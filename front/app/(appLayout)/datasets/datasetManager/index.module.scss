@@ -1,0 +1,41 @@
+.pageTop {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1.5625vw;
+    padding-bottom: 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.content {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 1.5625vw;
+}
+
+.tableHeader {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.tipWrap {
+    font-size: 12px;
+    color: #8F949E;
+    line-height: 24px;
+}
+
+.tagsWrap {
+    padding: 2px 4px;
+    height: 24px;
+    background: #F6F7F8;
+    border-radius: 4px;
+    border: 1px solid #F0F1F3;
+    font-size: 12px;
+    color: #8F949E;
+}
+
+.modalOuter {
+    max-height: 70vh;
+    overflow-y: auto;
+}

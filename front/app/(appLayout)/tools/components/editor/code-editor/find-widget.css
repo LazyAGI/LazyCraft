@@ -1,0 +1,213 @@
+/* 搜索框样式优化 - 解决排版问题 */
+
+/* 整体容器 */
+.monaco-editor .find-widget {
+    background-color: white !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 4px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    height: 36px !important;
+    /* 固定高度 */
+    margin: 0 !important;
+    padding: 0 30px 0 8px !important;
+    /* 增加右侧padding以容纳关闭按钮 */
+    position: absolute !important;
+    z-index: 10 !important;
+    top: 5px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+}
+
+/* 查找和替换部分 */
+.monaco-editor .find-widget .find-part,
+.monaco-editor .find-widget .replace-part {
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100% !important;
+}
+
+/* 标签隐藏 */
+.monaco-editor .find-widget .find-part .find-label,
+.monaco-editor .find-widget .replace-part .replace-label {
+    display: none !important;
+}
+
+/* 输入框容器 */
+.monaco-editor .find-widget .monaco-inputbox {
+    height: 28px !important;
+    min-width: 150px !important;
+    margin: 0 4px 0 0 !important;
+    background-color: #f9fafb !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 3px !important;
+}
+
+/* 输入框样式 */
+.monaco-editor .find-widget .input {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+    font-size: 13px !important;
+    color: #374151 !important;
+    height: 26px !important;
+    line-height: 26px !important;
+    padding: 0 6px !important;
+    background-color: transparent !important;
+}
+
+/* 输入框聚焦状态 */
+.monaco-editor .find-widget .monaco-inputbox.synthetic-focus {
+    border-color: #3b82f6 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* 匹配结果计数器 */
+.monaco-editor .find-widget .matchesCount {
+    font-size: 12px !important;
+    color: #6b7280 !important;
+    margin: 0 6px !important;
+    min-width: 50px !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+}
+
+/* 按钮容器 */
+.monaco-editor .find-widget .monaco-findInput .controls,
+.monaco-editor .find-widget .button-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 按钮基础样式 */
+.monaco-editor .find-widget .button {
+    width: 24px !important;
+    height: 24px !important;
+    margin: 0 2px !important;
+    padding: 0 !important;
+    background-color: transparent !important;
+    border: none !important;
+    outline: none !important;
+    cursor: pointer !important;
+    border-radius: 3px !important;
+    color: #6b7280 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* 导航按钮样式 */
+.monaco-editor .find-widget .button.previous,
+.monaco-editor .find-widget .button.next {
+    background-color: #f3f4f6 !important;
+    margin: 0 1px !important;
+}
+
+/* 按钮悬停效果 */
+.monaco-editor .find-widget .button:not(.disabled):hover {
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+}
+
+/* 按钮激活效果 */
+.monaco-editor .find-widget .button.toggle.checked {
+    background-color: #dbeafe !important;
+    color: #2563eb !important;
+}
+
+/* 按钮图标 */
+.monaco-editor .find-widget .button .codicon {
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* 替换按钮 */
+.monaco-editor .find-widget .replace,
+.monaco-editor .find-widget .replace-all {
+    margin: 0 2px !important;
+    padding: 0 6px !important;
+    background-color: #f3f4f6 !important;
+    border-radius: 3px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* 替换按钮悬停 */
+.monaco-editor .find-widget .replace:hover,
+.monaco-editor .find-widget .replace-all:hover {
+    background-color: #e5e7eb !important;
+}
+
+/* 关闭按钮 - 加强样式确保可见 */
+.monaco-editor .find-widget>.button.codicon-widget-close,
+.monaco-editor .find-widget>.button.codicon-close,
+.monaco-editor .find-widget>.close-fw {
+    position: absolute !important;
+    right: 4px !important;
+    top: 6px !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #6b7280 !important;
+    background-color: #f3f4f6 !important;
+    border-radius: 3px !important;
+    opacity: 0.9 !important;
+    z-index: 11 !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+}
+
+/* 关闭按钮悬停样式 */
+.monaco-editor .find-widget>.button.codicon-widget-close:hover,
+.monaco-editor .find-widget>.button.codicon-close:hover,
+.monaco-editor .find-widget>.close-fw:hover {
+    background-color: #e5e7eb !important;
+    opacity: 1 !important;
+    color: #111827 !important;
+}
+
+/* 关闭图标增强 */
+.monaco-editor .find-widget>.button.codicon-widget-close:before,
+.monaco-editor .find-widget>.button.codicon-close:before {
+    content: "\ea76" !important;
+    /* 确保使用X图标 */
+    font-size: 14px !important;
+    font-weight: bold !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* 找不到结果样式 */
+.monaco-editor .find-widget .monaco-findInput .controls .matchesCount.no-results {
+    color: #ef4444 !important;
+}
+
+/* 高亮搜索结果 */
+.monaco-editor .findMatch {
+    background-color: rgba(245, 158, 11, 0.2) !important;
+    border: none !important;
+}
+
+.monaco-editor .currentFindMatch {
+    background-color: rgba(245, 158, 11, 0.5) !important;
+    border: 1px solid rgba(245, 158, 11, 0.8) !important;
+}

@@ -1,0 +1,8 @@
+.custom-switch {}
+.custom-switch-readonly {
+  cursor: auto !important;
+
+  .ant-switch-handle, .ant-switch-inner {
+    cursor: auto !important;
+  }
+}

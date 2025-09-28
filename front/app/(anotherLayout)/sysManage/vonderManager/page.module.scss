@@ -1,0 +1,53 @@
+.tagManageWrap {
+  width: 100%;
+  background: #fff;
+  padding: 1.5625vw;
+
+  .title {
+    font-weight: 500;
+    font-size: 16px;
+    color: #071127;
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .leftIcon {
+      display: inline-block;
+      width: 3px;
+      height: 16px;
+      background: #0E5DD8;
+      margin-right: 8px;
+    }
+  }
+
+  .detailWrap {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 10px;
+
+    .tagSty {
+      font-size: 14px;
+      line-height: 32px;
+      background: #F6F7F8;
+      user-select: none;
+      color: #5E6472;
+    }
+
+    .tagPlusStyle {
+      line-height: 32px;
+      border-style: dashed;
+      background: #FFF;
+      font-size: 14px;
+      color: #5E6472;
+      cursor: pointer;
+    }
+  }
+}
+
+.updSty {
+  :global(.ant-card-body) {
+    padding: 20px !important;
+
+  }
+}

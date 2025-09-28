@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="description" content="Description">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <link rel="stylesheet" href="view/vue.css">
+</head>
+<style>
+    .sidebar-nav .collapse ul {
+        display: none;
+    }
+</style>
+<body>
+  <div id="app"></div>
+  <script>
+    window.$docsify = {
+        requestHeaders: {
+            'cache-control': 'max-age=0',
+        },
+        name: '帮助文档',
+        loadSidebar: true,
+        loadSidebar: './_sidebar.md',
+        loadNavbar: false,
+        themeColor: '#3F51B5',
+        subMaxLevel: 2,
+        auto2top: true,
+        maxLevel: 4,
+        gtag: 'G-H77Y58DS3L',
+        markdown: {
+            renderer: {
+                code: function(code, lang) {
+                    if (lang === "mermaid") {
+                        return (
+                                '<div class="mermaid">' + mermaid.render('mermaid-svg-' + num++, code) + "</div>"
+                        );
+                    }
+                    return this.origin.code.apply(this, arguments);
+                }
+            }
+        },
+        search: {
+            maxAge: 10, // Expiration time, the default one day
+            paths: 'auto', // or 'auto'
+            placeholder: '搜索',
+            noData: '找不到结果!',
+            hideOtherSidebarContent: false, // whether or not to hide other sidebar content
+        }
+	}
+  </script>
+  <!-- Docsify v4 -->
+  <script src="view/docsify@4.js"></script>
+  <script src="view/search.min.js"></script>
+  <!-- 高亮语法中心 -->
+  <script src="view/prism-bash.min.js"></script>
+  <script src="view/prism-docker.min.js"></script>
+  <script src="view/prism-python.min.js"></script>
+  <script src="view/prism-powershell.min.js"></script>
+  <!-- 代码复制插件 -->
+  <script src="view/docsify-copy-code.js"></script>
+
+</body>
+</html>

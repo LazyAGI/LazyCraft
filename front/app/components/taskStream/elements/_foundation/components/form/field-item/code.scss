@@ -1,0 +1,25 @@
+.field__code-editor-wrapper {
+  // 设置编辑器左侧行数栏宽度
+  .overflow-guard .margin {
+    width: 44px !important;
+  }
+  // 设置编辑器右侧代码编辑部分宽度
+  .monaco-scrollable-element.editor-scrollable {
+    width: calc(100% - 44px) !important;
+    left: 44px !important;
+  }
+
+  .prompt-editor-height-resize-wrapper {
+    overflow-y: hidden;
+    overflow-x: hidden;
+  }
+}
+.ant-form-item-has-error {
+  &>.ant-row>.ant-col {
+    &>.ant-form-item-control-input>.ant-form-item-control-input-content {
+      &>.field__code-editor-wrapper>div>div {
+        border-color: #fd3021 !important;
+      }
+    }
+  }
+}

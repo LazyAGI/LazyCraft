@@ -1,0 +1,124 @@
+.knowledgeWrap {
+  width: 87.7083vw;
+  margin: 0 auto;
+  padding-top: 1.5625vw;
+  height: 42.7083vw;
+
+  .pageTop {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .content {
+    // padding: 0 120px;
+  }
+
+  .cardItem {
+    width: 100%;
+    min-height: 12vw;
+    padding: 16px;
+    // margin: 5px;
+    box-sizing: border-box;
+    background: #ffffff;
+    box-shadow: 0px 0px 4px 0px rgba(7, 17, 39, 0.12);
+    border-radius: 12px;
+    position: relative;
+
+    &:hover {
+      box-shadow: 0px 0.4167vw 1.25vw 0px rgba(7, 17, 39, 0.12);
+
+    }
+  }
+
+  .cardHeader {
+    display: flex;
+    align-items: center;
+  }
+
+  .name {
+    margin-left: 14px;
+    font-size: 16px;
+    color: #071127;
+    margin-left: 16px;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .iconWrap {
+    background: #f6f7f8;
+    border-radius: 15%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .headerIcon {
+    width: 2.9167vw;
+    height: 2.9167vw;
+    font-size: 1.6667vw;
+    background: linear-gradient(150deg, #26adf0 0%, #69d17b 100%);
+    color: #fff;
+  }
+
+  .cardContent {
+    width: 100%;
+    margin-top: 0.5208vw;
+    font-size: 0.7292vw;
+    // min-height: 2.1875vw;
+    color: #5E6472;
+    display: -webkit-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-all;
+    white-space: pre-wrap;
+    -webkit-box-orient: vertical;
+    line-clamp: 1;
+    -webkit-line-clamp: 1;
+  }
+
+  .tagWrap {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    white-space: nowrap;
+    display: flex;
+    min-height: 1.0417vw;
+    align-items: center;
+    margin-top: 0.5208vw;
+
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+    >span {
+      font-size: 0.625vw;
+      line-height: 1.0417vw;
+      background: #F6F7F8;
+      color: #8F949E;
+    }
+  }
+
+  .cardActions {
+    text-align: right;
+    margin-top: 0.5208vw;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .actionsIcon {
+    // margin-left: 12px;
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+
+    &:hover {
+      border: 1px solid #0e5dd8;
+      color: #0e5dd8;
+      cursor: pointer;
+    }
+  }
+}

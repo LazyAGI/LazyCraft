@@ -1,0 +1,48 @@
+  .agentSidebar {
+    width: 260px;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+
+    .agentHistory {
+      flex: 1;
+      position: relative;
+
+      .agentTopics {
+        position: absolute;
+        inset: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+
+        .chatActive {
+          position: relative;
+          padding: 0 0 0 10px;
+
+          &::after {
+            content: '';
+            display: block;
+            width: 3px;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            background: #1677ff;
+          }
+        }
+
+        .chatTitle {
+          width: 90%;
+          height: 30px;
+          line-height: 30px;
+          margin: 10px auto 0;
+          font-size: 16px;
+          color: #5a5a5a;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          cursor: pointer;
+        }
+      }
+    }
+  }

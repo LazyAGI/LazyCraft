@@ -1,0 +1,116 @@
+/* LazyLLM Code Editor Styles */
+
+/* 编辑器边距调整 */
+.margin-view-overlays {
+  padding-left: 10px;
+}
+
+.no-wrapper .margin-view-overlays {
+  padding-left: 0;
+}
+
+/* 隐藏只读提示 */
+.monaco-editor-overlaymessage {
+  display: none !important;
+}
+
+/* 修复滚动条问题 */
+.lazyllm-code-editor .prompt-editor-height-resize-wrapper {
+  overflow: hidden;
+}
+
+/* 隐藏悬停内容 */
+.monaco-hover-content .hover-contents {
+  display: none !important;
+}
+
+/* 搜索框样式优化 */
+.monaco-editor .find-widget {
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  height: 36px !important;
+  padding: 6px !important;
+  transform: translateY(calc(-100% - 8px)) !important;
+  transition: transform 0.2s ease-in-out !important;
+}
+
+.monaco-editor .find-widget.visible {
+  transform: translateY(0) !important;
+}
+
+/* 输入框样式 */
+.monaco-editor .find-widget .monaco-inputbox,
+.monaco-editor .find-widget .input {
+  background: white !important;
+  color: #374151 !important;
+  height: 24px !important;
+  border-radius: 4px !important;
+}
+
+/* 匹配计数器 */
+.monaco-editor .find-widget .matchesCount {
+  font-size: 12px !important;
+  color: #6b7280 !important;
+}
+
+/* 关闭按钮 */
+.monaco-editor .find-widget .button.codicon-widget-close {
+  background: transparent !important;
+  border-radius: 4px !important;
+  color: #6b7280 !important;
+  cursor: pointer !important;
+  position: absolute !important;
+  top: 4px !important;
+  right: 4px !important;
+  width: 20px !important;
+  height: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10 !important;
+}
+
+.monaco-editor .find-widget .button.codicon-widget-close:hover {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+/* 按钮悬停效果 */
+.monaco-editor .find-widget .button:not(.disabled):hover {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+  border-radius: 4px !important;
+}
+
+/* 搜索结果高亮 */
+.monaco-editor .findMatch {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-radius: 2px !important;
+}
+
+.monaco-editor .currentFindMatch {
+  background: rgba(59, 130, 246, 0.4) !important;
+  border: 1px solid #3b82f6 !important;
+  border-radius: 2px !important;
+}
+
+/* 搜索框内部布局 */
+.monaco-editor .find-widget .find-part,
+.monaco-editor .find-widget .replace-part {
+  margin: 2px 24px 2px 8px !important;
+}
+
+/* 替换按钮样式 */
+.monaco-editor .find-widget .button.replace,
+.monaco-editor .find-widget .button.replace-all {
+  background: #f8fafc !important;
+  border-radius: 4px !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.monaco-editor .find-widget .button.replace:hover,
+.monaco-editor .find-widget .button.replace-all:hover {
+  background: #e2e8f0 !important;
+}

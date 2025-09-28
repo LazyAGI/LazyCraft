@@ -1,0 +1,556 @@
+.document_node_group_wrapper {
+    background: #ffffff;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+    .document_node_group_header {
+        background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 0;
+        margin-bottom: 20px;
+        box-shadow:
+            0 1px 3px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+        .header-title {
+            padding: 12px 16px;
+            border-bottom: 1px solid #dee2e6;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 8px 8px 0 0;
+
+            label {
+                font-size: 14px;
+                font-weight: 600 !important;
+                color: #2c3e50 !important;
+                margin: 0;
+                display: flex;
+                align-items: center;
+
+                .ant-divider {
+                    background: linear-gradient(145deg, #1677ff 0%, #096dd9 100%);
+                    border-radius: 2px;
+                    box-shadow: 0 1px 2px rgba(22, 119, 255, 0.3);
+                }
+            }
+        }
+
+        .header-content {
+            padding: 16px;
+
+            .document-node-active-group {
+                background: linear-gradient(145deg, #fff8e1 0%, #fffbf0 100%);
+                border: 1px solid #ffeaa7;
+                border-radius: 6px;
+                padding: 12px;
+                margin: 0;
+                box-shadow:
+                    0 2px 4px rgba(255, 193, 7, 0.1),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+                border-left: 4px solid #ffc107;
+                position: relative;
+
+                &::before {
+                    content: '';
+                    position: absolute;
+                    left: -1px;
+                    top: 0;
+                    bottom: 0;
+                    width: 4px;
+                    background: linear-gradient(180deg, #ffc107 0%, #ffb300 100%);
+                    border-radius: 0 2px 2px 0;
+                }
+            }
+        }
+    }
+
+    .document_node_group_list {
+        .custom-group-header {
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border: 1px solid #dee2e6;
+            border-radius: 8px 8px 0 0;
+            padding: 12px 16px;
+            margin-bottom: 0;
+            border-bottom: none;
+            box-shadow:
+                0 1px 3px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+            label {
+                font-size: 14px;
+                font-weight: 600 !important;
+                color: #2c3e50 !important;
+                margin: 0;
+                display: flex;
+                align-items: center;
+
+                .ant-divider {
+                    background: linear-gradient(145deg, #1677ff 0%, #096dd9 100%);
+                    border-radius: 2px;
+                    box-shadow: 0 1px 2px rgba(22, 119, 255, 0.3);
+                }
+            }
+        }
+
+        .node-group-item {
+            background: linear-gradient(145deg, #fafbfc 0%, #f1f3f4 100%);
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+            box-shadow:
+                0 2px 4px rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+
+            .ant-form-item {
+                margin-bottom: 16px;
+
+                .ant-form-item-label {
+                    >label {
+                        font-weight: 500;
+                        color: #4a5568;
+                        font-size: 13px;
+                    }
+                }
+            }
+
+            .remove-button {
+                position: absolute;
+                top: 16px;
+                right: 16px;
+                z-index: 1;
+                background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+                border: 1px solid #dc3545;
+                color: #dc3545;
+                box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+                transition: all 0.3s ease;
+
+                &:hover {
+                    background: linear-gradient(145deg, #dc3545 0%, #c82333 100%);
+                    color: #ffffff;
+                    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+                    transform: translateY(-1px);
+                }
+
+                &:active {
+                    transform: translateY(0);
+                    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.4);
+                }
+            }
+
+            .config-section {
+                background: linear-gradient(145deg, #f7f9fc 0%, #e8f4fd 100%);
+                border: 1px solid #d1e7f0;
+                border-radius: 6px;
+                padding: 16px;
+                margin-top: 16px;
+                box-shadow:
+                    inset 0 1px 2px rgba(0, 0, 0, 0.05),
+                    0 1px 2px rgba(255, 255, 255, 0.8);
+                // border-left: 3px solid #1677ff;
+
+                .ant-form-item {
+                    margin-bottom: 12px;
+
+                    &:last-child {
+                        margin-bottom: 0;
+                    }
+
+                    .ant-form-item-label {
+                        >label {
+                            font-size: 12px;
+                            color: #6c757d;
+                            font-weight: 500;
+                        }
+                    }
+                }
+
+                .nested-config {
+                    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+                    border: 1px solid #e3f2fd;
+                    border-radius: 4px;
+                    padding: 12px;
+                    margin-top: 8px;
+                    box-shadow:
+                        inset 0 1px 2px rgba(0, 0, 0, 0.03),
+                        0 1px 2px rgba(40, 167, 69, 0.1);
+                    // border-left: 2px solid #28a745;
+
+                    &::before {
+                        content: '';
+                        position: absolute;
+                        left: -1px;
+                        top: 0;
+                        bottom: 0;
+                        width: 3px;
+                        // background: linear-gradient(180deg, #28a745 0%, #20c997 100%);
+                        border-radius: 0 2px 2px 0;
+                    }
+
+                    .ant-form-item {
+                        margin-bottom: 8px;
+
+                        &:last-child {
+                            margin-bottom: 0;
+                        }
+                    }
+                }
+            }
+
+            // Embedding 模型启用复选框样式
+            .ant-form-item[data-field="enable_embed"] {
+                position: relative;
+
+                &.embed-enabled::after {
+                    content: '';
+                    position: absolute;
+                    right: -8px;
+                    top: 50%;
+                    width: 8px;
+                    height: 2px;
+                    background: #1677ff;
+                    transform: translateY(-50%);
+                    opacity: 1;
+                    transition: opacity 0.3s ease;
+                }
+
+                .ant-form-item-control {
+                    .ant-checkbox-wrapper {
+                        font-size: 13px;
+                        font-weight: 500;
+                        color: #4a5568;
+                        background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+                        border: 1px solid #dee2e6;
+                        border-radius: 6px;
+                        padding: 10px 14px;
+                        transition: all 0.3s ease;
+                        display: flex;
+                        align-items: center;
+                        position: relative;
+
+                        &:hover {
+                            background: linear-gradient(145deg, #e9ecef 0%, #dee2e6 100%);
+                            border-color: #1677ff;
+                            box-shadow: 0 2px 4px rgba(22, 119, 255, 0.1);
+                        }
+
+                        .ant-checkbox {
+                            margin-right: 10px;
+
+                            .ant-checkbox-inner {
+                                border-color: #1677ff;
+                                border-width: 2px;
+                                width: 18px;
+                                height: 18px;
+                            }
+
+                            &.ant-checkbox-checked {
+                                .ant-checkbox-inner {
+                                    background: linear-gradient(145deg, #1677ff 0%, #096dd9 100%);
+                                    border-color: #1677ff;
+
+                                    &::after {
+                                        border-color: #ffffff;
+                                        border-width: 2px;
+                                    }
+                                }
+                            }
+                        }
+
+                        span:not(.ant-checkbox) {
+                            color: #2c3e50;
+                            font-weight: 600;
+                        }
+                    }
+                }
+
+                &.embed-enabled .ant-checkbox-wrapper {
+                    background: linear-gradient(145deg, #e6f7ff 0%, #bae7ff 100%);
+                    border-color: #1677ff;
+                    box-shadow: 0 2px 4px rgba(22, 119, 255, 0.15);
+
+                    &::after {
+                        content: '└';
+                        position: absolute;
+                        right: -20px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        color: #1677ff;
+                        font-size: 16px;
+                        font-weight: bold;
+                    }
+                }
+            }
+
+            // Embedding 模型选择区域动画
+            .embed-model-section {
+                opacity: 1;
+                max-height: 500px;
+                overflow: hidden;
+                transition: all 0.3s ease-in-out;
+                margin-left: 16px;
+                padding: 12px 16px;
+                background: linear-gradient(145deg, #f0f8ff 0%, #e6f7ff 100%);
+                border: 1px solid #b3d9ff;
+                border-radius: 6px;
+                // border-left: 4px solid #1677ff;
+                position: relative;
+
+                &::before {
+                    content: '';
+                    position: absolute;
+                    left: -20px;
+                    top: 0;
+                    bottom: 0;
+                    width: 2px;
+                    // background: linear-gradient(180deg, #1677ff 0%, #40a9ff 100%);
+                    border-radius: 1px;
+                }
+
+                &.hidden {
+                    opacity: 0;
+                    max-height: 0;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .ant-form-item {
+                    transition: all 0.3s ease;
+                    margin-bottom: 12px;
+
+                    .ant-form-item-label {
+                        >label {
+                            font-size: 12px;
+                            color: #1677ff;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                        }
+                    }
+
+                    .ant-select,
+                    .ant-input {
+                        border-color: #91d5ff;
+
+                        &:hover {
+                            border-color: #1677ff;
+                            box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+                        }
+
+                        &:focus,
+                        &.ant-select-focused {
+                            border-color: #1677ff;
+                            box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
+                        }
+                    }
+                }
+
+                .nested-config {
+                    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+                    border: 1px solid #d1e7f0;
+                    border-radius: 4px;
+                    padding: 12px;
+                    margin-top: 12px;
+                    margin-left: 12px;
+                    box-shadow:
+                        inset 0 1px 2px rgba(0, 0, 0, 0.03),
+                        0 1px 2px rgba(40, 167, 69, 0.1);
+                    // border-left: 3px solid #28a745;
+                    position: relative;
+
+                    &::before {
+                        content: '';
+                        position: absolute;
+                        left: -16px;
+                        top: 0;
+                        bottom: 0;
+                        width: 2px;
+                        // background: linear-gradient(180deg, #28a745 0%, #20c997 100%);
+                        border-radius: 1px;
+                    }
+
+                    .ant-form-item {
+                        margin-bottom: 8px;
+
+                        &:last-child {
+                            margin-bottom: 0;
+                        }
+
+                        .ant-form-item-label {
+                            >label {
+                                font-size: 11px;
+                                // color: #28a745;
+                                font-weight: 600;
+                                text-transform: uppercase;
+                                letter-spacing: 0.3px;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        .add-group-section {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            border: 2px dashed #d9d9d9;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #fafafa 0%, #f0f0f0 100%);
+            transition: all 0.3s ease;
+
+            &.first-section {
+                border-radius: 0 0 8px 8px;
+                border-top: none;
+                border-style: solid;
+                border-width: 1px;
+                border-color: #dee2e6;
+                border-top: none;
+            }
+
+            &:hover {
+                border-color: #1677ff;
+                background: linear-gradient(145deg, #f0f8ff 0%, #e6f7ff 100%);
+            }
+
+            .add-group-button {
+                font-size: 14px;
+                font-weight: 500;
+                color: #1677ff;
+                background: transparent;
+                border: none;
+                box-shadow: none;
+                transition: all 0.3s ease;
+
+                &:hover {
+                    color: #096dd9;
+                    background: rgba(22, 119, 255, 0.1);
+                    border-radius: 4px;
+                }
+
+                &:active {
+                    transform: scale(0.98);
+                }
+            }
+        }
+    }
+}
+
+// 为嵌套的Form.Item添加更好的间距
+.nested-config {
+    .ant-form-item {
+        .ant-form-item-control {
+            .ant-form-item-control-input {
+
+                .ant-select,
+                .ant-input-number {
+                    transition: all 0.3s ease;
+
+                    &:hover {
+                        border-color: #40a9ff;
+                        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+                    }
+
+                    &:focus,
+                    &.ant-select-focused {
+                        border-color: #40a9ff;
+                        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+                    }
+                }
+            }
+        }
+    }
+}
+
+// 增强表单项的视觉层级
+.field-item {
+    .ant-form-item-label {
+        >label {
+            position: relative;
+            display: flex;
+            align-items: center;
+
+            &.required::before {
+                content: '*';
+                color: #ff4d4f;
+                margin-right: 4px;
+                font-size: 14px;
+            }
+        }
+    }
+}
+
+// 必填项标记样式
+.field-item-required-mark {
+    font-size: 12px;
+    line-height: 1;
+}
+
+// 分割线样式优化
+.node-group-divider {
+    border-color: #e8e8e8;
+    margin: 20px 0;
+}
+
+// 响应式设计优化
+@media (max-width: 768px) {
+    .document_node_group_wrapper {
+        padding: 12px;
+        margin-bottom: 12px;
+
+        .document_node_group_header {
+            margin-bottom: 16px;
+
+            .header-title {
+                padding: 10px 12px;
+
+                label {
+                    font-size: 13px;
+                }
+            }
+
+            .header-content {
+                padding: 12px;
+            }
+        }
+
+        .document_node_group_list {
+            .node-group-item {
+                padding: 16px;
+
+                .remove-button {
+                    position: static;
+                    margin-top: 12px;
+                    width: 100%;
+                }
+            }
+
+            .custom-group-header {
+                padding: 10px 12px;
+                margin-bottom: 12px;
+
+                label {
+                    font-size: 13px;
+                }
+            }
+
+            .add-group-section {
+                padding: 16px;
+
+                .add-group-button {
+                    font-size: 13px;
+                }
+            }
+        }
+    }
+}
+
+// 确保第一个node-group-item的特殊圆角样式生效
+.document_node_group_wrapper .document_node_group_list .node-group-item:first-of-type {
+    border-radius: 0 0 8px 8px !important;
+    border-top: none !important;
+}

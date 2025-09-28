@@ -1,0 +1,35 @@
+.created-resource-list-item {
+  width: calc(100% - 40px);
+  margin: 0 20px;
+  padding: 6px 0;
+  height: 34px;
+  border-bottom: 1px solid #F0F1F3;
+  
+  .resource-list-item-title {
+    color: #071127;
+    width: calc(100% - 44px);
+    &:hover {
+      color: #0E5DD8;
+    }
+  }
+  .resource-list-item-delete-btn {
+    display: none;
+    color: #5E6472;
+    width: 20px;
+    height: 20px;
+    padding: 2px;
+    border-radius: 4px;
+    border: 1px solid #F0F1F3;
+    background: #F6F7F8;
+    &:hover {
+      color: #EF4444;
+      border: 1px solid #fbeeec;
+      background: #f9eded;
+    }
+  }
+  &:hover {
+    .resource-list-item-delete-btn {
+      display: flex;
+    }
+  }
+}

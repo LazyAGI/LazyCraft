@@ -1,0 +1,1692 @@
+{
+    "id": "ac899d0f-86e1-4064-aa97-19a2cc07bb76", 
+    "name": "test_if", 
+    "description": "", 
+    "icon": null, 
+    "icon_background": null, 
+    "categories": [ ], 
+    "tags": [
+        "效率工具"
+    ], 
+    "graph": {
+        "nodes": [
+            {
+                "id": "__start__", 
+                "type": "custom", 
+                "data": {
+                    "type": "start", 
+                    "title": "开始", 
+                    "desc": "", 
+                    "payload__kind": "__start__", 
+                    "variables": [ ], 
+                    "config__input_ports": [ ], 
+                    "config__output_shape": [
+                        {
+                            "id": "0a7c1edb-0d1d-46fe-847e-6e431f7246ae", 
+                            "variable_mode": "mode-line", 
+                            "variable_name": "input", 
+                            "variable_type": "int"
+                        }
+                    ], 
+                    "config__output_ports": [
+                        {
+                            "id": "source"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__output_shape", 
+                            "type": "config__output_shape", 
+                            "label": "参数", 
+                            "tooltip": "定义工作流需要的输入参数，可以选择多种格式"
+                        }
+                    ], 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 80, 
+                    "y": 282
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 80, 
+                    "y": 282
+                }, 
+                "width": 194, 
+                "height": 56, 
+                "selected": false
+            }, 
+            {
+                "id": "__end__", 
+                "type": "custom", 
+                "data": {
+                    "type": "end", 
+                    "title": "结束", 
+                    "desc": "", 
+                    "payload__kind": "__end__", 
+                    "outputs": [ ], 
+                    "config__input_ports": [
+                        {
+                            "id": "target", 
+                            "param_source_shape": [
+                                {
+                                    "variable_name": "input", 
+                                    "variable_type": "int", 
+                                    "variable_mode": "mode-line", 
+                                    "id": "24780630-b86e-4721-a02c-8cb89df44826", 
+                                    "sourceNodeTitle": "条件分支聚合器-1"
+                                }
+                            ], 
+                            "param_check_success": true, 
+                            "param_input_error": [
+                                {
+                                    "id": "118bee2a-abce-4676-b36c-b9d4dec8cb73", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name": "input", 
+                                    "error_type": "type_mismatch", 
+                                    "source_info": {
+                                        "node_title": "条件分支聚合器-1", 
+                                        "variable_name": "input", 
+                                        "variable_type": "int"
+                                    }
+                                }
+                            ], 
+                            "param_input_success": [
+                                {
+                                    "id": "118bee2a-abce-4676-b36c-b9d4dec8cb73", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name": "input", 
+                                    "variable_type": "int"
+                                }
+                            ]
+                        }
+                    ], 
+                    "config__output_ports": [ ], 
+                    "config__input_shape": [
+                        {
+                            "id": "118bee2a-abce-4676-b36c-b9d4dec8cb73", 
+                            "variable_mode": "mode-line", 
+                            "variable_name": "input", 
+                            "variable_type": "int"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__input_shape", 
+                            "type": "config__input_shape", 
+                            "label": "参数"
+                        }, 
+                        {
+                            "name": "config__input_ports", 
+                            "type": "config__input_ports", 
+                            "label": "输入端点", 
+                            "tooltip": "输入参数的数量，需保证与输入参数数量保持一致"
+                        }
+                    ], 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 1584.1113456340008, 
+                    "y": 296.71745887492585
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 1584.1113456340008, 
+                    "y": 296.71745887492585
+                }, 
+                "width": 194, 
+                "height": 59, 
+                "selected": false
+            }, 
+            {
+                "id": "1748312294200", 
+                "type": "custom", 
+                "data": {
+                    "type": "if-else", 
+                    "title": "条件分支-1", 
+                    "desc": "根据分支条件，判断执行哪个任务", 
+                    "payload__kind": "Ifs", 
+                    "config__can_run_by_single": false, 
+                    "config__input_ports": [
+                        {
+                            "id": "target", 
+                            "param_source_shape": [
+                                {
+                                    "id": "0a7c1edb-0d1d-46fe-847e-6e431f7246ae", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name": "input", 
+                                    "variable_type": "int", 
+                                    "sourceNodeTitle": "开始"
+                                }
+                            ], 
+                            "param_check_success": true, 
+                            "param_input_error": [
+                                {
+                                    "id": "52637fde-d158-4c77-baff-1ed542d50320", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name": "input", 
+                                    "error_type": "type_mismatch", 
+                                    "source_info": {
+                                        "node_title": "开始", 
+                                        "variable_name": "input", 
+                                        "variable_type": "int"
+                                    }
+                                }
+                            ], 
+                            "param_input_success": [
+                                {
+                                    "id": "52637fde-d158-4c77-baff-1ed542d50320", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name": "input", 
+                                    "variable_type": "int"
+                                }
+                            ]
+                        }
+                    ], 
+                    "config__output_ports": [
+                        {
+                            "id": "true", 
+                            "label": "IF ", 
+                            "logical_operator": "and", 
+                            "cond": "def test_input(input):\r\n return input > 3", 
+                            "chosen": false, 
+                            "selected": false
+                        }, 
+                        {
+                            "id": "false", 
+                            "label": "ELSE"
+                        }
+                    ], 
+                    "config__input_shape": [
+                        {
+                            "id": "52637fde-d158-4c77-baff-1ed542d50320", 
+                            "variable_mode": "mode-line", 
+                            "variable_name": "input", 
+                            "variable_type": "int"
+                        }
+                    ], 
+                    "config__output_shape": [
+                        {
+                            "id": "52637fde-d158-4c77-baff-1ed542d50320", 
+                            "variable_mode": "mode-line", 
+                            "variable_name": "input", 
+                            "variable_type": "int"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__input_shape", 
+                            "type": "config__input_shape", 
+                            "label": "输入参数", 
+                            "effects": [
+                                "InputShape_OutputShape_IfsFull"
+                            ]
+                        }, 
+                        {
+                            "name": "config__output_shape", 
+                            "type": "config__output_shape", 
+                            "label": "输出参数", 
+                            "readOnly": true
+                        }, 
+                        {
+                            "name": "config__input_ports", 
+                            "type": "config__input_ports", 
+                            "label": "输入端点", 
+                            "tooltip": "输入参数的数量，需保证与输入参数数量保持一致"
+                        }, 
+                        {
+                            "name": "payload__judge_on_full_input", 
+                            "label": "使用全部的输入判断", 
+                            "type": "select", 
+                            "options": [
+                                {
+                                    "label": "是", 
+                                    "value": true
+                                }, 
+                                {
+                                    "label": "否", 
+                                    "value": false
+                                }
+                            ], 
+                            "defaultValue": true, 
+                            "watch": [
+                                {
+                                    "conditions": [
+                                        {
+                                            "value": false
+                                        }
+                                    ], 
+                                    "actions": [
+                                        {
+                                            "key": "config__parameters", 
+                                            "extend": true, 
+                                            "value": [
+                                                {
+                                                    "name": "config__input_shape", 
+                                                    "type": "config__input_shape", 
+                                                    "label": "输入参数", 
+                                                    "effects": [
+                                                        "InputShape_OutputShape_IfsNoFull"
+                                                    ], 
+                                                    "min": 2
+                                                }, 
+                                                { }, 
+                                                { }, 
+                                                { }, 
+                                                {
+                                                    "type": "if_else", 
+                                                    "name": "payload__if_else", 
+                                                    "required": true
+                                                }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__input_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "input", 
+                                                    "variable_name": "条件", 
+                                                    "variable_name_readonly": true
+                                                }, 
+                                                {
+                                                    "id": "input_1"
+                                                }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__output_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "output_1"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }, 
+                                {
+                                    "conditions": [
+                                        {
+                                            "value": true
+                                        }
+                                    ], 
+                                    "actions": [
+                                        {
+                                            "key": "config__parameters", 
+                                            "extend": true, 
+                                            "value": [
+                                                {
+                                                    "name": "config__input_shape", 
+                                                    "type": "config__input_shape", 
+                                                    "label": "输入参数", 
+                                                    "effects": [
+                                                        "InputShape_OutputShape_IfsFull"
+                                                    ]
+                                                }, 
+                                                { }, 
+                                                { }, 
+                                                { }, 
+                                                {
+                                                    "type": "if_else", 
+                                                    "name": "payload__if_else", 
+                                                    "required": true
+                                                }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__input_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "input_1"
+                                                }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__output_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "output_1"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }, 
+                        {
+                            "type": "if_else", 
+                            "name": "payload__if_else", 
+                            "required": true
+                        }
+                    ], 
+                    "code_language": "python3", 
+                    "name": "ifs", 
+                    "title_en": "IFS", 
+                    "about": "根据分支条件，判断执行哪个任务。类似switch，但条件判断只有为true/false", 
+                    "classification": "control-flow", 
+                    "payload__patent_id": "1b2f062a-30d2-424b-b49a-b553b531d78e", 
+                    "payload__judge_on_full_input": true, 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 375, 
+                    "y": 244
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 375, 
+                    "y": 244
+                }, 
+                "width": 194, 
+                "height": 139, 
+                "selected": false
+            }, 
+            {
+                "id": "1748312308217", 
+                "type": "custom", 
+                "data": {
+                    "type": "universe", 
+                    "title": "条件分支聚合器-1", 
+                    "desc": "能够聚合多个分支输入", 
+                    "config__input_ports": [
+                        {
+                            "id": "0ea7ce7c-cf74-4ba6-825c-ab9ed0867fdf", 
+                            "param_source_shape": [
+                                {
+                                    "id": "168f741b-484f-47e2-aa3c-cb17b9c59adf", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name": "output", 
+                                    "variable_type": "int", 
+                                    "sourceNodeTitle": "代码块-1"
+                                }
+                            ], 
+                            "param_check_success": true, 
+                            "param_input_success": [
+                                {
+                                    "id": "input", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_port": "0ea7ce7c-cf74-4ba6-825c-ab9ed0867fdf", 
+                                    "variable_name": "input", 
+                                    "variable_type": "int"
+                                }
+                            ], 
+                            "param_input_error": [
+                                {
+                                    "id": "input", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_port": "0ea7ce7c-cf74-4ba6-825c-ab9ed0867fdf", 
+                                    "variable_name": "input", 
+                                    "error_type": "type_mismatch", 
+                                    "source_info": {
+                                        "node_title": "代码块-1", 
+                                        "variable_name": "output", 
+                                        "variable_type": "int"
+                                    }
+                                }
+                            ]
+                        }, 
+                        {
+                            "id": "bd6d9783-2ec6-4bfb-b070-5bbd1a304b66", 
+                            "param_source_shape": [
+                                {
+                                    "variable_name": "input", 
+                                    "variable_type": "int", 
+                                    "variable_mode": "mode-line", 
+                                    "id": "83e4b72c-f7ba-4016-adf2-8dffe9dc1479", 
+                                    "sourceNodeTitle": "条件分支聚合器-1-2"
+                                }
+                            ], 
+                            "param_check_success": true, 
+                            "param_input_error": [
+                                {
+                                    "id": "5154977f-260a-4c8a-a0b8-fef964d4bd1d", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_port": "bd6d9783-2ec6-4bfb-b070-5bbd1a304b66", 
+                                    "variable_name": "input1", 
+                                    "variable_type": "int", 
+                                    "error_type": "count_more"
+                                }
+                            ], 
+                            "param_input_success": [
+                                {
+                                    "id": "5154977f-260a-4c8a-a0b8-fef964d4bd1d", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_port": "bd6d9783-2ec6-4bfb-b070-5bbd1a304b66", 
+                                    "variable_name": "input1", 
+                                    "variable_type": "int"
+                                }
+                            ]
+                        }
+                    ], 
+                    "config__output_ports": [
+                        {
+                            "id": "source"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__input_shape", 
+                            "type": "config__input_shape", 
+                            "label": "输入参数", 
+                            "effects": [
+                                "InputShape_OutputShape_ModeIndependent"
+                            ]
+                        }, 
+                        {
+                            "name": "config__output_shape", 
+                            "type": "config__output_shape", 
+                            "label": "输出参数", 
+                            "effects": "", 
+                            "readOnly": true
+                        }, 
+                        {
+                            "name": "config__input_ports", 
+                            "type": "config__input_ports", 
+                            "label": "输入端点", 
+                            "effects": "", 
+                            "tooltip": "将输入变量格式化解析并输出，提取期望的字段"
+                        }, 
+                        {
+                            "label": "模式", 
+                            "name": "payload__setmode", 
+                            "type": "select", 
+                            "required": true, 
+                            "tooltip": "提供两种聚合模式，独立模式可将多个输入聚合为一个输出，同一模式将多个输入分别输出", 
+                            "options": [
+                                {
+                                    "label": "同一模式", 
+                                    "value": "mode-same"
+                                }, 
+                                {
+                                    "label": "独立模式", 
+                                    "value": "mode-independent"
+                                }
+                            ], 
+                            "defaultValue": "mode-same", 
+                            "watch": [
+                                {
+                                    "conditions": [
+                                        {
+                                            "value": "mode-independent"
+                                        }
+                                    ], 
+                                    "actions": [
+                                        {
+                                            "key": "config__parameters", 
+                                            "extend": true, 
+                                            "value": [
+                                                {
+                                                    "effects": [
+                                                        "InputShape_OutputShape_ModeIndependent"
+                                                    ]
+                                                }, 
+                                                { }, 
+                                                { }, 
+                                                { }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__input_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "input"
+                                                }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__output_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "output"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }, 
+                                {
+                                    "conditions": [
+                                        {
+                                            "value": "mode-same"
+                                        }
+                                    ], 
+                                    "actions": [
+                                        {
+                                            "key": "config__parameters", 
+                                            "extend": true, 
+                                            "value": [
+                                                {
+                                                    "effects": [
+                                                        "InputShape_OutputShape_ModeSame"
+                                                    ]
+                                                }, 
+                                                { }, 
+                                                { }, 
+                                                { }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__input_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "input"
+                                                }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__output_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "output"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ], 
+                    "config__input_shape": [
+                        {
+                            "id": "input", 
+                            "variable_mode": "mode-line", 
+                            "variable_port": "0ea7ce7c-cf74-4ba6-825c-ab9ed0867fdf", 
+                            "variable_name": "input", 
+                            "variable_type": "int"
+                        }, 
+                        {
+                            "id": "5154977f-260a-4c8a-a0b8-fef964d4bd1d", 
+                            "variable_mode": "mode-line", 
+                            "variable_port": "bd6d9783-2ec6-4bfb-b070-5bbd1a304b66", 
+                            "variable_name": "input1", 
+                            "variable_type": "int"
+                        }
+                    ], 
+                    "config__output_shape": [
+                        {
+                            "variable_name": "input", 
+                            "variable_type": "int", 
+                            "variable_mode": "mode-line", 
+                            "id": "24780630-b86e-4721-a02c-8cb89df44826"
+                        }
+                    ], 
+                    "name": "aggregator", 
+                    "classification": "fundamental-component", 
+                    "payload__kind": "aggregator", 
+                    "title_en": "Branch Aggregator", 
+                    "about": "用于聚合分支", 
+                    "payload__setmode": "mode-independent", 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 1250.0295686640422, 
+                    "y": 234.94425593010078
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 1250.0295686640422, 
+                    "y": 234.94425593010078
+                }, 
+                "width": 194, 
+                "height": 75, 
+                "selected": false
+            }, 
+            {
+                "id": "1748312460143", 
+                "type": "custom", 
+                "data": {
+                    "type": "code", 
+                    "title": "代码块-1", 
+                    "desc": "编写代码，处理输入变量来生成返回值", 
+                    "variables": [ ], 
+                    "code_language": "python3", 
+                    "code": "", 
+                    "outputs": {
+                        "key0": {
+                            "type": "string", 
+                            "children": null
+                        }, 
+                        "key1": {
+                            "type": "array", 
+                            "children": null
+                        }, 
+                        "key2": {
+                            "type": "object", 
+                            "children": null
+                        }
+                    }, 
+                    "payload__code": "def main(input):\n return input + 3", 
+                    "payload__code_language": "python3", 
+                    "payload__kind": "Code", 
+                    "config__input_shape": [
+                        {
+                            "id": "input", 
+                            "variable_name": "input", 
+                            "variable_type": "int", 
+                            "variable_required": true, 
+                            "variable_mode": "mode-line"
+                        }
+                    ], 
+                    "config__output_shape": [
+                        {
+                            "id": "168f741b-484f-47e2-aa3c-cb17b9c59adf", 
+                            "variable_mode": "mode-line", 
+                            "variable_name": "output", 
+                            "variable_type": "int"
+                        }
+                    ], 
+                    "config__input_ports": [
+                        {
+                            "id": "target", 
+                            "param_source_shape": [
+                                {
+                                    "id": "52637fde-d158-4c77-baff-1ed542d50320", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name": "input", 
+                                    "variable_type": "int", 
+                                    "sourceNodeTitle": "条件分支-1"
+                                }
+                            ], 
+                            "param_check_success": true, 
+                            "param_input_error": [
+                                {
+                                    "id": "input", 
+                                    "variable_name": "input", 
+                                    "variable_type": "str", 
+                                    "variable_required": true, 
+                                    "variable_mode": "mode-line", 
+                                    "error_type": "type_mismatch", 
+                                    "source_info": {
+                                        "node_title": "条件分支-1", 
+                                        "variable_name": "input", 
+                                        "variable_type": "int"
+                                    }
+                                }
+                            ], 
+                            "param_input_success": [
+                                {
+                                    "id": "input", 
+                                    "variable_name": "input", 
+                                    "variable_type": "int", 
+                                    "variable_required": true, 
+                                    "variable_mode": "mode-line"
+                                }
+                            ]
+                        }
+                    ], 
+                    "config__output_ports": [
+                        {
+                            "id": "source"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__input_shape", 
+                            "type": "config__input_shape", 
+                            "label": "输入参数", 
+                            "tooltip": "输入需要添加到代码的变量，代码中可以直接引用此处添加的变量", 
+                            "variable_type_options": [
+                                "str", 
+                                "int", 
+                                "float", 
+                                "bool", 
+                                "dict", 
+                                "list", 
+                                "any"
+                            ]
+                        }, 
+                        {
+                            "name": "config__output_shape", 
+                            "type": "config__output_shape", 
+                            "label": "输出参数", 
+                            "tooltip": "代码运行完成后输出的变量，须保证此处的变量名、变量类型与代码的return中完全一致"
+                        }, 
+                        {
+                            "name": "config__input_ports", 
+                            "type": "config__input_ports", 
+                            "label": "输入端点", 
+                            "tooltip": "输入参数的数量，需保证与输入参数数量保持一致"
+                        }, 
+                        {
+                            "name": "payload__code", 
+                            "type": "code", 
+                            "label": "Code", 
+                            "code_language_options": [
+                                {
+                                    "label": "python", 
+                                    "value": "python3"
+                                }
+                            ], 
+                            "required": true
+                        }
+                    ], 
+                    "name": "code", 
+                    "title_en": "Code", 
+                    "about": "自定义函数和测试输入，并在后台提供一个沙箱协助用户执行代码。沙箱中需要管控好用户的权限，拒绝用户做删除系统文件等危险操作。目前仅支持python。", 
+                    "classification": "fundamental-component", 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 649, 
+                    "y": 110
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 649, 
+                    "y": 110
+                }, 
+                "width": 194, 
+                "height": 91, 
+                "selected": false
+            }, 
+            {
+                "id": "1748312467165", 
+                "type": "custom", 
+                "data": {
+                    "type": "code", 
+                    "title": "代码块-2", 
+                    "desc": "编写代码，处理输入变量来生成返回值", 
+                    "variables": [ ], 
+                    "code_language": "python3", 
+                    "code": "", 
+                    "outputs": {
+                        "key0": {
+                            "type": "string", 
+                            "children": null
+                        }, 
+                        "key1": {
+                            "type": "array", 
+                            "children": null
+                        }, 
+                        "key2": {
+                            "type": "object", 
+                            "children": null
+                        }
+                    }, 
+                    "payload__code": "def main(input):\n return input -3", 
+                    "payload__code_language": "python3", 
+                    "payload__kind": "Code", 
+                    "config__input_shape": [
+                        {
+                            "id": "input", 
+                            "variable_name": "input", 
+                            "variable_type": "int", 
+                            "variable_required": true, 
+                            "variable_mode": "mode-line"
+                        }
+                    ], 
+                    "config__output_shape": [
+                        {
+                            "id": "3b9691a4-3991-475a-8d4b-034abb9889df", 
+                            "variable_mode": "mode-line", 
+                            "variable_name": "output", 
+                            "variable_type": "int"
+                        }
+                    ], 
+                    "config__input_ports": [
+                        {
+                            "id": "target", 
+                            "param_source_shape": [
+                                {
+                                    "id": "52637fde-d158-4c77-baff-1ed542d50320", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name": "input", 
+                                    "variable_type": "int", 
+                                    "sourceNodeTitle": "条件分支-1-2"
+                                }
+                            ], 
+                            "param_check_success": true, 
+                            "param_input_error": [
+                                {
+                                    "id": "input", 
+                                    "variable_name": "input", 
+                                    "variable_type": "str", 
+                                    "variable_required": true, 
+                                    "variable_mode": "mode-line", 
+                                    "error_type": "type_mismatch", 
+                                    "source_info": {
+                                        "node_title": "条件分支-1", 
+                                        "variable_name": "input", 
+                                        "variable_type": "int"
+                                    }
+                                }
+                            ], 
+                            "param_input_success": [
+                                {
+                                    "id": "input", 
+                                    "variable_name": "input", 
+                                    "variable_type": "int", 
+                                    "variable_required": true, 
+                                    "variable_mode": "mode-line"
+                                }
+                            ]
+                        }
+                    ], 
+                    "config__output_ports": [
+                        {
+                            "id": "source"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__input_shape", 
+                            "type": "config__input_shape", 
+                            "label": "输入参数", 
+                            "tooltip": "输入需要添加到代码的变量，代码中可以直接引用此处添加的变量", 
+                            "variable_type_options": [
+                                "str", 
+                                "int", 
+                                "float", 
+                                "bool", 
+                                "dict", 
+                                "list", 
+                                "any"
+                            ]
+                        }, 
+                        {
+                            "name": "config__output_shape", 
+                            "type": "config__output_shape", 
+                            "label": "输出参数", 
+                            "tooltip": "代码运行完成后输出的变量，须保证此处的变量名、变量类型与代码的return中完全一致"
+                        }, 
+                        {
+                            "name": "config__input_ports", 
+                            "type": "config__input_ports", 
+                            "label": "输入端点", 
+                            "tooltip": "输入参数的数量，需保证与输入参数数量保持一致"
+                        }, 
+                        {
+                            "name": "payload__code", 
+                            "type": "code", 
+                            "label": "Code", 
+                            "code_language_options": [
+                                {
+                                    "label": "python", 
+                                    "value": "python3"
+                                }
+                            ], 
+                            "required": true
+                        }
+                    ], 
+                    "name": "code", 
+                    "title_en": "Code", 
+                    "about": "自定义函数和测试输入，并在后台提供一个沙箱协助用户执行代码。沙箱中需要管控好用户的权限，拒绝用户做删除系统文件等危险操作。目前仅支持python。", 
+                    "classification": "fundamental-component", 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 824.1709104794782, 
+                    "y": 471.8513016450029
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 824.1709104794782, 
+                    "y": 471.8513016450029
+                }, 
+                "width": 194, 
+                "height": 91, 
+                "selected": false
+            }, 
+            {
+                "id": "17483130379970", 
+                "type": "custom", 
+                "data": {
+                    "type": "if-else", 
+                    "title": "条件分支-1-2", 
+                    "desc": "根据分支条件，判断执行哪个任务", 
+                    "payload__kind": "Ifs", 
+                    "config__can_run_by_single": false, 
+                    "config__input_ports": [
+                        {
+                            "id": "target", 
+                            "param_source_shape": [
+                                {
+                                    "id": "52637fde-d158-4c77-baff-1ed542d50320", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name": "input", 
+                                    "variable_type": "int", 
+                                    "sourceNodeTitle": "条件分支-1"
+                                }
+                            ], 
+                            "param_check_success": true, 
+                            "param_input_error": [
+                                {
+                                    "id": "52637fde-d158-4c77-baff-1ed542d50320", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name": "input", 
+                                    "error_type": "type_mismatch", 
+                                    "source_info": {
+                                        "node_title": "开始", 
+                                        "variable_name": "input", 
+                                        "variable_type": "int"
+                                    }
+                                }
+                            ], 
+                            "param_input_success": [
+                                {
+                                    "id": "52637fde-d158-4c77-baff-1ed542d50320", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name": "input", 
+                                    "variable_type": "int"
+                                }
+                            ]
+                        }
+                    ], 
+                    "config__output_ports": [
+                        {
+                            "id": "true", 
+                            "label": "IF ", 
+                            "logical_operator": "and", 
+                            "cond": "def test_input(input):\r\n return input > 3", 
+                            "chosen": false, 
+                            "selected": false
+                        }, 
+                        {
+                            "id": "false", 
+                            "label": "ELSE"
+                        }
+                    ], 
+                    "config__input_shape": [
+                        {
+                            "id": "52637fde-d158-4c77-baff-1ed542d50320", 
+                            "variable_mode": "mode-line", 
+                            "variable_name": "input", 
+                            "variable_type": "int"
+                        }
+                    ], 
+                    "config__output_shape": [
+                        {
+                            "id": "52637fde-d158-4c77-baff-1ed542d50320", 
+                            "variable_mode": "mode-line", 
+                            "variable_name": "input", 
+                            "variable_type": "int"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__input_shape", 
+                            "type": "config__input_shape", 
+                            "label": "输入参数", 
+                            "effects": [
+                                "InputShape_OutputShape_IfsFull"
+                            ]
+                        }, 
+                        {
+                            "name": "config__output_shape", 
+                            "type": "config__output_shape", 
+                            "label": "输出参数", 
+                            "readOnly": true
+                        }, 
+                        {
+                            "name": "config__input_ports", 
+                            "type": "config__input_ports", 
+                            "label": "输入端点", 
+                            "tooltip": "输入参数的数量，需保证与输入参数数量保持一致"
+                        }, 
+                        {
+                            "name": "payload__judge_on_full_input", 
+                            "label": "使用全部的输入判断", 
+                            "type": "select", 
+                            "options": [
+                                {
+                                    "label": "是", 
+                                    "value": true
+                                }, 
+                                {
+                                    "label": "否", 
+                                    "value": false
+                                }
+                            ], 
+                            "defaultValue": true, 
+                            "watch": [
+                                {
+                                    "conditions": [
+                                        {
+                                            "value": false
+                                        }
+                                    ], 
+                                    "actions": [
+                                        {
+                                            "key": "config__parameters", 
+                                            "extend": true, 
+                                            "value": [
+                                                {
+                                                    "name": "config__input_shape", 
+                                                    "type": "config__input_shape", 
+                                                    "label": "输入参数", 
+                                                    "effects": [
+                                                        "InputShape_OutputShape_IfsNoFull"
+                                                    ], 
+                                                    "min": 2
+                                                }, 
+                                                { }, 
+                                                { }, 
+                                                { }, 
+                                                {
+                                                    "type": "if_else", 
+                                                    "name": "payload__if_else", 
+                                                    "required": true
+                                                }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__input_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "input", 
+                                                    "variable_name": "条件", 
+                                                    "variable_name_readonly": true
+                                                }, 
+                                                {
+                                                    "id": "input_1"
+                                                }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__output_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "output_1"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }, 
+                                {
+                                    "conditions": [
+                                        {
+                                            "value": true
+                                        }
+                                    ], 
+                                    "actions": [
+                                        {
+                                            "key": "config__parameters", 
+                                            "extend": true, 
+                                            "value": [
+                                                {
+                                                    "name": "config__input_shape", 
+                                                    "type": "config__input_shape", 
+                                                    "label": "输入参数", 
+                                                    "effects": [
+                                                        "InputShape_OutputShape_IfsFull"
+                                                    ]
+                                                }, 
+                                                { }, 
+                                                { }, 
+                                                { }, 
+                                                {
+                                                    "type": "if_else", 
+                                                    "name": "payload__if_else", 
+                                                    "required": true
+                                                }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__input_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "input_1"
+                                                }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__output_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "output_1"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }, 
+                        {
+                            "type": "if_else", 
+                            "name": "payload__if_else", 
+                            "required": true
+                        }
+                    ], 
+                    "code_language": "python3", 
+                    "name": "ifs", 
+                    "title_en": "IFS", 
+                    "about": "根据分支条件，判断执行哪个任务。类似switch，但条件判断只有为true/false", 
+                    "classification": "control-flow", 
+                    "payload__patent_id": "1b2f062a-30d2-424b-b49a-b553b531d78e", 
+                    "payload__judge_on_full_input": true, 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 577.6935501213519, 
+                    "y": 609.5073565395611
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 577.6935501213519, 
+                    "y": 609.5073565395611
+                }, 
+                "width": 194, 
+                "height": 139, 
+                "selected": true
+            }, 
+            {
+                "id": "17483130494550", 
+                "type": "custom", 
+                "data": {
+                    "type": "code", 
+                    "title": "代码块-1-3", 
+                    "desc": "编写代码，处理输入变量来生成返回值", 
+                    "variables": [ ], 
+                    "code_language": "python3", 
+                    "code": "", 
+                    "outputs": {
+                        "key0": {
+                            "type": "string", 
+                            "children": null
+                        }, 
+                        "key1": {
+                            "type": "array", 
+                            "children": null
+                        }, 
+                        "key2": {
+                            "type": "object", 
+                            "children": null
+                        }
+                    }, 
+                    "payload__code": "def main(input):\n return input + 3", 
+                    "payload__code_language": "python3", 
+                    "payload__kind": "Code", 
+                    "config__input_shape": [
+                        {
+                            "id": "input", 
+                            "variable_name": "input", 
+                            "variable_type": "int", 
+                            "variable_required": true, 
+                            "variable_mode": "mode-line"
+                        }
+                    ], 
+                    "config__output_shape": [
+                        {
+                            "id": "168f741b-484f-47e2-aa3c-cb17b9c59adf", 
+                            "variable_mode": "mode-line", 
+                            "variable_name": "output", 
+                            "variable_type": "int"
+                        }
+                    ], 
+                    "config__input_ports": [
+                        {
+                            "id": "target", 
+                            "param_source_shape": [
+                                {
+                                    "id": "52637fde-d158-4c77-baff-1ed542d50320", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name": "input", 
+                                    "variable_type": "int", 
+                                    "sourceNodeTitle": "条件分支-1-2"
+                                }
+                            ], 
+                            "param_check_success": true, 
+                            "param_input_error": [
+                                {
+                                    "id": "input", 
+                                    "variable_name": "input", 
+                                    "variable_type": "str", 
+                                    "variable_required": true, 
+                                    "variable_mode": "mode-line", 
+                                    "error_type": "type_mismatch", 
+                                    "source_info": {
+                                        "node_title": "条件分支-1", 
+                                        "variable_name": "input", 
+                                        "variable_type": "int"
+                                    }
+                                }
+                            ], 
+                            "param_input_success": [
+                                {
+                                    "id": "input", 
+                                    "variable_name": "input", 
+                                    "variable_type": "int", 
+                                    "variable_required": true, 
+                                    "variable_mode": "mode-line"
+                                }
+                            ]
+                        }
+                    ], 
+                    "config__output_ports": [
+                        {
+                            "id": "source"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__input_shape", 
+                            "type": "config__input_shape", 
+                            "label": "输入参数", 
+                            "tooltip": "输入需要添加到代码的变量，代码中可以直接引用此处添加的变量", 
+                            "variable_type_options": [
+                                "str", 
+                                "int", 
+                                "float", 
+                                "bool", 
+                                "dict", 
+                                "list", 
+                                "any"
+                            ]
+                        }, 
+                        {
+                            "name": "config__output_shape", 
+                            "type": "config__output_shape", 
+                            "label": "输出参数", 
+                            "tooltip": "代码运行完成后输出的变量，须保证此处的变量名、变量类型与代码的return中完全一致"
+                        }, 
+                        {
+                            "name": "config__input_ports", 
+                            "type": "config__input_ports", 
+                            "label": "输入端点", 
+                            "tooltip": "输入参数的数量，需保证与输入参数数量保持一致"
+                        }, 
+                        {
+                            "name": "payload__code", 
+                            "type": "code", 
+                            "label": "Code", 
+                            "code_language_options": [
+                                {
+                                    "label": "python", 
+                                    "value": "python3"
+                                }
+                            ], 
+                            "required": true
+                        }
+                    ], 
+                    "name": "code", 
+                    "title_en": "Code", 
+                    "about": "自定义函数和测试输入，并在后台提供一个沙箱协助用户执行代码。沙箱中需要管控好用户的权限，拒绝用户做删除系统文件等危险操作。目前仅支持python。", 
+                    "classification": "fundamental-component", 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 832.704584930694, 
+                    "y": 728.9719854592528
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 832.704584930694, 
+                    "y": 728.9719854592528
+                }, 
+                "width": 194, 
+                "height": 91, 
+                "selected": false
+            }, 
+            {
+                "id": "17483130647330", 
+                "type": "custom", 
+                "data": {
+                    "type": "universe", 
+                    "title": "条件分支聚合器-1-2", 
+                    "desc": "能够聚合多个分支输入", 
+                    "config__input_ports": [
+                        {
+                            "id": "0ea7ce7c-cf74-4ba6-825c-ab9ed0867fdf", 
+                            "param_source_shape": [
+                                {
+                                    "id": "3b9691a4-3991-475a-8d4b-034abb9889df", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name": "output", 
+                                    "variable_type": "int", 
+                                    "sourceNodeTitle": "代码块-2"
+                                }
+                            ], 
+                            "param_check_success": true, 
+                            "param_input_success": [
+                                {
+                                    "id": "input", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_port": "0ea7ce7c-cf74-4ba6-825c-ab9ed0867fdf", 
+                                    "variable_name": "input", 
+                                    "variable_type": "int"
+                                }
+                            ], 
+                            "param_input_error": [
+                                {
+                                    "id": "input", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_port": "0ea7ce7c-cf74-4ba6-825c-ab9ed0867fdf", 
+                                    "variable_name": "input", 
+                                    "variable_type": "int"
+                                }
+                            ]
+                        }, 
+                        {
+                            "id": "5c4fd0dd-1037-499d-b73e-9428a635f7d4", 
+                            "param_source_shape": [
+                                {
+                                    "id": "168f741b-484f-47e2-aa3c-cb17b9c59adf", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name": "output", 
+                                    "variable_type": "int", 
+                                    "sourceNodeTitle": "代码块-1-3"
+                                }
+                            ], 
+                            "param_check_success": true, 
+                            "param_input_error": [ ], 
+                            "param_input_success": [
+                                {
+                                    "id": "5154977f-260a-4c8a-a0b8-fef964d4bd1d", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_port": "5c4fd0dd-1037-499d-b73e-9428a635f7d4", 
+                                    "variable_name": "input1", 
+                                    "variable_type": "int"
+                                }
+                            ]
+                        }
+                    ], 
+                    "config__output_ports": [
+                        {
+                            "id": "source"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__input_shape", 
+                            "type": "config__input_shape", 
+                            "label": "输入参数", 
+                            "effects": [
+                                "InputShape_OutputShape_ModeIndependent"
+                            ]
+                        }, 
+                        {
+                            "name": "config__output_shape", 
+                            "type": "config__output_shape", 
+                            "label": "输出参数", 
+                            "effects": "", 
+                            "readOnly": true
+                        }, 
+                        {
+                            "name": "config__input_ports", 
+                            "type": "config__input_ports", 
+                            "label": "输入端点", 
+                            "effects": "", 
+                            "tooltip": "将输入变量格式化解析并输出，提取期望的字段"
+                        }, 
+                        {
+                            "label": "模式", 
+                            "name": "payload__setmode", 
+                            "type": "select", 
+                            "required": true, 
+                            "tooltip": "提供两种聚合模式，独立模式可将多个输入聚合为一个输出，同一模式将多个输入分别输出", 
+                            "options": [
+                                {
+                                    "label": "同一模式", 
+                                    "value": "mode-same"
+                                }, 
+                                {
+                                    "label": "独立模式", 
+                                    "value": "mode-independent"
+                                }
+                            ], 
+                            "defaultValue": "mode-same", 
+                            "watch": [
+                                {
+                                    "conditions": [
+                                        {
+                                            "value": "mode-independent"
+                                        }
+                                    ], 
+                                    "actions": [
+                                        {
+                                            "key": "config__parameters", 
+                                            "extend": true, 
+                                            "value": [
+                                                {
+                                                    "effects": [
+                                                        "InputShape_OutputShape_ModeIndependent"
+                                                    ]
+                                                }, 
+                                                { }, 
+                                                { }, 
+                                                { }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__input_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "input"
+                                                }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__output_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "output"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }, 
+                                {
+                                    "conditions": [
+                                        {
+                                            "value": "mode-same"
+                                        }
+                                    ], 
+                                    "actions": [
+                                        {
+                                            "key": "config__parameters", 
+                                            "extend": true, 
+                                            "value": [
+                                                {
+                                                    "effects": [
+                                                        "InputShape_OutputShape_ModeSame"
+                                                    ]
+                                                }, 
+                                                { }, 
+                                                { }, 
+                                                { }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__input_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "input"
+                                                }
+                                            ]
+                                        }, 
+                                        {
+                                            "key": "config__output_shape", 
+                                            "value": [
+                                                {
+                                                    "id": "output"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ], 
+                    "config__input_shape": [
+                        {
+                            "id": "input", 
+                            "variable_mode": "mode-line", 
+                            "variable_port": "0ea7ce7c-cf74-4ba6-825c-ab9ed0867fdf", 
+                            "variable_name": "input", 
+                            "variable_type": "int"
+                        }, 
+                        {
+                            "id": "5154977f-260a-4c8a-a0b8-fef964d4bd1d", 
+                            "variable_mode": "mode-line", 
+                            "variable_port": "5c4fd0dd-1037-499d-b73e-9428a635f7d4", 
+                            "variable_name": "input1", 
+                            "variable_type": "int"
+                        }
+                    ], 
+                    "config__output_shape": [
+                        {
+                            "variable_name": "input", 
+                            "variable_type": "int", 
+                            "variable_mode": "mode-line", 
+                            "id": "83e4b72c-f7ba-4016-adf2-8dffe9dc1479"
+                        }
+                    ], 
+                    "name": "aggregator", 
+                    "classification": "fundamental-component", 
+                    "payload__kind": "aggregator", 
+                    "title_en": "Branch Aggregator", 
+                    "about": "用于聚合分支", 
+                    "payload__setmode": "mode-independent", 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 1071.6338427700773, 
+                    "y": 609.5073565395611
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 1071.6338427700773, 
+                    "y": 609.5073565395611
+                }, 
+                "width": 194, 
+                "height": 75, 
+                "selected": false
+            }
+        ], 
+        "edges": [
+            {
+                "id": "d4e27579-883e-4637-90bd-e59a416bb622", 
+                "source": "__start__", 
+                "target": "1748312294200", 
+                "sourceHandle": "source", 
+                "targetHandle": "target", 
+                "type": "custom", 
+                "data": {
+                    "sourceType": "start", 
+                    "targetType": "if-else"
+                }
+            }, 
+            {
+                "id": "e853cdd9-ce96-4c16-84af-19010e0db941", 
+                "source": "1748312308217", 
+                "target": "__end__", 
+                "sourceHandle": "source", 
+                "targetHandle": "target", 
+                "type": "custom", 
+                "data": {
+                    "sourceType": "universe", 
+                    "targetType": "end"
+                }
+            }, 
+            {
+                "id": "a519165a-3cf5-46f7-b4d5-92b54aeb7a6d", 
+                "source": "1748312294200", 
+                "target": "1748312460143", 
+                "sourceHandle": "true", 
+                "targetHandle": "target", 
+                "type": "custom", 
+                "data": {
+                    "sourceType": "if-else", 
+                    "targetType": "code"
+                }
+            }, 
+            {
+                "id": "ed9f54d2-73fb-4572-849d-eb93406250c5", 
+                "source": "1748312460143", 
+                "target": "1748312308217", 
+                "sourceHandle": "source", 
+                "targetHandle": "0ea7ce7c-cf74-4ba6-825c-ab9ed0867fdf", 
+                "type": "custom", 
+                "data": {
+                    "sourceType": "code", 
+                    "targetType": "universe"
+                }
+            }, 
+            {
+                "id": "8498f7c4-270f-43a9-961e-373f22acb58c", 
+                "source": "1748312294200", 
+                "target": "17483130379970", 
+                "sourceHandle": "false", 
+                "targetHandle": "target", 
+                "type": "custom", 
+                "data": {
+                    "sourceType": "if-else", 
+                    "targetType": "if-else"
+                }
+            }, 
+            {
+                "id": "1ba8bf0c-6702-4112-8bcd-fb6bbfcf01f6", 
+                "source": "17483130379970", 
+                "target": "1748312467165", 
+                "sourceHandle": "true", 
+                "targetHandle": "target", 
+                "type": "custom", 
+                "data": {
+                    "sourceType": "if-else", 
+                    "targetType": "code"
+                }
+            }, 
+            {
+                "id": "176cb250-9b0a-4d70-89f0-bf822b1cf292", 
+                "source": "17483130379970", 
+                "target": "17483130494550", 
+                "sourceHandle": "false", 
+                "targetHandle": "target", 
+                "type": "custom", 
+                "data": {
+                    "sourceType": "if-else", 
+                    "targetType": "code"
+                }
+            }, 
+            {
+                "id": "b8903441-3f25-4543-8e96-fc14c3086646", 
+                "source": "1748312467165", 
+                "target": "17483130647330", 
+                "sourceHandle": "source", 
+                "targetHandle": "0ea7ce7c-cf74-4ba6-825c-ab9ed0867fdf", 
+                "type": "custom", 
+                "data": {
+                    "sourceType": "code", 
+                    "targetType": "universe"
+                }
+            }, 
+            {
+                "id": "613cc68e-c927-4744-b88a-748703df7b91", 
+                "source": "17483130494550", 
+                "target": "17483130647330", 
+                "sourceHandle": "source", 
+                "targetHandle": "5c4fd0dd-1037-499d-b73e-9428a635f7d4", 
+                "type": "custom", 
+                "data": {
+                    "sourceType": "code", 
+                    "targetType": "universe"
+                }
+            }, 
+            {
+                "id": "5fd45aec-fd07-4f5b-835b-56bd73eb2fe7", 
+                "source": "17483130647330", 
+                "target": "1748312308217", 
+                "sourceHandle": "source", 
+                "targetHandle": "bd6d9783-2ec6-4bfb-b070-5bbd1a304b66", 
+                "type": "custom", 
+                "data": {
+                    "sourceType": "universe", 
+                    "targetType": "universe"
+                }
+            }
+        ], 
+        "resources": [ ], 
+        "viewport": {
+            "x": -3.933612949741189, 
+            "y": 77.29720633382792, 
+            "zoom": 0.435275281648062
+        }
+    }
+}

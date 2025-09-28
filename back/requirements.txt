@@ -1,0 +1,66 @@
+Flask==3.0.3
+Flask-Compress==1.14
+Flask-Cors==4.0.1
+Flask-Login==0.6.3
+Flask-Migrate==4.0.7
+Flask-RESTful==0.3.10
+flask-sock==0.7.0
+Flask-SQLAlchemy==3.1.1
+gunicorn==22.0.0
+celery==5.3.6
+# openpyxl==3.1.5
+unstructured==0.10.30
+pypdfium2==4.17.0
+# sqlalchemy
+psycopg2-binary
+Werkzeug
+pytest
+anthropic
+# beautifulsoup4
+# jieba
+# numpy
+bs4==0.0.2
+websocket-client
+simple-websocket==1.0.0
+PyYAML
+# PyJWT
+# pydantic
+pydantic-extra-types
+pydantic-settings
+readabilipy==0.2.0
+cachetools
+chardet==5.1.0
+cohere==5.2.6
+# gmpy2==2.2.1
+cos-python-sdk-v5==1.9.30
+mailchimp-transactional==1.0.56
+replicate==0.22.0
+# httpx
+Markdown
+markdown-it-py
+tokenizers
+pycryptodome
+safetensors
+# app
+# uvicorn
+# gradio<5.0.0
+typer
+# docx2txt
+# EbookLib
+# html2text
+# olefile
+nbconvert
+# python-pptx
+pymilvus==2.4.14
+pymongo
+pymysql
+redis
+networkx
+cython
+sqlmodel
+typer==0.7.0
+uv
+mcp
+modelscope
+dashscope
+zhipuai

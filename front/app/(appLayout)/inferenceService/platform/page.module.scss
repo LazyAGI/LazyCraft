@@ -1,0 +1,149 @@
+.inferenceWrap {
+  width: 84.7083vw;
+  margin: 0 auto;
+  // padding-top: 1.5625vw;
+  height: auto;
+  // overflow-x: scroll;
+
+  .panelSty {
+    :global(.ant-collapse-header) {
+      background: #FFF !important;
+      padding: 12px 16px !important;
+    }
+
+    :global(.ant-collapse-content) {
+      background: #FAFAFB !important;
+    }
+
+    :global(.ant-collapse-content-box) {
+      padding: 8px 16px !important;
+    }
+  }
+
+  .colHeadSty {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+
+    .colName {
+      width: 25.5542vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .colNum {
+      width: 20.7917vw;
+      text-align: center;
+    }
+
+    .colNum2 {
+      width: 15.4167vw;
+      text-align: center;
+    }
+
+    .colNum3 {
+      width: 12.4167vw;
+      text-align: center;
+    }
+  }
+
+  .colBody {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0px 8px 16px;
+    border-bottom: 1px solid #f0f0f0;
+
+    .nameSty {
+      width: 30.5542vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .creator {
+      width: 15.7917vw;
+      text-align: center;
+    }
+
+    .statuSty {
+      width: 23.4167vw;
+      text-align: center;
+    }
+
+    .createTime {
+      width: 15.625vw;
+      text-align: center;
+    }
+
+    .actionSty {
+      width: 10.8333vw;
+      text-align: right;
+    }
+  }
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .middleWrap {
+    margin-top: 25px;
+
+    .sourceInfo {
+      font-size: 14px;
+      color: #5E6472;
+    }
+
+    .title {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      margin-top: 25px;
+      line-height: 50px;
+      background: #F5F6F7;
+      border-radius: 4px 4px 0px 0px;
+      padding: 0 16px;
+
+      .item1 {
+        width: 27.8542vw;
+        margin-left: 2.6042vw;
+      }
+
+      .item2 {
+        width: 16.8333vw;
+        text-align: center;
+      }
+
+      .item3 {
+        width: 10.8333vw;
+        text-align: center;
+      }
+
+      .actionSty {
+        width: 8.3333vw;
+        text-align: right;
+      }
+    }
+  }
+}
+
+.createWrap {
+  margin-top: 20px;
+  max-height: 70vh;
+  overflow: auto;
+  padding: 0 16px;
+
+  .resetForm :global(.ant-form-item) {
+    margin-bottom: 16px;
+  }
+}
+
+@media only screen and (max-width: 1400px) {
+  .third {
+    bottom: 0.5333vw !important;
+  }
+}

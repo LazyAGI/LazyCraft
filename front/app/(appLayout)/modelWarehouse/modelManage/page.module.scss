@@ -1,0 +1,270 @@
+.tabsWrap {
+  padding: 1.5625vw;
+  padding-bottom: 1.0417vw;
+}
+
+.pageTop {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.content {
+  padding: 0px 1.5625vw;
+  padding-bottom: 1.0417vw;
+}
+
+.cardItem {
+  width: 100%;
+  // min-width: 405px;
+  min-height: 220px; // 设置最小高度确保一致性
+  padding: 16px;
+  // margin: 5px;
+  box-sizing: border-box;
+  background: #ffffff;
+  box-shadow: 0px 0px 4px 0px rgba(7, 17, 39, 0.12);
+  border-radius: 12px;
+
+  &:hover {
+    box-shadow: 0px 8px 24px 0px rgba(7, 17, 39, 0.12);
+    transform: scale(1.005);
+  }
+}
+
+.header {
+  display: flex;
+}
+
+.imgWrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  border: 1px solid #F0F1F3;
+
+  img {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+  }
+}
+
+.infoWrap {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  margin-left: 14px;
+  margin-right: 4px;
+}
+
+.info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.name {
+  width: 100%;
+}
+
+.stateWrap {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+
+}
+
+.type {
+  height: 24px;
+  background: #F0F5FC;
+  border-radius: 4px;
+  border: 1px solid #F0F1F3;
+  text-align: center;
+  font-size: 12px;
+  color: #0E5DD8;
+  line-height: 24px;
+  padding: 0 4px;
+}
+
+.kind {
+  margin-left: 4px;
+  // color: #1890ff
+}
+
+.loading {
+  margin-left: 0.5208vw;
+  display: flex;
+  align-items: center;
+  color: #071127;
+  font-size: 12px;
+
+  .icon {
+    color: #0E5DD8
+  }
+}
+
+.editIcon {
+  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.desc {
+  margin-top: 5px;
+  width: 100%;
+  height: 24px;
+  font-size: 0.7292vw;
+  color: #5E6472;
+  line-height: 1.25vw;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 22px; // 描述也需要固定最小高度
+}
+
+.tagWrap {
+  cursor: pointer;
+  position: relative;
+  height: 32px;
+  overflow: hidden;
+  margin: 8px 0;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 40px;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+    pointer-events: none; // 确保不影响点击事件
+  }
+
+  .tagInner {
+    display: flex;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow: hidden;
+
+    :global(.ant-tag) {
+      flex-shrink: 0;
+      margin-right: 8px;
+
+      &:last-child {
+        margin-right: 0;
+      }
+    }
+  }
+}
+
+.footer {
+  margin-top: auto; // 将footer推到底部
+  display: flex;
+}
+
+.tagListWrap {
+  flex: 1;
+  margin-right: 12px;
+  overflow: hidden;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.tagContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.tag {
+  max-width: 6.25vw;
+  padding: 2px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+  color: #8F949E;
+  background: #F6F7F8;
+  border-radius: 4px;
+  font-size: 12px;
+  border: 1px solid #F0F1F3;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.moreTag {
+  font-size: 12px;
+  color: #8F949E;
+  text-decoration-line: underline;
+}
+
+.delete {
+  flex-shrink: 0;
+  margin-left: 12px;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+
+  &:hover {
+    border: 1px solid #0e5dd8;
+    color: #0e5dd8;
+    cursor: pointer;
+  }
+}
+
+.modelList {
+  display: flex;
+  flex-wrap: wrap;
+  max-height: 70vh;
+  overflow: auto;
+
+  .item {
+    padding: 2px 8px;
+    margin: 8px 0;
+    background: #F6F7F8;
+    border-radius: 4px;
+    border: 1px solid #F0F1F3;
+    margin-right: 12px;
+    color: #8F949E;
+  }
+}
+
+.createModule {
+  height: 550px;
+  overflow-y: auto;
+
+  .tip {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #C1C3C9;
+    line-height: 22px;
+  }
+}
+
+.actionsIcon {
+  margin-left: 12px;
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #F6F7F8;
+  border-radius: 4px;
+  border: 1px solid #F0F1F3;
+
+  &:hover {
+    border: 1px solid #0e5dd8;
+    color: #0e5dd8;
+    cursor: pointer;
+  }
+}

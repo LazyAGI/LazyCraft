@@ -1,0 +1,19 @@
+.createDatabaseTableContainer {
+  .splitLine {
+    width: 3px;
+    height: 16px;
+    background: #0E5DD8;
+    display: inline-block;
+    margin-right: 8px;
+  }
+
+  .middleRouter {
+    cursor: pointer;
+    display: inline-block;
+    padding: 0 4px;
+    &:hover {
+      color: rgba(0, 0, 0, 0.88);
+      background: rgba(0, 0, 0, 0.06);
+    }
+  }
+}

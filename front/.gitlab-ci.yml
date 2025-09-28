@@ -1,0 +1,12 @@
+image: ubuntu:20.04
+# before_script:
+#   - apt update && apt install -y curl
+
+stages:        # List of stages for jobs, and their order of execution
+  - update-inmage2compose
+
+update:       # This job runs in the build stage, which runs first.
+  stage: update-inmage2compose
+  script:
+    - uname -a
+    # - curl -X post -u sensetime:tps@sensetime "http://10.210.0.49:5021/job/update_front_images2compose/buildWithParameters?token=test_front_update&BACKEND_BRANCH=dev&FRONTEND_COMMIT_HASH=${CI_COMMIT_SHA:0:8}&FRONTEND_BRANCH=$CI_COMMIT_REF_NAME&GITLAB_USER_NAME=$GITLAB_USER_NAME&GITLAB_USER_EMAIL=$GITLAB_USER_EMAIL"

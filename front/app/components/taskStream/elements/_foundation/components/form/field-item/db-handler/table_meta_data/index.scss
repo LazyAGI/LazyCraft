@@ -1,0 +1,50 @@
+.tables-info-dict-column-add-btn {
+  .anticon {
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+.tables-info-dict-column-item {
+  padding: 6px 10px 6px 2px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border-radius: 4px;
+  margin-bottom: 6px;
+
+  .tables-info-dict-column-item-actions {
+    display: none;
+    .anticon {
+      cursor: pointer;
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+
+  &:hover {
+    background: #F5F6F7;
+    .tables-info-dict-column-item-actions {
+      display: block;
+    }
+  }
+}
+
+.tables-info-dict-column-edit-btn {
+  color: #5E6472;
+  &:hover {
+    color: #0E5DD8;
+  }
+}
+
+.tables-info-dict-column-delete-btn {
+  color: #5E6472;
+  &:hover {
+    color: #EF4444;
+  }
+}

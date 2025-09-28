@@ -1,0 +1,87 @@
+.config-flex-items-center-gap-2 {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 16px;
+    line-height: 30px;
+    // margin-bottom: 5px;
+    text-align: center;
+    background-color: #F5F6F7;
+    padding: 10px;
+    margin-bottom: 5px;
+
+    .flex-items-center-gap-2 {
+        width: 180px;
+        margin-bottom: 0;
+        min-height: 58px;
+
+        .input-field-container {
+            width: 100%;
+            min-height: inherit;
+
+            &.has-error {
+                min-height: 78px;
+            }
+
+            p {
+                margin: 0;
+                margin-bottom: 4px;
+            }
+
+            input {
+                width: 100%;
+            }
+
+            .variable-name-tip {
+                color: #ff4d4f;
+                font-size: 13px;
+                position: absolute;
+                white-space: nowrap;
+                margin-top: 5px;
+            }
+        }
+    }
+
+    .flex-items-center-gap-2-checkbox {
+        width: 80px;
+        text-align: center;
+
+        p {
+            margin: 0;
+            margin-bottom: 4px;
+        }
+    }
+
+    .flex-items-center-gap-2-delete {
+        width: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-top: 24px;
+    }
+}
+
+.config-container {
+    position: relative;
+    min-height: 32px;
+}
+
+.add-button-wrapper {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    z-index: 1;
+}
+
+.field-item-extra-add-btn {
+    color: #0E5DD8;
+
+    &:hover {
+        color: #0E5DD8;
+        background: rgba(14, 93, 216, 0.1);
+    }
+
+    .anticon {
+        margin-left: 4px;
+    }
+}

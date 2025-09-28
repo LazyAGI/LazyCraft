@@ -1,0 +1,2 @@
+# /etc/cron.d/sco_auth
+*/15 * * * * /usr/local/bin/cron_script >> /var/log/crontab.log 2>&1

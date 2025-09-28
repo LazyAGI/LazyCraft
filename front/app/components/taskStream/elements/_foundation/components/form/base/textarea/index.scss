@@ -1,0 +1,18 @@
+.custom-textarea {
+  // border color
+  &.ant-input-outlined {
+    border-color: #D9DBE0;
+  }
+  // placeholder color
+  &::placeholder {
+    color: #C1C3C9;
+  }
+}
+.custom-textarea-readonly {
+  &.ant-input-outlined[disabled] {
+    background-color: #fff;
+    border-color: #D9DBE0;
+    color: #071127;
+    cursor: auto;
+  }
+}

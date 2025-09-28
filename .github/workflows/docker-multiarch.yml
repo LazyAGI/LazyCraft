@@ -1,0 +1,161 @@
+name: Image Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+      - "V*"
+
+  workflow_dispatch:
+
+jobs:
+  build-amd64:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get datasets
+        run: |
+          wget https://github.com/LazyAGI/LazyCraft/releases/download/common_datasets/common_datasets.zip \
+                -O back/src/parts/data/common_datasets/common_datasets.zip
+
+      - name: Set IMAGE_TAG
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            RAW_TAG="${GITHUB_REF_NAME}"
+            IMAGE_TAG="${RAW_TAG#[vV]}"
+          else
+            IMAGE_TAG="dev-latest"
+          fi
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Docker login (DockerHub)
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker login (Aliyun)
+        uses: docker/login-action@v3
+        with:
+          registry: registry.cn-hangzhou.aliyuncs.com
+          username: ${{ secrets.ALIYUN_USERNAME }}
+          password: ${{ secrets.ALIYUN_PASSWORD }}
+
+      - name: Build amd64 (back)
+        run: |
+          cd back
+          IMAGE_DOCKERHUB=lazyllm/lazycraft-back
+          IMAGE_ALIYUN=registry.cn-hangzhou.aliyuncs.com/lazyllm/lazycraft-back
+          docker buildx build . \
+            --platform linux/amd64 \
+            -t $IMAGE_DOCKERHUB:${IMAGE_TAG}-amd64 \
+            -t $IMAGE_ALIYUN:${IMAGE_TAG}-amd64 \
+            --push
+
+      - name: Build amd64 (front)
+        run: |
+          cd front
+          IMAGE_DOCKERHUB=lazyllm/lazycraft-front
+          IMAGE_ALIYUN=registry.cn-hangzhou.aliyuncs.com/lazyllm/lazycraft-front
+          docker buildx build . \
+            --platform linux/amd64 \
+            -t $IMAGE_DOCKERHUB:${IMAGE_TAG}-amd64 \
+            -t $IMAGE_ALIYUN:${IMAGE_TAG}-amd64 \
+            --push
+
+  build-arm64:
+    runs-on: ubuntu-22.04-arm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set IMAGE_TAG
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            RAW_TAG="${GITHUB_REF_NAME}"
+            IMAGE_TAG="${RAW_TAG#[vV]}"
+          else
+            IMAGE_TAG="dev-latest"
+          fi
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Docker login (DockerHub)
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker login (Aliyun)
+        uses: docker/login-action@v3
+        with:
+          registry: registry.cn-hangzhou.aliyuncs.com
+          username: ${{ secrets.ALIYUN_USERNAME }}
+          password: ${{ secrets.ALIYUN_PASSWORD }}
+
+      - name: Build arm64 (back)
+        run: |
+          cd back
+          IMAGE_DOCKERHUB=lazyllm/lazycraft-back
+          IMAGE_ALIYUN=registry.cn-hangzhou.aliyuncs.com/lazyllm/lazycraft-back
+          docker buildx build . \
+            --platform linux/arm64 \
+            -t $IMAGE_DOCKERHUB:${IMAGE_TAG}-arm64 \
+            -t $IMAGE_ALIYUN:${IMAGE_TAG}-arm64 \
+            --push
+
+      - name: Build arm64 (front)
+        run: |
+          cd front
+          IMAGE_DOCKERHUB=lazyllm/lazycraft-front
+          IMAGE_ALIYUN=registry.cn-hangzhou.aliyuncs.com/lazyllm/lazycraft-front
+          docker buildx build . \
+            --platform linux/arm64 \
+            -t $IMAGE_DOCKERHUB:${IMAGE_TAG}-arm64 \
+            -t $IMAGE_ALIYUN:${IMAGE_TAG}-arm64 \
+            --push
+
+  manifest:
+    runs-on: ubuntu-22.04
+    needs: [build-amd64, build-arm64]
+    steps:
+      - name: Set IMAGE_TAG
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            RAW_TAG="${GITHUB_REF_NAME}"
+            IMAGE_TAG="${RAW_TAG#[vV]}"
+          else
+            IMAGE_TAG="dev-latest"
+          fi
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Docker login (DockerHub)
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker login (Aliyun)
+        uses: docker/login-action@v3
+        with:
+          registry: registry.cn-hangzhou.aliyuncs.com
+          username: ${{ secrets.ALIYUN_USERNAME }}
+          password: ${{ secrets.ALIYUN_PASSWORD }}
+
+      - name: Create & Push manifest
+        run: |
+          for svc in back front; do
+            IMAGE_DOCKERHUB=lazyllm/lazycraft-$svc
+            IMAGE_ALIYUN=registry.cn-hangzhou.aliyuncs.com/lazyllm/lazycraft-$svc
+
+            docker manifest create $IMAGE_DOCKERHUB:${IMAGE_TAG} \
+              --amend $IMAGE_DOCKERHUB:${IMAGE_TAG}-amd64 \
+              --amend $IMAGE_DOCKERHUB:${IMAGE_TAG}-arm64
+            docker manifest push $IMAGE_DOCKERHUB:${IMAGE_TAG}
+
+            docker manifest create $IMAGE_ALIYUN:${IMAGE_TAG} \
+              --amend $IMAGE_ALIYUN:${IMAGE_TAG}-amd64 \
+              --amend $IMAGE_ALIYUN:${IMAGE_TAG}-arm64
+            docker manifest push $IMAGE_ALIYUN:${IMAGE_TAG}
+          done

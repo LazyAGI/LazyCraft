@@ -1,0 +1,549 @@
+.pageDrawer {
+  .mainDrawer {
+    transform: translateX(0);
+    transition: transform 0.3s ease;
+
+    &.connectionOpen {
+      transform: translateX(-700px);
+    }
+  }
+
+  .formContainer {
+    .iconUpload {
+      .avatarUploader {
+        .iconContainer {
+          img {
+            width: 100px;
+            height: 100px;
+          }
+        }
+      }
+
+      .iconTip {
+        color: #C1C3C9 !important;
+        font-size: 12px;
+        margin-top: 8px;
+      }
+
+      .moreIconButton {
+        position: absolute;
+        top: 75px;
+        left: 95px;
+      }
+    }
+
+    .descriptionContainer {
+      position: relative;
+
+      .characterCount {
+        position: absolute;
+        bottom: 8px;
+        right: 12px;
+        font-size: 12px;
+        color: #999;
+        pointer-events: none;
+        background-color: white;
+        padding: 0 4px;
+      }
+    }
+  }
+}
+
+// 二级弹窗独立样式 - 不嵌套在pageDrawer下
+.connectionDrawer {
+  .loadingContainer {
+    text-align: center;
+    padding: 16px;
+
+    .logBanner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #f7f8fa;
+      border: 1px solid #e5e6eb;
+      color: #333;
+
+      .bannerIcon {
+        color: #1677ff;
+      }
+
+      .bannerTitle {
+        font-weight: 600;
+      }
+
+      .bannerStatus {
+        margin-left: auto;
+        font-size: 12px;
+      }
+
+      .status-running {
+        color: #1677ff;
+      }
+
+      .status-success {
+        color: #52c41a;
+      }
+
+      .status-error {
+        color: #ff4d4f;
+      }
+    }
+
+    .logsWrapper {
+      margin-top: 12px;
+      width: 100%;
+      max-height: 700px;
+      overflow: auto;
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #e5e6eb;
+      padding: 0;
+
+      .logsEmpty {
+        color: #999;
+        font-size: 12px;
+        padding: 12px;
+        text-align: left;
+      }
+
+      .logsList {
+        .logRow {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 12px;
+          border-bottom: 1px solid #f0f0f0;
+
+          .labelCol {
+            width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+
+            .logLabel {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              min-width: 48px;
+              height: 22px;
+              padding: 0 10px;
+              border-radius: 999px;
+              background: #fafafa;
+              border: 1px solid #8c8c8c;
+              color: #8c8c8c;
+              font-size: 12px;
+            }
+          }
+
+          .textCol {
+            flex: 1;
+            display: flex;
+            align-items: center;
+
+            .logText {
+              margin: 0;
+              font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'Liberation Mono', monospace;
+              white-space: pre-wrap;
+              word-break: break-word;
+              font-size: 12px;
+              color: #333;
+              text-align: left;
+            }
+          }
+
+          // 事件颜色修饰（提高优先级）
+          &.event-start {
+            .labelCol {
+              .logLabel {
+                border-color: #1677ff;
+                color: #1677ff;
+              }
+            }
+          }
+
+          &.event-finish,
+          &.event-completed,
+          &.event-complete {
+            .labelCol {
+              .logLabel {
+                border-color: #52c41a;
+                color: #52c41a;
+              }
+            }
+          }
+
+          &.event-error {
+            .labelCol {
+              .logLabel {
+                border-color: #ff7875;
+                color: #ff7875;
+              }
+            }
+          }
+
+          &.event-chunk,
+          &.event-message {
+            .labelCol {
+              .logLabel {
+                border-color: #8c8c8c;
+                color: #8c8c8c;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .loadingTitle {
+      margin-top: 20px;
+    }
+  }
+
+  .contentContainer {
+    height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    box-sizing: border-box;
+
+    .toolListSection {
+      height: 100%; // 固定占50%高度
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; // 防止内容溢出
+
+      .sectionHeader {
+        flex-shrink: 0; // 标题不参与缩放
+        padding: 16px 20px 12px;
+        border-bottom: 1px solid #e8e8e8;
+        background-color: #fafafa;
+        border-radius: 8px 8px 0 0;
+
+        .sectionTitle {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 600;
+        }
+      }
+
+      .sectionContent {
+        flex: 1; // 占据剩余空间
+        overflow-y: auto; // 垂直滚动
+        overflow-x: hidden; // 隐藏横向滚动
+        padding: 0;
+
+        .toolListItem {
+          padding: 16px 20px;
+          border-bottom: 1px solid #f0f0f0;
+          cursor: pointer;
+          transition: background-color 0.2s;
+
+          &:hover {
+            background-color: #f5f5f5;
+          }
+
+          &.selected {
+            background-color: #e6f7ff;
+            border-left: 3px solid #1890ff;
+          }
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          .toolTitle {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+          }
+
+          .toolDescription {
+            margin: 8px 0;
+            color: #666;
+            font-size: 13px;
+            line-height: 1.4;
+          }
+
+          .toolSchema {
+            font-size: 13px;
+            color: #333;
+
+            .schemaCode {
+              background: #f5f5f5;
+              padding: 8px;
+              border-radius: 4px;
+              margin-top: 8px;
+              font-size: 12px;
+              overflow: auto;
+              max-height: 120px;
+              white-space: pre-wrap;
+              word-break: break-word;
+            }
+          }
+        }
+
+        .emptyState {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          text-align: center;
+          color: #999;
+          font-size: 14px;
+        }
+      }
+    }
+
+    .testSection {
+      height: 50%; // 固定占50%高度
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; // 防止内容溢出
+
+      .sectionHeader {
+        flex-shrink: 0; // 标题不参与缩放
+        padding: 16px 20px 12px;
+        border-bottom: 1px solid #e8e8e8;
+        border-radius: 8px 8px 0 0;
+
+        .sectionTitle {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 600;
+        }
+      }
+
+      .sectionContent {
+        flex: 1; // 占据剩余空间
+        overflow-y: auto; // 垂直滚动
+        overflow-x: hidden; // 隐藏横向滚动
+        padding: 20px;
+
+        .testContainer {
+          color: #666;
+
+          >p {
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #333;
+          }
+
+          .toolSelector {
+            width: 100%;
+            margin-bottom: 16px;
+          }
+
+          .noToolsText {
+            color: #999;
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+          }
+
+          .testParams {
+            margin-top: 20px;
+
+            .paramsTitle {
+              font-size: 14px;
+              font-weight: 500;
+              margin-bottom: 12px;
+              color: #333;
+            }
+
+            .paramsInput {
+              margin-bottom: 16px;
+
+              textarea {
+                font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                resize: vertical;
+                min-height: 100px;
+              }
+            }
+
+            .buttonGroup {
+              display: flex;
+              gap: 8px;
+
+              .testButton {
+                // 测试按钮样式
+              }
+            }
+          }
+
+          .testResults {
+            margin-top: 20px;
+
+            .resultsTitle {
+              font-size: 14px;
+              font-weight: 500;
+              margin-bottom: 12px;
+              color: #333;
+            }
+
+            .resultsContainer {
+              border-radius: 4px;
+              padding: 16px;
+              min-height: 100px;
+              max-height: 200px; // 限制最大高度
+              font-size: 13px;
+              color: #666;
+              overflow-y: auto; // 结果区域也可滚动
+              font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+              white-space: pre-wrap;
+              word-break: break-word;
+            }
+          }
+        }
+
+        .toolName {
+          font-size: 18px;
+          font-weight: 700;
+          color: #333;
+        }
+
+        .toolDescription {
+          font-size: 14px;
+          color: #666;
+          margin-top: 5px;
+        }
+      }
+    }
+  }
+}
+
+.mcpResultHeader {
+  margin-top: 10px;
+}
+
+.mainCard {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.jsonContainer {
+  width: 100%;
+  overflow-x: auto;
+
+  .jsonContent {
+    margin: 0;
+    width: 100%;
+    overflow-x: auto;
+
+    .jsonText {
+      display: block;
+      width: 100%;
+      white-space: pre-wrap;
+      word-break: break-word;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+
+      code {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        white-space: pre-wrap;
+        word-break: break-word;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+      }
+    }
+  }
+}
+.testResultsSection {
+  margin-top: 20px;
+
+  .resultContainer {
+    width: 100%;
+
+    .mcpResultHeader {
+      margin-bottom: 16px;
+
+      .resultTitle {
+        font-weight: 600;
+        color: #333;
+      }
+
+      .resultStatus {
+        margin-left: 8px;
+      }
+    }
+
+    .resultBox {
+      width: 100%;
+      overflow: hidden;
+
+      .jsonContainer {
+        width: 100%;
+        max-width: 100%;
+
+        .jsonContent {
+          width: 100%;
+          max-width: 100%;
+
+          pre {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            max-width: 100%;
+            white-space: pre-wrap;
+            word-break: break-word;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+          }
+        }
+      }
+    }
+  }
+}
+.requiredParamsContainer {
+  margin: 20px 0;
+
+  .paramInput {
+    width: 100%;
+
+    textarea {
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      resize: vertical;
+      min-height: 80px;
+    }
+  }
+}
+.buttonContainer {
+  margin: 20px 0;
+  display: flex;
+  gap: 12px;
+}
+.noToolSelected {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+  font-size: 14px;
+}
+
+.selectedToolDetails {
+  width: 100%;
+
+  .toolName {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 8px;
+  }
+
+  .toolDescription {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+}

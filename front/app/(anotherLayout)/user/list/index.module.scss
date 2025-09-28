@@ -1,0 +1,30 @@
+
+.content {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 1.5625vw;
+}
+
+.tableHeader {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    margin: 1.5625vw 0;
+    margin-bottom: 1.0417vw;
+}
+
+.tipWrap {
+    font-size: 12px;
+    color: #8F949E;
+    line-height: 24px;
+}
+
+.tagsWrap {
+    padding: 2px 4px;
+    height: 24px;
+    background: #F6F7F8;
+    border-radius: 4px;
+    border: 1px solid #F0F1F3;
+    font-size: 12px;
+    color: #8F949E;
+}

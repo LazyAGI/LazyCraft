@@ -1,0 +1,39 @@
+.wrapNav {
+  display: flex;
+  gap: 4px;
+
+  &:hover {
+    color: #0E5DD8;
+
+    .normal {
+      background: linear-gradient(150deg, #26ADF0 0%, #69D17B 100%);
+      border-radius: 8px;
+      color: #fff;
+    }
+  }
+
+  .normal {
+    width: 24px;
+    height: 24px;
+    font-size: 24px;
+    text-align: center;
+    line-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .activeIcon {
+    width: 24px;
+    height: 24px;
+    font-size: 24px;
+    background: linear-gradient(150deg, #26ADF0 0%, #69D17B 100%);
+    border-radius: 8px;
+    color: #fff;
+    text-align: center;
+    // margin-right: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

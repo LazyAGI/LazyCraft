@@ -1,0 +1,21 @@
+.info__item {
+  /* max-width: 700px; */
+  display: flex;
+  width: 100%;
+  padding: 8px 0;
+  font-size: 14px;
+
+  .info__item--label {
+    color: #5E6472;
+    text-align: left;
+  }
+
+  .info__item--content {
+    flex-grow: 1;
+    max-width: 650px;
+    // padding-left: 10px;
+    color: #071127;
+    text-align: left;
+    word-break: break-all;
+  }
+}

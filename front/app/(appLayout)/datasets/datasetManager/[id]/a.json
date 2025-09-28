@@ -1,0 +1,27 @@
+{
+    "id": 1,
+    "name": "Sample Dataset",
+    "description": "This is a randomly generated dataset for testing.",
+    "created_at": "2024-11-19T10:00:00Z",
+    "data": [
+        {
+            "field1": "value1",
+            "field2": 123,
+            "field3": true
+        },
+        {
+            "field1": "value2",
+            "field2": 456,
+            "field3": false
+        },
+        {
+            "field1": "value3",
+            "field2": 789,
+            "field3": null
+        }
+    ],
+    "metadata": {
+        "version": "1.0.0",
+        "author": "John Doe"
+    }
+}

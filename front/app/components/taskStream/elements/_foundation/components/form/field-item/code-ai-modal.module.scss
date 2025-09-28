@@ -1,0 +1,180 @@
+.modal {
+  :global {
+    .ant-modal-content {
+      padding: 21px;
+
+      .ant-modal-body {
+        height: 470px !important;
+      }
+      .ant-modal-footer{
+        border-top: none !important;
+      }
+    }
+  }
+}
+
+.container {
+  display: flex;
+  gap: 18px;
+  height: 100%;
+
+  .section {
+    flex: 1;
+    position: relative;
+
+    .title {
+      margin-bottom: 13px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .inputWrapper {
+      position: relative;
+      height: 100%;
+
+      .textarea {
+        width: 100%;
+        height: 282px !important;
+        padding: 11px;
+        resize: none;
+        background-color: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        line-height: 19px;
+        font-size: 13px;
+        font-weight: normal;
+        color: #111827;
+        transition: all 0.2s ease;
+
+        &::placeholder {
+          color: #9CA3AF;
+        }
+
+        &:focus {
+          outline: none;
+          border-color: #3B82F6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          background-color: #ffffff;
+        }
+      }
+
+      .generateBtn {
+        position: absolute !important;
+        right: 12px;
+        bottom: 45px;
+        display: flex;
+        align-items: center;
+        border-radius: 6px !important;
+        gap: 6px;
+        height: 36px;
+        padding: 0 16px;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
+      }
+    }
+
+    .placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      height: 96%;
+      width: 100%;
+      background-color: #f9fafb;
+      border: 2px dashed #e5e7eb;
+      border-radius: 8px;
+      padding: 19px;
+      text-align: center;
+
+      span {
+        color: #6b7280;
+        font-size: 13px;
+        line-height: 20px;
+      }
+
+      span:first-of-type {
+        font-weight: 500;
+        color: #4b5563;
+      }
+    }
+
+    .codePreview {
+      height: 398px;
+      background-color: #1f2937;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 15px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 12px;
+      color: #e5e7eb;
+      overflow: auto;
+      line-height: 17px;
+
+      pre {
+        margin: 0;
+        color: #e5e7eb;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      /* 代码高亮样式 */
+      .keyword {
+        color: #f59e0b;
+      }
+
+      .string {
+        color: #10b981;
+      }
+
+      .comment {
+        color: #6b7280;
+        font-style: italic;
+      }
+
+      .function {
+        color: #3b82f6;
+      }
+    }
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    gap: 15px;
+
+    .section {
+      .inputWrapper {
+        .textarea {
+          height: 122px !important;
+        }
+
+        .generateBtn {
+          position: static !important;
+          width: 100%;
+          margin-top: 11px;
+        }
+      }
+
+      .codePreview {
+        height: 198px;
+      }
+    }
+  }
+} 

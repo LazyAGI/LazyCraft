@@ -1,0 +1,78 @@
+.quotaContainer {
+    padding: 24px;
+
+    h1 {
+        // margin-bottom: 16px;
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    .quotaContent {
+        background: #fff;
+        border-radius: 8px;
+        padding: 24px;
+    }
+}
+
+.quotaInfoSection {
+    margin-bottom: 24px;
+
+    p {
+        margin: 0;
+        line-height: 32px;
+
+        label {
+            display: inline-block;
+            width: 80px;
+            color: #666;
+            margin-right: 8px;
+        }
+    }
+}
+
+.formRow {
+    :global {
+        .ant-form-item {
+            margin-bottom: 24px;
+            width: 100%;
+        }
+    }
+}
+
+.quotaRow {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+
+    label {
+        width: 80px;
+        color: #666;
+        margin-right: 8px;
+        flex-shrink: 0;
+    }
+
+    .quotaInputs {
+        flex: 1;
+        display: flex;
+        gap: 16px;
+
+        :global(.ant-input-affix-wrapper) {
+            flex: 1;
+        }
+    }
+
+    .quotaInlineFormItem {
+        flex: 1;
+        margin-bottom: 0;
+
+        :global(.ant-select) {
+            width: 100%;
+        }
+    }
+}
+
+.quotaForm {
+    :global(.ant-form-item:last-child) {
+        margin-bottom: 0;
+    }
+}
