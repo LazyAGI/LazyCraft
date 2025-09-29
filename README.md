@@ -56,6 +56,16 @@
 
 - 提供 **标准化接口**，可无缝集成至业务系统。
 
+### 6. 视频介绍
+
+- 自定义RAG的离线解析和在线召回流程
+  
+https://github.com/user-attachments/assets/12a703df-6df4-4136-8957-ca2d46bbd5f2
+
+- 微调 + 部署一站操作
+
+https://github.com/user-attachments/assets/5d78e69d-9874-4bc7-9c36-e38fd8c8a8e3
+
 ---
 
 ## 三、快速开始
