@@ -90,6 +90,13 @@ http://127.0.0.1:30382
 默认密码：LazyCraft@2025
 ```
 
+### 4. 注意事项
+
+如果在mac下docker compose命令找不到，则可以尝试通过`brew install --cask docker`安装docker
+或者通过`brew install docker-compose`,此时要把 `docker compose up -d` 替换为 `docker-compose up -d`
+
+在docker启动后，可以通过 `docker ps`命令观察启动状态，找到对应的IP
+
 ## 四、自定义构建镜像
 
 > 注意：以下操作均在 Linux 环境下进行
