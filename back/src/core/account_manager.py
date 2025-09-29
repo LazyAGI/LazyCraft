@@ -1039,7 +1039,7 @@ class TenantService:
 
     @classmethod
     def check_tenant_storage(cls, current_user):
-        if current_user.is_administrator:
+        if current_user.is_super:
             return True
         tenant = (
             db.session.query(Tenant)
