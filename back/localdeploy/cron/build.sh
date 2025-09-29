@@ -1,1 +1,0 @@
-pyinstaller --onefile --strip --hidden-import=pexpect cron_script.py

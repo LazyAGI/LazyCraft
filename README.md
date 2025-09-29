@@ -92,12 +92,15 @@ http://127.0.0.1:30382
 
 ## 四、自定义构建镜像
 
+> 注意：以下操作均在 Linux 环境下进行
+
 ### 1. 克隆代码
 ```bash
 git clone https://github.com/LazyAGI/LazyCraft.git
 cd LazyCraft
 git submodule update --init
 
+mkdir -p back/src/parts/data/common_datasets
 wget https://github.com/LazyAGI/LazyCraft/releases/download/common_datasets/common_datasets.zip \
      -O back/src/parts/data/common_datasets/common_datasets.zip
 ```

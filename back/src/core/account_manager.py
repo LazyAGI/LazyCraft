@@ -705,7 +705,7 @@ class TenantService:
         default_tenant = Tenant.query.filter_by(id=default_tenant_id).first()
         if not default_tenant:
             default_tenant = cls.create_tenant(
-                "默认用户组", admin, id=default_tenant_id
+                "默认用户组", admin, id=default_tenant_id, gpu_quota=1000000, storage_quota=1000000
             )
         return default_tenant
 

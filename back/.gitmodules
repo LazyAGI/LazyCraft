@@ -1,3 +1,0 @@
-[submodule "LazyLLM"]
-	path = LazyLLM
-	url = https://github.com/LazyAGI/LazyLLM.git

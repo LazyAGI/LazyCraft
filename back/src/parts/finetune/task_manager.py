@@ -31,6 +31,7 @@ import pytz
 import requests
 
 from libs.timetools import TimeTools
+from libs.filetools import FileTools
 from models.model_account import Account, Tenant
 from parts.data.data_service import DataService
 from parts.finetune.model import FinetuneTask, TaskStatus
@@ -79,7 +80,7 @@ class TaskManager:
         Returns:
             None: 无返回值。
         """
-        self.supplier = os.getenv("CLOUD_SUPPLIER", "maas")
+        self.supplier = os.getenv("CLOUD_SUPPLIER", "lazyllm")
         self._handle_completed_task = (
             self._handle_completed_task_maas
             if self.supplier == "maas"
@@ -776,6 +777,13 @@ class TaskManager:
 
         status = self._get_task_status(task_db, job_id)
 
+        try:
+            get_ft_log_result, get_ft_log_return = self.get_ft_log(job_id)
+            if get_ft_log_result and get_ft_log_return != "":
+                self.task_log_content(task_db.id, get_ft_log_return)
+        except Exception as e:
+            logging.error(f"get_ft_log error: {e}")
+
         if status == "Completed":
             self._handle_completed_task(
                 task_db, job_id, token, check_count, model_id_or_path
@@ -1203,15 +1211,22 @@ class TaskManager:
             )
             # 统计模型所占空间大小
             # Tenant.save_used_storage(task.tenant_id, FileTools.get_dir_path_size(target_model_path_or_key))
-            amp_get_result, amp_get_size = service.amp_get_model_size(
-                task.target_model_name
-            )
-            if amp_get_result:
-                Tenant.save_used_storage(task.tenant_id, int(amp_get_size))
-            else:
-                logging.info(
-                    "获取微调后的模型大小异常 in handle_done_task FT尚未上传AMP"
+            if self.supplier == "maas":
+                amp_get_result, amp_get_size = service.amp_get_model_size(
+                    task.target_model_name
                 )
+                if amp_get_result:
+                    Tenant.save_used_storage(task.tenant_id, int(amp_get_size))
+                else:
+                    logging.info(
+                        "获取微调后的模型大小异常 in handle_done_task FT尚未上传AMP"
+                    )
+            else:
+                try:
+                    model_path = os.path.join(os.getenv("LAZYLLM_MODEL_PATH"), task.target_model_name)
+                    Tenant.save_used_storage(task.tenant_id, FileTools.get_dir_path_size(model_path))
+                except Exception as e:
+                    logging.error(f"handle_done_task error: {e}")
 
             # 检查是否已有日志内容
             if not self._check_existing_log_content(task):
@@ -1374,6 +1389,7 @@ class TaskManager:
         task = db.session.query(FinetuneTask).filter(FinetuneTask.id == task_id).first()
         save_path = os.path.join(LOG_PATH, str(task_id), "finetune.log")
 
+        logging.info(f"task_log_content save_path: {save_path}")
         content = ""
         if message:
             content = log_content + str(message)

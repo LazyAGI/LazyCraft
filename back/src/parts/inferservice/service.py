@@ -90,7 +90,7 @@ class InferService:
         engine (LightEngine): 轻量级引擎对象。
     """
     def __init__(self):
-        self.supplier = os.getenv("CLOUD_SUPPLIER", "maas")
+        self.supplier = os.getenv("CLOUD_SUPPLIER", "lazyllm")
 
     def check_gpu_quota(self, tenant_id, required_gpus=1):
         """检查GPU配额。

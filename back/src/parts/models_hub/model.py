@@ -67,7 +67,7 @@ def get_finetune_model_list(only_model_key=False):
     Raises:
         requests.RequestException: 当HTTP请求失败时。
     """
-    if os.getenv("CLOUD_SUPPLIER", "maas") == "maas":
+    if os.getenv("CLOUD_SUPPLIER", "lazyllm") == "maas":
         # maas 环境：调用 API 接口
         ft_model_list = []
         get_ft_model_list_url = os.getenv("FT_ENDPOINT", "NOT_SET_FT_ENDPOINT!!") + "/v1/models:all"
