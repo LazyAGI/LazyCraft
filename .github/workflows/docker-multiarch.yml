@@ -18,6 +18,7 @@ jobs:
 
       - name: Get datasets
         run: |
+          mkdir -p back/src/parts/data/common_datasets
           wget https://github.com/LazyAGI/LazyCraft/releases/download/common_datasets/common_datasets.zip \
                 -O back/src/parts/data/common_datasets/common_datasets.zip
 
@@ -158,4 +159,5 @@ jobs:
               --amend $IMAGE_ALIYUN:${IMAGE_TAG}-amd64 \
               --amend $IMAGE_ALIYUN:${IMAGE_TAG}-arm64
             docker manifest push $IMAGE_ALIYUN:${IMAGE_TAG}
+
           done
