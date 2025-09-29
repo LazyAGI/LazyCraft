@@ -1,0 +1,31 @@
+.outerWrap {
+  width: 100%;
+  background: #fff;
+  box-shadow: 0px -2px 20px 0px rgba(7, 17, 39, 0.08);
+  border-radius: 20px 20px 0px 0px;
+
+  .createWrap {
+    width: 84.5vw;
+    min-height: calc(100vh - 60px);
+    margin: 0 auto;
+    .breadcrumb {
+      margin-top: 8px;
+      margin-bottom: 15px;
+    }
+
+    .topWrap {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+  }
+
+  .saveWrap {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: right;
+    background: #fff;
+    z-index: 3;
+  }
+}

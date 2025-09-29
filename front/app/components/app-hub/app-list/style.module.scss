@@ -1,0 +1,111 @@
+.appContainer {
+  width: 87.7083vw;
+  margin: 0 auto;
+  padding-top: 1.5625vw;
+  height: 42.7083vw;
+
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .scrollWrap {
+    height: 40.625vw;
+    overflow-y: auto;
+    scrollbar-width: none;
+    margin-top: 20px;
+
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+    .middle {
+      width: 100%;
+      display: flex;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      gap: 1.0417vw;
+      padding: 1px;
+
+      .prpItem {
+        width: 21.0938vw;
+        cursor: pointer;
+        // height: 9.4792vw;
+        height: 250px;
+        background: #FFFFFF;
+        box-shadow: 0px 0px 4px 0px rgba(7, 17, 39, 0.12);
+        border-radius: 0.625vw;
+        padding: 0.8333vw;
+        position: relative;
+
+        &:hover {
+          box-shadow: 0px 0.4167vw 1.25vw 0px rgba(7, 17, 39, 0.12);
+        }
+
+        .tagWrap {
+          width: 100%;
+          overflow-x: auto;
+          scrollbar-width: none;
+          white-space: nowrap;
+          display: flex;
+          align-items: center;
+          margin-top: 0.5208vw;
+
+          ::-webkit-scrollbar {
+            display: none;
+          }
+
+          >span {
+            font-size: 0.625vw;
+            line-height: 1.0417vw;
+            background: #F6F7F8;
+            color: #8F949E;
+          }
+        }
+
+        .lastLine {
+          position: absolute;
+          bottom: 0.1vw;
+          left: 0;
+          display: flex;
+          justify-content: space-between;
+          width: 100%;
+          padding: 0 16px;
+
+          .iconWrap {
+            background: #f6f7f8;
+            border-radius: 15%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+
+            >span {
+              font-size: 16px;
+            }
+
+            &:hover {
+              border: 1px solid #0e5dd8;
+              color: #0e5dd8;
+              cursor: pointer;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.avataWrap {
+  border: 1px solid #F0F1F3;
+  height: 42px;
+  border-radius: 0.5rem;
+
+  >img {
+    width: 100%;
+    height: 100%;
+  }
+}

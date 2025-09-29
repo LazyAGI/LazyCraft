@@ -1,0 +1,53 @@
+/* LazyLLM Loading Animation Styles */
+.loading-container-base {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-container-base.app-type {
+    height: 100%;
+}
+
+.loading-spin-animation path {
+    animation: loading-fade 2s linear infinite;
+}
+
+@keyframes loading-fade {
+    0% {
+        opacity: 0;
+    }
+
+    25% {
+        opacity: 0.1;
+    }
+
+    50% {
+        opacity: 0.2;
+    }
+
+    75% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.loading-spin-animation path:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.loading-spin-animation path:nth-child(2) {
+    animation-delay: 0.5s;
+}
+
+.loading-spin-animation path:nth-child(3) {
+    animation-delay: 1s;
+}
+
+.loading-spin-animation path:nth-child(4) {
+    animation-delay: 1.5s;
+}

@@ -1,0 +1,9 @@
+.draw-log-wrap {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background-color: #FFF;
+}
+.xterm .xterm-viewport {
+  overflow: hidden !important;
+}

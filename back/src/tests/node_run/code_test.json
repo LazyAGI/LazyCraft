@@ -1,0 +1,378 @@
+{
+    "id": "04f2452c-a4d2-4e95-874f-6e9197b0f66b", 
+    "name": "code_test", 
+    "description": "", 
+    "icon": null, 
+    "icon_background": null, 
+    "categories": [ ], 
+    "tags": [
+        "效率工具"
+    ], 
+    "graph": {
+        "nodes": [
+            {
+                "id": "__start__", 
+                "type": "custom", 
+                "data": {
+                    "type": "start", 
+                    "title": "开始", 
+                    "desc": "", 
+                    "payload__kind": "__start__", 
+                    "variables": [ ], 
+                    "config__input_ports": [ ], 
+                    "config__output_shape": [
+                        {
+                            "id": "ffd8ccc5-0fd9-437d-ae04-5654bdbd28e6", 
+                            "variable_mode": "mode-line", 
+                            "variable_name": "x", 
+                            "variable_type": "int"
+                        }
+                    ], 
+                    "config__output_ports": [
+                        {
+                            "id": "source"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__output_shape", 
+                            "type": "config__output_shape", 
+                            "label": "参数", 
+                            "tooltip": "定义工作流需要的输入参数，可以选择多种格式", 
+                            "variable_type_options": [
+                                "str", 
+                                "int", 
+                                "float", 
+                                "bool", 
+                                "dict", 
+                                "list", 
+                                "file", 
+                                "any"
+                            ]
+                        }
+                    ], 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 80, 
+                    "y": 282
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 80, 
+                    "y": 282
+                }, 
+                "width": 195, 
+                "height": 56, 
+                "selected": false
+            }, 
+            {
+                "id": "__end__", 
+                "type": "custom", 
+                "data": {
+                    "type": "end", 
+                    "title": "结束", 
+                    "desc": "", 
+                    "payload__kind": "__end__", 
+                    "outputs": [ ], 
+                    "config__input_ports": [
+                        {
+                            "id": "target", 
+                            "param_source_shape": [ ], 
+                            "param_input_error": [
+                                {
+                                    "id": "0964c37e-3378-438d-b6ec-39971304f3a4", 
+                                    "variable_mode": "mode-line", 
+                                    "error_type": "type_mismatch", 
+                                    "source_info": {
+                                        "node_title": "代码块-1", 
+                                        "variable_name": "x", 
+                                        "variable_type": "int"
+                                    }
+                                }
+                            ], 
+                            "param_input_success": [
+                                {
+                                    "id": "0964c37e-3378-438d-b6ec-39971304f3a4", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_type": "int", 
+                                    "variable_name": "x"
+                                }
+                            ]
+                        }
+                    ], 
+                    "config__output_ports": [ ], 
+                    "config__input_shape": [
+                        {
+                            "id": "0964c37e-3378-438d-b6ec-39971304f3a4", 
+                            "variable_mode": "mode-line", 
+                            "variable_type": "int", 
+                            "variable_name": "x"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__input_shape", 
+                            "type": "config__input_shape", 
+                            "label": "参数"
+                        }, 
+                        {
+                            "name": "config__input_ports", 
+                            "type": "config__input_ports", 
+                            "label": "输入端点", 
+                            "tooltip": "输入参数的数量，需保证与输入参数数量保持一致"
+                        }
+                    ], 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 850, 
+                    "y": 282
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 850, 
+                    "y": 282
+                }, 
+                "width": 195, 
+                "height": 60, 
+                "selected": false
+            }, 
+            {
+                "id": "1745311574501", 
+                "type": "custom", 
+                "data": {
+                    "type": "code", 
+                    "title": "代码块-1", 
+                    "desc": "编写代码，处理输入变量来生成返回值", 
+                    "variables": [ ], 
+                    "code_language": "python3", 
+                    "code": "", 
+                    "outputs": { }, 
+                    "payload__code": "def main(x):\r\n return x + 4", 
+                    "payload__code_language": "python3", 
+                    "payload__kind": "Code", 
+                    "config__input_ports": [
+                        {
+                            "id": "target", 
+                            "param_source_shape": [ ], 
+                            "param_input_error": [
+                                {
+                                    "id": "5438512c-8f26-4eee-a92a-29773d5d918e", 
+                                    "variable_mode": "mode-line", 
+                                    "error_type": "type_mismatch", 
+                                    "source_info": {
+                                        "node_title": "开始", 
+                                        "variable_name": "x", 
+                                        "variable_type": "int"
+                                    }
+                                }
+                            ], 
+                            "param_input_success": [
+                                {
+                                    "id": "5438512c-8f26-4eee-a92a-29773d5d918e", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_type": "int", 
+                                    "variable_name": "x"
+                                }
+                            ]
+                        }
+                    ], 
+                    "config__output_ports": [
+                        {
+                            "id": "source"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__input_shape", 
+                            "type": "config__input_shape", 
+                            "label": "输入参数", 
+                            "tooltip": "输入需要添加到代码的变量，代码中可以直接引用此处添加的变量"
+                        }, 
+                        {
+                            "name": "config__output_shape", 
+                            "type": "config__output_shape", 
+                            "label": "输出参数", 
+                            "tooltip": "代码运行完成后输出的变量，须保证此处的变量名、变量类型与代码的return中完全一致"
+                        }, 
+                        {
+                            "name": "config__input_ports", 
+                            "type": "config__input_ports", 
+                            "label": "输入端点", 
+                            "tooltip": "输入参数的数量，需保证与输入参数数量保持一致"
+                        }, 
+                        {
+                            "name": "payload__code", 
+                            "type": "code", 
+                            "label": "Code", 
+                            "code_language_options": [
+                                {
+                                    "label": "python", 
+                                    "value": "python3"
+                                }
+                            ], 
+                            "required": true
+                        }
+                    ], 
+                    "name": "code", 
+                    "title_en": "Code", 
+                    "about": "自定义函数和测试输入，并在后台提供一个沙箱协助用户执行代码。沙箱中需要管控好用户的权限，拒绝用户做删除系统文件等危险操作。目前仅支持python。", 
+                    "classification": "fundamental-component", 
+                    "config__input_shape": [
+                        {
+                            "id": "5438512c-8f26-4eee-a92a-29773d5d918e", 
+                            "variable_mode": "mode-line", 
+                            "variable_type": "int", 
+                            "variable_name": "x"
+                        }
+                    ], 
+                    "config__output_shape": [
+                        {
+                            "id": "4afee027-ff88-47a5-9d85-3d6e95f364ed", 
+                            "variable_mode": "mode-line", 
+                            "variable_type": "int", 
+                            "variable_name": "x"
+                        }
+                    ], 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 430, 
+                    "y": 249
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 430, 
+                    "y": 249
+                }, 
+                "width": 195, 
+                "height": 92, 
+                "selected": true
+            },
+            {
+                "id": "1745311574500", 
+                "type": "custom", 
+                "data": {
+                    "type": "code", 
+                    "title": "代码块-1", 
+                    "desc": "编写代码，处理输入变量来生成返回值", 
+                    "variables": [ ], 
+                    "code_language": "python3", 
+                    "code": "", 
+                    "outputs": { }, 
+                    "payload__code": "def main(x):\r\n return x + 3", 
+                    "payload__code_language": "python3", 
+                    "payload__kind": "Code", 
+                    "config__input_ports": [
+                        {
+                            "id": "target", 
+                            "param_source_shape": [ ], 
+                            "param_input_error": [
+                                {
+                                    "id": "5438512c-8f26-4eee-a92a-29773d5d918e", 
+                                    "variable_mode": "mode-line", 
+                                    "error_type": "type_mismatch", 
+                                    "source_info": {
+                                        "node_title": "开始", 
+                                        "variable_name": "x", 
+                                        "variable_type": "int"
+                                    }
+                                }
+                            ], 
+                            "param_input_success": [
+                                {
+                                    "id": "5438512c-8f26-4eee-a92a-29773d5d918e", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_type": "int", 
+                                    "variable_name": "x"
+                                }
+                            ]
+                        }
+                    ], 
+                    "config__output_ports": [
+                        {
+                            "id": "source"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__input_shape", 
+                            "type": "config__input_shape", 
+                            "label": "输入参数", 
+                            "tooltip": "输入需要添加到代码的变量，代码中可以直接引用此处添加的变量"
+                        }, 
+                        {
+                            "name": "config__output_shape", 
+                            "type": "config__output_shape", 
+                            "label": "输出参数", 
+                            "tooltip": "代码运行完成后输出的变量，须保证此处的变量名、变量类型与代码的return中完全一致"
+                        }, 
+                        {
+                            "name": "config__input_ports", 
+                            "type": "config__input_ports", 
+                            "label": "输入端点", 
+                            "tooltip": "输入参数的数量，需保证与输入参数数量保持一致"
+                        }, 
+                        {
+                            "name": "payload__code", 
+                            "type": "code", 
+                            "label": "Code", 
+                            "code_language_options": [
+                                {
+                                    "label": "python", 
+                                    "value": "python3"
+                                }
+                            ], 
+                            "required": true
+                        }
+                    ], 
+                    "name": "code", 
+                    "title_en": "Code", 
+                    "about": "自定义函数和测试输入，并在后台提供一个沙箱协助用户执行代码。沙箱中需要管控好用户的权限，拒绝用户做删除系统文件等危险操作。目前仅支持python。", 
+                    "classification": "fundamental-component", 
+                    "config__input_shape": [
+                        {
+                            "id": "5438512c-8f26-4eee-a92a-29773d5d918e", 
+                            "variable_mode": "mode-line", 
+                            "variable_type": "int", 
+                            "variable_name": "x"
+                        }
+                    ], 
+                    "config__output_shape": [
+                        {
+                            "id": "4afee027-ff88-47a5-9d85-3d6e95f364ed", 
+                            "variable_mode": "mode-line", 
+                            "variable_type": "int", 
+                            "variable_name": "x"
+                        }
+                    ], 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 430, 
+                    "y": 249
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 430, 
+                    "y": 249
+                }, 
+                "width": 195, 
+                "height": 92, 
+                "selected": true
+            }
+        ], 
+        "edges": [ ], 
+        "resources": [ ], 
+        "viewport": {
+            "x": 157.15334127692245, 
+            "y": 94.88822425160924, 
+            "zoom": 0.8705505632961241
+        }
+    }
+}

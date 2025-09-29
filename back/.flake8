@@ -1,0 +1,16 @@
+[flake8]
+exclude = third_part/,.git,build,dist,*.egg-info,*.egg,*.pyc,*.pyo,*.pyd,.tox,.venv,.mypy_cache,.pytest_cache,.coverage
+max-line-length = 120
+# E701: multiple statements on one line (colon)
+# E702: multiple statements on one line (semicolon)
+# E704: multiple statements on one line (def)
+# E302: expected 2 blank lines, found 1
+# E305: expected 2 blank lines after class or function definition, found 1
+# E124: closing bracket does not match visual indentation
+# W503: line break before binary operator
+# F841 C901 F811,E712,W504
+# E741 ambiguous variable name
+# E402 module level import not at top of file
+# F821 undefined name
+ignore =  E701, E702, E704,W291,E262,F401,W293,E501,W292,F841,E226,W391,C901,E123,W605, W503, F811, E712,W504, E741,E402, F821, E999, E722, E203
+max-complexity = 12

@@ -1,0 +1,87 @@
+.container {
+    // padding: 8px 1.5625vw;
+    width: 100%;
+    // margin: 0 auto;
+
+    .breadcrumb {
+        margin-bottom: 8px;
+    }
+
+    .baseWrap {
+        display: flex;
+        justify-content: flex-start;
+
+        // align-items: center;
+        .imgWrap {
+            width: 4.1667vw;
+            height: 4.1667vw;
+            margin-right: 10px;
+            border-radius: 0.625vw;
+            border: 1px solid #F0F1F3;
+
+            >img {
+                width: 100%;
+                border-radius: 0.625vw;
+            }
+        }
+
+        .infoMiddle {
+            color: #5E6472;
+            width: 60.2708vw;
+            margin-right: 5.4167vw;
+
+            .first {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+
+                .name {
+                    font-size: 16px;
+                    color: #071127;
+                    line-height: 24px;
+                    font-weight: bold;
+                }
+
+            }
+
+            .detailWrap {
+                margin-top: 8px;
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+                gap: 60px;
+            }
+        }
+    }
+
+
+    .adjustWrap {
+        height: 50vh;
+        overflow-y: auto;
+        padding-top: 4px;
+
+        .headWrap {
+            display: flex;
+            justify-content: space-between;
+            // flex-direction: row-reverse;
+        }
+    }
+}
+
+.title {
+    font-size: 22px;
+    color: #071127;
+    font-weight: bold;
+}
+
+.tableHeader {
+    width: 100%;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.cardSty {
+    border: none;
+}

@@ -1,0 +1,20 @@
+.outerWrap {
+  width: 100%;
+  background: #fff;
+  height: 100%;
+  box-shadow: 0px -2px 20px 0px rgba(7, 17, 39, 0.08);
+  border-radius: 20px 20px 0px 0px;
+
+  .costWrap {
+    width: 84.5vw;
+    margin: 0 auto;
+    padding-top: 1.5625vw;
+    min-height: 15.625vw;
+
+    .topWrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+}

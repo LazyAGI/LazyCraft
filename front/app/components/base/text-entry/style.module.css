@@ -1,0 +1,32 @@
+.inputContainer {
+  display: inline-flex;
+  height: 1.75rem; /* h-7 */
+  width: 100%;
+  padding: 0.25rem 0.5rem; /* py-1 px-2 */
+  border-radius: 0.5rem; /* rounded-lg */
+  font-size: 0.75rem; /* text-xs */
+  line-height: 1.5; /* leading-normal */
+  background-color: #f3f4f6; /* bg-gray-100 */
+  caret-color: #3b82f6; /* caret-primary-600 - 假设primary-600是蓝色 */
+}
+
+.inputContainer:hover {
+  background-color: #f3f4f6; /* hover:bg-gray-100 */
+}
+
+.inputContainer:focus {
+  background-color: white; /* focus:bg-white */
+  outline: none; /* focus-visible:outline-none */
+  box-shadow: inset 0 0 0 1px #e5e7eb; /* focus:ring-1 focus:ring-inset focus:ring-gray-200 */
+}
+
+.inputContainer::placeholder {
+  color: #9ca3af; /* placeholder:text-gray-400 */
+}
+
+.prefixIcon {
+  white-space: nowrap; /* whitespace-nowrap */
+  position: absolute; /* absolute */
+  left: 0.5rem; /* left-2 */
+  align-self: center; /* self-center */
+}

@@ -1,0 +1,73 @@
+.field-item {
+  &.ant-form-item {
+    margin-bottom: 10px;
+    padding: 0 20px;
+
+    .ant-form-item {
+      padding: 0;
+    }
+  }
+}
+
+.ant-form-vertical {
+  .field-item.ant-form-item:not(.ant-form-item-horizontal) {
+    .ant-form-item-label {
+      padding: 7px 0 13px !important;
+    }
+  }
+}
+
+// 隐藏必填*号
+.field-item-required-mark {
+  display: none !important;
+}
+
+// 输入输出参数/输入输出端点添加border-bottom
+.field-item.is-input-or-output-field {
+  &.ant-form-item {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #F0F1F3;
+  }
+}
+
+// 表单label样式
+.field-item-label {
+  font-size: 14px;
+  color: #5E6472;
+  vertical-align: middle;
+
+  // title类型的标题样式
+  &.title-styled-label {
+    font-size: 14px;
+    color: #071127;
+    font-weight: 500;
+    // margin-bottom: 6px;
+
+    .title-divider {
+      background-color: #1677ff;
+      width: 3px;
+      margin-left: 0;
+      margin-right: 6px;
+    }
+  }
+}
+
+.field-item-extra-add-btn {
+  &.ant-btn {
+    font-size: 14px;
+    padding: 4px 0;
+    color: #0E5DD8 !important;
+    background-color: #fff !important;
+
+    .anticon {
+      cursor: pointer;
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+}
+

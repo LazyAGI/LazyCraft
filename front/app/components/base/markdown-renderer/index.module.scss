@@ -1,0 +1,213 @@
+.markdownContent {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #3f3f3f;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+
+  // 标题样式
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 16px 0 8px 0;
+    font-weight: 600;
+    color: #262626;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  h3 {
+    font-size: 18px;
+  }
+
+  h4 {
+    font-size: 16px;
+  }
+
+  h5 {
+    font-size: 14px;
+  }
+
+  h6 {
+    font-size: 12px;
+  }
+
+  // 段落样式
+  p {
+    margin: 8px 0;
+    line-height: 1.6;
+  }
+
+  // 列表样式
+  ul,
+  ol {
+    margin: 8px 0;
+    padding-left: 20px;
+  }
+
+  li {
+    margin: 4px 0;
+  }
+
+  // 引用样式
+  blockquote {
+    margin: 12px 0;
+    padding: 8px 16px;
+    border-left: 4px solid #d9d9d9;
+    background-color: #f5f5f5;
+    color: #666;
+  }
+
+  // 代码样式
+  .inlineCode {
+    background-color: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+    color: #d63384;
+    word-break: break-all;
+    overflow-wrap: break-word;
+  }
+
+  .codeBlock {
+    margin: 12px 0;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    overflow-x: auto;
+    max-width: 100%;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+
+    code {
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #333;
+      white-space: pre-wrap;
+      word-break: break-all;
+      overflow-wrap: break-word;
+    }
+  }
+
+  // 表格样式
+  .tableWrapper {
+    margin: 12px 0;
+    overflow-x: auto;
+    border-radius: 6px;
+    border: 1px solid #d9d9d9;
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 100%;
+    }
+
+    th,
+    td {
+      padding: 8px 12px;
+      text-align: left;
+      border: 1px solid #d9d9d9;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #f5f5f5;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+
+    tr:hover {
+      background-color: #f0f0f0;
+    }
+  }
+
+  // 分割线样式
+  hr {
+    margin: 16px 0;
+    border: none;
+    border-top: 1px solid #d9d9d9;
+  }
+
+  // 强调样式
+  strong {
+    font-weight: 600;
+    color: #262626;
+  }
+
+  em {
+    font-style: italic;
+    color: #666;
+  }
+
+  // 删除线样式
+  del {
+    text-decoration: line-through;
+    color: #999;
+  }
+
+  // 任务列表样式
+  input[type="checkbox"] {
+    margin-right: 8px;
+  }
+
+  // 数学公式样式
+  .katex {
+    font-size: 1.1em;
+  }
+
+  // 响应式设计
+  @media (max-width: 768px) {
+    font-size: 13px;
+
+    h1 {
+      font-size: 20px;
+    }
+
+    h2 {
+      font-size: 18px;
+    }
+
+    h3 {
+      font-size: 16px;
+    }
+
+    h4 {
+      font-size: 14px;
+    }
+
+    h5 {
+      font-size: 13px;
+    }
+
+    h6 {
+      font-size: 12px;
+    }
+
+    .tableWrapper {
+      font-size: 12px;
+
+      th,
+      td {
+        padding: 6px 8px;
+      }
+    }
+  }
+}

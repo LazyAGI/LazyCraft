@@ -1,0 +1,124 @@
+.aiDimensionWrap {
+  width: 100%;
+  height: 100%;
+  background: #FFFFFF;
+  overflow-y: auto;
+  padding: 5px 1.5625vw;
+
+  .container {
+
+    // width: 87.5vw;
+    // margin: 0 auto;
+    .title {
+      font-size: 22px;
+      color: #071127;
+      font-weight: bold;
+    }
+
+    .breadcrumb {
+      margin-bottom: 8px;
+      margin-top: 8px;
+    }
+
+    .infoWrap {
+      color: #5E6472;
+
+      .first {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+
+        .name {
+          font-size: 16px;
+          color: #071127;
+          line-height: 24px;
+          font-weight: bold;
+        }
+
+      }
+
+      .detailWrap {
+        margin-top: 8px;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 60px;
+      }
+    }
+
+    .resultWrap {
+      height: 29.4167vw;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: row;
+
+      .leftWrap {
+        flex: 3;
+        border-right: 1px solid #F0F1F3;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+
+        >div {
+          flex: 1;
+        }
+
+        .textWrap {
+          padding-top: 8px;
+          color: #5E6472;
+        }
+      }
+
+      .rightWrap {
+        flex: 1;
+        padding-left: 20px;
+
+        .chooseWrap {
+          padding-top: 8px;
+          height: 24.7396vw;
+          overflow-y: auto;
+
+          .chooseItem {
+            margin-bottom: 15px;
+          }
+
+          .chooseTitle {
+            font-weight: 500;
+            color: #071127;
+            font-size: 16px;
+          }
+
+          .chooseDes {
+            color: #5E6472;
+          }
+
+          .radioList {
+            padding: 12px;
+          }
+        }
+      }
+    }
+  }
+
+  .title {
+    font-size: 22px;
+    color: #071127;
+    font-weight: bold;
+  }
+
+  .tableHeader {
+    width: 100%;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .saveWrap {
+    position: fixed;
+    bottom: 0;
+    width: calc(100% - 249px);
+    text-align: right;
+    background: #fff;
+  }
+}

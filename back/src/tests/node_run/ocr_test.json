@@ -1,0 +1,330 @@
+{
+    "id": "f3f1bb13-faf7-4025-8035-41d17eb1fa1b", 
+    "name": "ocr_test", 
+    "description": "", 
+    "icon": "", 
+    "icon_background": null, 
+    "categories": [ ], 
+    "tags": [
+        "效率工具"
+    ], 
+    "graph": {
+        "nodes": [
+            {
+                "id": "__start__", 
+                "type": "custom", 
+                "data": {
+                    "type": "start", 
+                    "title": "开始", 
+                    "desc": "", 
+                    "payload__kind": "__start__", 
+                    "variables": [ ], 
+                    "config__input_ports": [ ], 
+                    "config__output_shape": [
+                        {
+                            "id": "086d2255-4756-4956-adca-f028c8e230dd", 
+                            "variable_mode": "mode-line", 
+                            "variable_type": "file", 
+                            "variable_file_type": "image", 
+                            "variable_name": "input"
+                        }
+                    ], 
+                    "config__output_ports": [
+                        {
+                            "id": "source"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__output_shape", 
+                            "type": "config__output_shape", 
+                            "label": "参数", 
+                            "tooltip": "定义工作流需要的输入参数，可以选择多种格式"
+                        }
+                    ], 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 80, 
+                    "y": 282
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 80, 
+                    "y": 282
+                }, 
+                "width": 195, 
+                "height": 56, 
+                "selected": false
+            }, 
+            {
+                "id": "__end__", 
+                "type": "custom", 
+                "data": {
+                    "type": "end", 
+                    "title": "结束", 
+                    "desc": "", 
+                    "payload__kind": "__end__", 
+                    "outputs": [ ], 
+                    "config__input_ports": [
+                        {
+                            "id": "target", 
+                            "param_source_shape": [
+                                {
+                                    "id": "output", 
+                                    "variable_name": "output", 
+                                    "variable_type": "str", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name_readonly": false, 
+                                    "variable_type_readonly": false, 
+                                    "variable_mode_readonly": false, 
+                                    "variable_type_options": [
+                                        "str"
+                                    ], 
+                                    "sourceNodeTitle": "OCR-1"
+                                }
+                            ], 
+                            "param_check_success": true, 
+                            "param_input_error": [
+                                {
+                                    "id": "47c73d04-96b7-4021-8ee6-b3786324eee6", 
+                                    "variable_mode": "mode-line", 
+                                    "error_type": "type_mismatch", 
+                                    "source_info": {
+                                        "node_title": "OCR-1", 
+                                        "variable_name": "output", 
+                                        "variable_type": "str"
+                                    }
+                                }
+                            ], 
+                            "param_input_success": [
+                                {
+                                    "id": "47c73d04-96b7-4021-8ee6-b3786324eee6", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_type": "str", 
+                                    "variable_name": "output"
+                                }
+                            ]
+                        }
+                    ], 
+                    "config__output_ports": [ ], 
+                    "config__input_shape": [
+                        {
+                            "id": "47c73d04-96b7-4021-8ee6-b3786324eee6", 
+                            "variable_mode": "mode-line", 
+                            "variable_type": "str", 
+                            "variable_name": "output"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__input_shape", 
+                            "type": "config__input_shape", 
+                            "label": "参数"
+                        }, 
+                        {
+                            "name": "config__input_ports", 
+                            "type": "config__input_ports", 
+                            "label": "输入端点", 
+                            "tooltip": "输入参数的数量，需保证与输入参数数量保持一致"
+                        }
+                    ], 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 850, 
+                    "y": 282
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 850, 
+                    "y": 282
+                }, 
+                "width": 195, 
+                "height": 60, 
+                "selected": false
+            }, 
+            {
+                "id": "1749804887718", 
+                "type": "custom", 
+                "data": {
+                    "type": "universe", 
+                    "title": "OCR-1", 
+                    "desc": "OCR", 
+                    "config__input_ports": [
+                        {
+                            "id": "target", 
+                            "param_source_shape": [
+                                {
+                                    "id": "086d2255-4756-4956-adca-f028c8e230dd", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_type": "file", 
+                                    "variable_file_type": "image", 
+                                    "variable_name": "input", 
+                                    "sourceNodeTitle": "开始"
+                                }
+                            ], 
+                            "param_check_success": true, 
+                            "param_input_error": [
+                                {
+                                    "id": "file", 
+                                    "variable_name": "file", 
+                                    "variable_type": "file", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name_readonly": false, 
+                                    "variable_type_readonly": false, 
+                                    "variable_mode_readonly": false, 
+                                    "variable_type_options": [
+                                        "file"
+                                    ], 
+                                    "variable_file_type_list": [
+                                        "pdf", 
+                                        "image"
+                                    ], 
+                                    "error_type": "file_type_mismatch", 
+                                    "source_info": {
+                                        "node_title": "开始", 
+                                        "variable_name": "input", 
+                                        "variable_type": "file", 
+                                        "variable_file_type": "image"
+                                    }
+                                }
+                            ], 
+                            "param_input_success": [
+                                {
+                                    "id": "file", 
+                                    "variable_name": "file", 
+                                    "variable_type": "file", 
+                                    "variable_mode": "mode-line", 
+                                    "variable_name_readonly": false, 
+                                    "variable_type_readonly": false, 
+                                    "variable_mode_readonly": false, 
+                                    "variable_type_options": [
+                                        "file"
+                                    ], 
+                                    "variable_file_type_list": [
+                                        "pdf", 
+                                        "image"
+                                    ], 
+                                    "variable_file_type": "image"
+                                }
+                            ]
+                        }
+                    ], 
+                    "config__output_ports": [
+                        {
+                            "id": "source"
+                        }
+                    ], 
+                    "config__parameters": [
+                        {
+                            "name": "config__input_shape", 
+                            "type": "config__input_shape", 
+                            "label": "输入参数", 
+                            "effects": "", 
+                            "min": 1, 
+                            "max": 1, 
+                            "tooltip": "输入需要添加到提示词的信息，这些信息可以被下方的提示词引用"
+                        }, 
+                        {
+                            "name": "config__output_shape", 
+                            "type": "config__output_shape", 
+                            "label": "输出参数", 
+                            "effects": "", 
+                            "min": 1, 
+                            "max": 1, 
+                            "tooltip": "大模型生成的输出内容"
+                        }
+                    ], 
+                    "config__input_shape": [
+                        {
+                            "id": "file", 
+                            "variable_name": "file", 
+                            "variable_type": "file", 
+                            "variable_mode": "mode-line", 
+                            "variable_name_readonly": false, 
+                            "variable_type_readonly": false, 
+                            "variable_mode_readonly": false, 
+                            "variable_type_options": [
+                                "file"
+                            ], 
+                            "variable_file_type_list": [
+                                "pdf", 
+                                "image"
+                            ], 
+                            "variable_file_type": "image"
+                        }
+                    ], 
+                    "config__output_shape": [
+                        {
+                            "id": "output", 
+                            "variable_name": "output", 
+                            "variable_type": "str", 
+                            "variable_mode": "mode-line", 
+                            "variable_name_readonly": false, 
+                            "variable_type_readonly": false, 
+                            "variable_mode_readonly": false, 
+                            "variable_type_options": [
+                                "str"
+                            ]
+                        }
+                    ], 
+                    "name": "OCR", 
+                    "classification": "function-module", 
+                    "payload__kind": "OCR", 
+                    "config__can_run_by_single": true, 
+                    "title_en": "OCR", 
+                    "about": "OCR", 
+                    "selected": false
+                }, 
+                "position": {
+                    "x": 477.0069274902344, 
+                    "y": 266.99999618530273
+                }, 
+                "targetPosition": "left", 
+                "sourcePosition": "right", 
+                "positionAbsolute": {
+                    "x": 477.0069274902344, 
+                    "y": 266.99999618530273
+                }, 
+                "width": 195, 
+                "height": 76, 
+                "selected": true
+            }
+        ], 
+        "edges": [
+            {
+                "id": "719a274a-9176-4c55-b4fd-29a0d8b4cc67", 
+                "source": "__start__", 
+                "target": "1749804887718", 
+                "sourceHandle": "source", 
+                "targetHandle": "target", 
+                "type": "custom", 
+                "data": {
+                    "sourceType": "start", 
+                    "targetType": "universe"
+                }
+            }, 
+            {
+                "id": "0122e67b-f919-4683-bb05-5495da866a57", 
+                "source": "1749804887718", 
+                "target": "__end__", 
+                "sourceHandle": "source", 
+                "targetHandle": "target", 
+                "type": "custom", 
+                "data": {
+                    "sourceType": "universe", 
+                    "targetType": "end"
+                }
+            }
+        ], 
+        "resources": [ ], 
+        "viewport": {
+            "x": 497.8728728728729, 
+            "y": 187, 
+            "zoom": 1
+        }
+    }
+}

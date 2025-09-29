@@ -1,0 +1,57 @@
+.modelTestCreate {
+  width: 100%;
+  height: 100%;
+  background: #FFFFFF;
+  overflow: auto;
+  padding-bottom: 40px;
+
+  .createWrap {
+    padding: 8px 30px;
+    padding-bottom: 30px;
+
+    .breadcrumb {
+      margin-top: 8px;
+      margin-bottom: 15px;
+    }
+  }
+
+  .tipWrap {
+    font-size: 12px;
+    color: #8F949E;
+    line-height: 24px;
+  }
+
+  .saveWrap {
+    position: fixed;
+    bottom: 0;
+    width: calc(100% - 180px);
+    text-align: right;
+    background: #fff;
+    z-index: 3;
+  }
+
+  .removeIcon {
+    position: absolute;
+    right: 0;
+    width: 24px;
+    height: 24px;
+    font-size: 18px;
+    top: 0;
+    text-align: center;
+    line-height: 24px;
+    z-index: 2;
+    cursor: pointer;
+
+    &:hover {
+      background: #FFDEDE;
+    }
+
+    >span {
+      cursor: pointer;
+
+      &:hover {
+        color: #FF5E5E;
+      }
+    }
+  }
+}

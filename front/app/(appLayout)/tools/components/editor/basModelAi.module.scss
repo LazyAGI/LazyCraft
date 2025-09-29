@@ -1,0 +1,121 @@
+.modal {
+  :global {
+    .ant-modal-content {
+      padding: 20px;
+
+      .ant-modal-body {
+        height: 470px !important;
+      }
+
+      .ant-modal-footer {
+        border-top: none !important;
+      }
+    }
+  }
+}
+
+.container {
+  display: flex;
+  gap: 20px;
+  height: 100%;
+
+  .section {
+    width: 50%;
+    min-width: 0; // 防止内容撑开
+    max-width: 50%;
+    position: relative;
+    .title {
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .inputWrapper {
+      position: relative;
+      height: 100%;
+
+      .textarea {
+        width: 100%;
+        height: 200px !important;
+        padding: 12px;
+        resize: none;
+        background-color: transparent;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        line-height: 18px;
+        font-size: 13px;
+        font-weight: normal;
+        color: #111827;
+
+        &::placeholder {
+          color: #9CA3AF;
+        }
+
+        &:focus {
+          outline: none;
+          border-color: #3B82F6;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+      }
+
+      .generateBtn {
+        position: absolute !important;
+        right: 0;
+        bottom: 0;
+        top: 210px;
+        display: flex;
+        align-items: center;
+        border-radius: 10px !important;
+        gap: 4px;
+      }
+    }
+
+    .copyBtn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: #9CA3AF;
+      // 上下居中显示
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+      // background-color: #f0f0f0;
+      border-radius: 10px;
+      // padding: 20px;
+    }
+
+    .codePreview {
+      height: 400px;
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 13px;
+      color: #111827;
+      overflow: auto;
+      position: relative;
+
+      :global {
+        .ant-spin-nested-loading {
+          height: 100%;
+
+          .ant-spin-container {
+            height: 100%;
+          }
+
+          .ant-spin {
+            max-height: none;
+          }
+        }
+      }
+
+      pre {
+        margin: 0;
+      }
+    }
+  }
+}

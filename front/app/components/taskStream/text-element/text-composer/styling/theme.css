@@ -1,0 +1,32 @@
+.workflow-note-style_text-block {
+  font-size: 13px;
+}
+
+.workflow-note-style_listing-unordered {
+  font-size: 13px;
+  margin: 0.5;
+  padding: 0.5;
+  list-style: disc;
+}
+
+.workflow-note-style_listing-item {
+  margin-left: 20px;
+  margin-right: 7px;
+}
+
+.workflow-note-style_hyperlink {
+  cursor: pointer;
+  color: #165dec;
+}
+
+.workflow-note-style_hyperlink:hover {
+  text-decoration: underline;
+}
+
+.workflow-note-style_content-crossed {
+  text-decoration: line-through;
+}
+
+.workflow-note-style_content-oblique {
+  font-style: italic;
+}

@@ -1,0 +1,9 @@
+.ant-form-item-has-error {
+  &>.ant-row>.ant-col {
+    &>.ant-form-item-control-input>.ant-form-item-control-input-content {
+      .field-item-advanced-prompt-input {
+        border: 1px solid #fd3021 !important;
+      }
+    }
+  }
+}

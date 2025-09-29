@@ -1,0 +1,40 @@
+.inferenceServiceNavigationContainer {
+  display: flex;
+  gap: 4px;
+
+  &:hover {
+    color: #0E5DD8;
+
+    .inactiveIcon {
+      background: linear-gradient(153deg, #5CAAFF 0%, #E580FF 100%);
+      ;
+      border-radius: 8px;
+      color: #fff;
+    }
+  }
+
+  .inactiveIcon {
+    width: 24px;
+    height: 24px;
+    font-size: 24px;
+    text-align: center;
+    line-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .activeIcon {
+    width: 24px;
+    height: 24px;
+    font-size: 24px;
+    background: linear-gradient(153deg, #5CAAFF 0%, #E580FF 100%);
+    ;
+    border-radius: 8px;
+    color: #fff;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

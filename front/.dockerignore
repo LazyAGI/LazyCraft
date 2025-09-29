@@ -1,0 +1,43 @@
+# 环境配置
+.env
+.env.*
+
+# 日志文件
+logs
+*.log*
+
+# Node.js 相关
+node_modules
+.husky
+.next
+
+# IDE 配置文件
+.vscode
+.idea
+*.iml
+*.iws
+*.ipr
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.tmp
+*.temp
+.cache
+
+# 测试覆盖率
+coverage
+.nyc_output
+
+# 构建产物
+dist
+build
+out
+
+# 其他
+*.md
+.git
+.gitignore
+README.md

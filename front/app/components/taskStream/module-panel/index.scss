@@ -1,0 +1,86 @@
+.module-panel-container {
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  position: relative;
+  height: calc(100vh - 60px);
+  width: 100%;
+
+  .com-drag-container {
+    display: flex;
+    justify-content: space-between;
+    background: #FFFFFF;
+    box-shadow: 0px 4px 8px 0px rgba(7, 17, 39, 0.1);
+    border-radius: 4px;
+
+    width: 214px;
+    height: 32px;
+    padding: 6px 10px;
+
+    &:hover {
+      box-shadow: 0px 4px 8px 0px rgba(7, 17, 39, 0.1);
+
+      .menu-icon {
+        color: #0E5DD8;
+      }
+    }
+  }
+
+  .sider-container {
+    .sider-panel {
+      width: 254px;
+
+      :where(.css-dev-only-do-not-override-1gwfwyx).ant-tabs-top>.ant-tabs-nav,
+      :where(.css-dev-only-do-not-override-1gwfwyx).ant-tabs-bottom>.ant-tabs-nav,
+      :where(.css-dev-only-do-not-override-1gwfwyx).ant-tabs-top>div>.ant-tabs-nav,
+      :where(.css-dev-only-do-not-override-1gwfwyx).ant-tabs-bottom>div>.ant-tabs-nav {
+        margin: 0 0 10px 0;
+      }
+
+      .canvas-subcontent-overflow {
+        overflow-y: auto;
+        overflow-x: hidden;
+
+        &::-webkit-scrollbar {
+          width: 0;
+          height: 0;
+        }
+      }
+
+    }
+
+    .unfold-btn {
+      margin-top: 8px;
+      margin-right: 20px;
+    }
+
+    .btn-container {
+      .com-btn {
+        width: 40px;
+        height: 40px;
+        line-height: 40px;
+        text-align: center;
+        cursor: pointer;
+        background: #fff;
+        border: 1px solid #f0f1f3;
+        border-radius: 8px;
+
+        &:hover {
+          background: #0e5dd8;
+        }
+
+        @media screen and (max-width: 768px) {
+          color: #fff;
+          background: rgba(14, 93, 216, 0.75);
+        }
+      }
+
+      .history-btn {
+        position: absolute;
+        top: 10px;
+        left: 20px;
+        z-index: 11;
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+.custom-input {
+  // border color
+  &.ant-input-outlined {
+    border-color: #D9DBE0;
+  }
+  // placeholder color
+  &::placeholder {
+    color: #C1C3C9;
+  }
+}
+
+.custom-input-readonly {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 400;
+  font-size: 14px;
+  color: #071127;
+  text-align: left;
+  font-style: normal;
+  border-radius: 4px;
+  border: 1px solid #D9DBE0;
+  padding: 5px 12px;
+  height: 30px;
+  .custom-input-readonly-value {
+    display: inline-block;
+    cursor: pointer;
+  }
+}

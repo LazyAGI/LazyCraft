@@ -1,0 +1,17 @@
+.outerWrap {
+  width: 100%;
+  background: #fff;
+  box-shadow: 0px -2px 20px 0px rgba(7, 17, 39, 0.08);
+  border-radius: 20px 20px 0px 0px;
+
+  .docWrap {
+    width: 100vw;
+    min-height: calc(100vh - 60px);
+
+    >iframe {
+      width: 100%;
+      min-height: calc(100vh - 60px);
+      overflow-y: auto;
+    }
+  }
+}

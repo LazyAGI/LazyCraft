@@ -1,0 +1,9 @@
+.ant-form-item-has-error {
+  &>.ant-row>.ant-col {
+    &>.ant-form-item-control-input>.ant-form-item-control-input-content {
+      .resource-selector-input-wrapper {
+        border: 1px solid #fd3021 !important;
+      }
+    }
+  }
+}

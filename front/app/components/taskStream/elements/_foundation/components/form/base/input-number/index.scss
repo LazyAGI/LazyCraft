@@ -1,0 +1,10 @@
+.custom-input-number {
+  // border color
+  &.ant-input-number-outlined {
+    border-color: #D9DBE0;
+  }
+  // placeholder color
+  &::placeholder {
+    color: #C1C3C9;
+  }
+}

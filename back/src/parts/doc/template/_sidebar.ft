@@ -1,0 +1,4 @@
+<!-- docs/_sidebar.md -->
+{% for menu in menus %}
+- [{{ menu.title }}]({{ menu.id }}.md)
+{% endfor %}

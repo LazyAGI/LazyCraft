@@ -1,0 +1,436 @@
+@import "preflight.css";
+@tailwind base;
+@tailwind components;
+
+
+/* 基础重置和全局样式 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  user-select: none;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow: hidden;
+}
+
+a {
+  color: inherit;
+  outline: none;
+  text-decoration: none;
+}
+
+button:focus-within {
+  outline: none;
+}
+
+/* 主题切换动画控制 */
+html[data-changing-theme] * {
+  transition: none !important;
+}
+
+/* CSS变量定义 */
+:root {
+  --background-end-rgb: 255, 255, 255;
+  --background-start-rgb: 214, 219, 220;
+  --border-radius: 4px;
+  --callout-border-rgb: 172, 175, 176;
+  --callout-rgb: 238, 240, 241;
+  --card-border-rgb: 131, 134, 135;
+  --card-rgb: 180, 185, 188;
+  --font-mono: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono",
+    "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro",
+    "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
+  --foreground-rgb: 0, 0, 0;
+  --max-width: 1100px;
+  --primary-glow: conic-gradient(from 180deg at 50% 50%,
+      #16abff33 0deg,
+      #0885ff33 55deg,
+      #54d6ff33 120deg,
+      #0071ff33 160deg,
+      transparent 360deg);
+  --secondary-glow: radial-gradient(rgb(255, 252, 252),
+      rgba(0, 0, 0, 0));
+  --tile-border: conic-gradient(#00000080,
+      #03030340,
+      #05050530,
+      #02020220,
+      #05050510,
+      #00000010,
+      #00000080);
+  --tile-end-rgb: 228, 232, 233;
+  --tile-start-rgb: 239, 245, 249;
+}
+
+/* 工具类样式 */
+.h1 {
+  color: #111928;
+  font-size: 1.125rem;
+  line-height: 1.5;
+  padding-bottom: 1.5rem;
+}
+
+.h2 {
+  color: #111928;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.link {
+  @apply text-blue-600 cursor-pointer hover:opacity-80 transition-opacity duration-200 ease-in-out;
+}
+
+.text-gradient {
+  background: linear-gradient(91.58deg, #2250F2 -29.55%, #0EBCF3 75.22%);
+  background-clip: text;
+  text-fill-color: transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 文本省略号样式 */
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Safari兼容性支持 */
+.inset-0 {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+}
+
+/* 分页器样式覆盖 */
+[class*=style_paginatio] li .text-primary-600 {
+  background-color: rgb(235 245 255);
+  color: rgb(28 100 242);
+}
+
+/* 字体系统定义 */
+.system-2xs-medium {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 12px;
+}
+
+.system-2xs-medium-uppercase {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 12px;
+  text-transform: uppercase;
+}
+
+.system-2xs-regular-uppercase {
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 12px;
+  text-transform: uppercase;
+}
+
+.system-sm-semibold {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+.system-sm-semibold-uppercase {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+
+
+.system-xl-semibold {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.system-xs-regular {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+}
+
+/* 代码字体样式 */
+[class*='code-'] {
+  @apply font-mono;
+}
+.code-sm-semibold {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* 组件样式导入 */
+@import '../components/base/click-unit/index.css';
+@import '../components/base/pop-modal/index.css';
+
+@tailwind utilities;
+
+/* Monaco编辑器样式修复 */
+.monaco-editor .find-widget {
+  background-color: white !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  position: relative;
+  z-index: 100;
+}
+
+.monaco-editor .find-widget>.button.codicon-widget-close {
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 50%;
+  cursor: pointer !important;
+  display: flex !important;
+  font-family: Arial, sans-serif !important;
+  font-size: 16px !important;
+  font-weight: bold !important;
+  height: 20px !important;
+  justify-content: center !important;
+  margin: 3px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  position: absolute !important;
+  right: 0 !important;
+  text-shadow: none !important;
+  top: 0 !important;
+  transition: background-color 0.2s, color 0.2s !important;
+  width: 20px !important;
+  z-index: 101 !important;
+}
+.monaco-editor .find-widget>.find-part {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  gap: 6px;
+  height: auto;
+  margin: 0;
+  padding: 10px 10px 8px 10px;
+}
+
+.monaco-editor .find-widget:not(.expanded)>.replace-part {
+  display: none !important;
+}
+
+.monaco-editor .find-widget.expanded>.replace-part {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex !important;
+  gap: 6px;
+  height: auto;
+  margin: 0;
+  padding: 0 10px 10px 10px;
+}
+
+.monaco-editor .find-widget>.replace-part {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  gap: 6px;
+  height: auto;
+  margin: 0;
+  padding: 0 10px 10px 10px;
+}
+
+.monaco-editor .find-widget .monaco-findInput {
+  margin: 0;
+  min-width: 220px;
+  position: relative;
+  width: 100%;
+}
+
+.monaco-editor .find-widget .monaco-findInput .input {
+  background-color: transparent;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 13px;
+  height: 32px;
+  padding: 6px 8px;
+  pointer-events: auto;
+  position: relative;
+  transition: border-color 0.2s;
+  width: 100%;
+  z-index: 1;
+}
+
+.monaco-editor .find-widget .matchesCount {
+  align-items: center;
+  color: #4b5563;
+  display: flex;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: auto;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.monaco-editor .find-widget,
+.monaco-editor .find-widget .monaco-findInput,
+.monaco-editor .find-widget .monaco-findInput .input,
+.monaco-editor .find-widget>.find-part,
+.monaco-editor .find-widget>.replace-part {
+  background-color: #f9fafb;
+}
+
+.monaco-editor .find-widget .monaco-findInput .input,
+.monaco-editor .find-widget .button {
+  background-color: white;
+}
+
+.monaco-editor .find-widget .monaco-findInput * {
+  pointer-events: auto;
+}
+
+.monaco-editor .find-widget .monaco-findInput>.controls {
+  align-items: center;
+  display: flex;
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.monaco-editor .find-widget .button {
+  align-items: center;
+  border-radius: 4px;
+  display: flex;
+  height: 24px;
+  justify-content: center;
+  margin: 0 3px;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  width: 24px;
+}
+
+.monaco-editor .find-widget .button:hover {
+  background-color: #f3f4f6;
+  opacity: 1;
+}
+
+.monaco-editor .find-widget .button.checked {
+  background-color: rgba(34, 80, 242, 0.1);
+  color: #2250F2;
+  opacity: 1;
+}
+
+.monaco-editor .find-widget .find-actions {
+  align-items: center;
+  display: flex;
+}
+
+.monaco-editor .find-widget .monaco-checkbox {
+  display: none;
+  visibility: hidden;
+}
+
+.monaco-editor .monaco-scrollable-element {
+  position: relative;
+}
+
+.monaco-editor .suggest-widget {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  min-width: 200px;
+  overflow: hidden;
+  width: auto !important;
+  z-index: 40;
+}
+
+.monaco-editor .suggest-widget .monaco-list {
+  width: 100% !important;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row {
+  align-items: center;
+  display: flex;
+  padding: 6px 10px;
+  transition: background-color 0.15s ease;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused {
+  background-color: rgba(34, 80, 242, 0.08);
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row:hover:not(.focused) {
+  background-color: #f9fafb;
+}
+
+.monaco-editor-hover {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-width: 500px;
+  overflow: hidden;
+  padding: 8px 12px;
+  z-index: 50;
+}
+
+.monaco-editor .monaco-action-bar {
+  align-items: center;
+  display: flex;
+}
+
+.monaco-editor .monaco-action-bar .action-item {
+  margin-right: 3px;
+}
+
+.monaco-editor .monaco-action-bar .action-label {
+  align-items: center;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  padding: 3px 6px;
+  transition: background-color 0.15s ease;
+}
+
+.monaco-editor .monaco-action-bar .action-label:hover {
+  background-color: #f3f4f6;
+}
+
+.monaco-editor .find-widget.visible {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+
+.monaco-editor .find-widget:not(.visible) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.15s ease;
+}

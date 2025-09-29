@@ -1,0 +1,95 @@
+.page {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    padding: 0 120px 20px 120px;
+    background: #fff;
+    outline: none;
+    .breadcrumb {
+        margin-bottom: 8px;
+        margin-top: 8px;
+    }
+}
+
+.card {
+    // margin-top: 8px;
+    box-shadow: 0px 0px 4px 0px rgba(7, 17, 39, 0.12);
+    border-radius: 12px;
+
+    .header {
+        width: 100%;
+        line-height: 62px;
+        background-color: #FAFAFB;
+        padding: 0 20px;
+        line-height: 62px;
+
+
+        .title {
+            font-size: 22px;
+            color: #071127;
+            font-weight: bold;
+        }
+    }
+
+    .content {
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    .displayFlex {
+        display: flex;
+    }
+
+    .iconWrapper {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        background: linear-gradient(150deg, #26adf0 0%, #69d17b 100%);
+        color: #fff;
+        font-size: 46px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .info {
+        flex: 1;
+        margin-left: 10px;
+    }
+
+    .name {
+        font-size: 16px;
+        color: #071127;
+        font-weight: bold;
+        line-height: 24px;
+    }
+
+    .desc {
+        height: 52px;
+        font-size: 14px;
+        color: #5E6472;
+        line-height: 22px;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-clamp: 2;
+    }
+
+    .author {
+        margin-top: 8px;
+        color: #5E6472;
+        font-size: 14px;
+    }
+}
+
+.card2 {
+    height: 62vh;
+}
+
+.tableHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}

@@ -1,0 +1,30 @@
+.gradientBorder {
+  background: radial-gradient(circle at 100% 100%, #fcfcfd 0, #fcfcfd 8px, transparent 8px) 0% 0%/10px 10px no-repeat,
+            radial-gradient(circle at 0 100%, #fcfcfd 0, #fcfcfd 8px, transparent 8px) 100% 0%/10px 10px no-repeat,
+            radial-gradient(circle at 100% 0, #fcfcfd 0, #fcfcfd 8px, transparent 8px) 0% 100%/10px 10px no-repeat,
+            radial-gradient(circle at 0 0, #fcfcfd 0, #fcfcfd 8px, transparent 8px) 100% 100%/10px 10px no-repeat,
+            linear-gradient(#fcfcfd, #fcfcfd) 50% 50%/calc(100% - 4px) calc(100% - 20px) no-repeat,
+            linear-gradient(#fcfcfd, #fcfcfd) 50% 50%/calc(100% - 20px) calc(100% - 4px) no-repeat,
+            radial-gradient(at 100% 100%, rgba(45,13,238,0.6) 0%, transparent 60%),
+            radial-gradient(at 100% 0%, rgba(45,13,238,0.6) 0%, transparent 60%),
+            radial-gradient(at 0% 0%, rgba(42,135,245,0.6) 0%, transparent 60%),
+            radial-gradient(at 0% 100%, rgba(42,135,245,0.6) 0%, transparent 60%);
+  border-radius: 12px;
+  padding: 2px;
+  box-sizing: border-box;
+}
+.EnhancedPromptInput {
+  border: 1px solid #D9DBE0;
+  border-radius: 4px;
+
+  &.focused, &:hover, &:focus, &:active {
+    border: 1px solid #0e5dd8;
+  }
+}
+.optionWrap {
+  display: flex;
+}
+
+.boxHeader {
+  border-bottom: 1px solid #F0F1F3;
+}

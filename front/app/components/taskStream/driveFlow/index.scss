@@ -1,0 +1,26 @@
+.lazyllm-run__code-editor-wrapper {
+
+  // 设置编辑器左侧行数栏宽度
+  .overflow-guard .margin {
+    width: 40px !important;
+  }
+
+  // 设置编辑器右侧代码编辑部分宽度
+  .monaco-scrollable-element.editor-scrollable {
+    width: calc(100% - 40px) !important;
+    left: 40px !important;
+  }
+
+  .prompt-editor-height-resize-wrapper {
+    overflow-y: hidden;
+    overflow-x: hidden;
+  }
+}
+
+// 设置结果输出中表单项的左右padding为0
+.result-output {
+  .ant-form-item {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}

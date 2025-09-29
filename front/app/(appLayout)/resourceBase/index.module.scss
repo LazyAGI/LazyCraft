@@ -1,0 +1,48 @@
+.container {
+  width: 100%;
+  height: calc(100vh - 60px);
+  background: #fff;
+  display: flex;
+}
+
+.slide {
+  width: 180px;
+  height: 100%;
+  padding: 1.5625vw 10px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  border-right: 1px solid #F0F5FC;
+  background: #FCFCFD;
+
+  .menu {
+      width: 100%;
+  }
+
+  .menuItem {
+      width: 100%;
+      padding: 4px 8px;
+      box-sizing: border-box;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      margin-bottom: 11px;
+  }
+
+  .active {
+      background: #F0F5FC;
+      color: #0E5DD8;
+  }
+
+  .icon {
+      width: 16px;
+      font-size: 16px;
+      margin-right: 8px;
+  }
+}
+
+.content {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+}

@@ -1,0 +1,50 @@
+.apiKeyModal {
+
+  // 关闭确认弹窗样式
+  &Close {
+    .apiKeyCloseContent {
+      padding: 15px 0;
+      text-align: center;
+
+      .apiKeyCloseText {
+        font-size: 14px;
+        margin: 0;
+      }
+    }
+  }
+
+  // 开启成功弹窗样式
+  &Success {
+    .apiKeySuccessContent {
+      padding: 20px 0;
+
+      .apiKeySuccessTitle {
+        margin-bottom: 16px;
+        font-size: 14px;
+      }
+
+      .apiKeyUrlContainer {
+        display: flex;
+        align-items: center;
+        background: #f5f5f5;
+        padding: 8px 12px;
+        border-radius: 4px;
+        margin-bottom: 16px;
+
+        .apiKeyUrlText {
+          flex: 1;
+          font-family: monospace;
+          font-size: 12px;
+          word-break: break-all;
+        }
+
+      }
+
+      .apiKeyUsageTip {
+        font-size: 12px;
+        color: #666;
+        margin: 0;
+      }
+    }
+  }
+}

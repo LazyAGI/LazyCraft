@@ -1,0 +1,19 @@
+.iconModal {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 15px;
+
+  .iconSty {
+    width: 80px;
+    height: 80px;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .activeIcon {
+    border: 3px solid #0E5DD8;
+  }
+}

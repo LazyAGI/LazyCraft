@@ -1,0 +1,220 @@
+.dict-variable-select {
+  .ant-select-selector {
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
+.dict-variable-input {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.dict-variable-del {
+  border: 0 !important;
+}
+
+.config-shape-check {
+  transition: all 0.3s;
+  color: #fb3f3f;
+  overflow: hidden;
+  padding-left: 6px;
+
+
+  &.check-success {
+    height: 0;
+  }
+
+  &.check-failed {
+    min-height: 26px;
+    height: auto !important;
+    padding: 4px 6px;
+  }
+}
+
+.config-shape-row {
+  padding: 0 6px;
+  background: #F5F6F7;
+  border-radius: 4px;
+  margin-top: 4px;
+  position: relative;
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  &.check-success {
+    background: rgba(105, 209, 123, 0.12);
+  }
+
+  &.check-error {
+    background: rgba(255, 94, 94, 0.12);
+    border: 1px solid rgba(255, 77, 79, 0.3);
+  }
+
+  .args-error-indicator {
+    position: absolute;
+    left: -20px;
+    top: 8px;
+    // z-index: 10;
+    cursor: pointer;
+  }
+
+  &.check-error {
+    .args-set {
+      input,
+      .ant-select-selector {
+        border-color: #ff4d4f;
+      }
+    }
+
+    .config-shape-check {
+      color: #ff4d4f;
+      font-weight: 500;
+      height: auto !important;
+      padding: 4px 0;
+    }
+  }
+}
+
+.config-shape-chunk {
+  position: relative;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  // margin-bottom: 6px;
+
+  &.supply-cell {
+    height: 38px;
+    align-items: flex-start
+  }
+
+  .args-set {
+    flex: 0 0 90px;
+    margin-right: 6px;
+  }
+
+  .args-info {
+    width: 0;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: left;
+    margin-right: 6px;
+
+    .args-input {
+      height: 32px;
+      line-height: 32px;
+      flex: 1;
+    }
+
+    .args-chain {
+      padding: 0 8px 0 10px;
+      flex: 1;
+      height: 32px;
+      line-height: 32px;
+      background: #FFFFFF;
+      box-shadow: 0px 2px 2px 0px rgba(7, 17, 39, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+
+      .prev-name {
+        color: #0E5DD8;
+      }
+    }
+
+    .args-const {
+      flex: 1;
+    }
+
+    .args-remove {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 26px;
+      height: 26px;
+      cursor: pointer;
+    }
+  }
+
+  .dict-data-operate {
+    width: 0;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding-top: 3px;
+
+    .dict-add,
+    .dict-remove {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 26px;
+      height: 26px;
+      cursor: pointer;
+    }
+  }
+}
+
+.config-shape-editor {
+  margin-top: 6px;
+
+  .monaco-editor {
+    .margin {
+      background-color: #ffffff;
+    }
+  }
+
+  .base_component__code_editor>div>div {
+    background-color: #ffffff;
+  }
+
+  .code-editor-space {
+    height: 6px;
+  }
+}
+
+.config-shape-textbox>div>div>div {
+  background-color: #ffffff;
+}
+
+.config-shape-textbox {
+  .textbox-space {
+    height: 6px;
+  }
+}
+
+.parameter-error-tooltip {
+  position: absolute;
+  background: #000;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  z-index: 1000;
+  max-width: 300px;
+  white-space: normal;
+  
+  &:after {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 100%;
+    border: 6px solid transparent;
+    border-top-color: #000;
+  }
+}
+
+.error-message-container {
+  display: flex;
+  align-items: center;
+  color: #ff4d4f;
+  font-weight: 500;
+  padding: 4px 0;
+  
+  span {
+    flex: 1;
+    word-break: break-word;
+  }
+}

@@ -1,0 +1,87 @@
+.background {
+  background-color: #F1F5FD;
+  position: relative;
+  background: url('./assets/background.png') no-repeat;
+  background-size: cover;
+}
+
+.formWrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  padding-right: 18.75vw;
+
+  .cWrap {
+    background: #FFFFFF;
+    width: 420px;
+    min-height: 460px;
+    box-shadow: 0px 0px 4px 0px rgba(7, 17, 39, 0.12);
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 30px 36px;
+
+    .title {
+      font-size: 28px;
+      font-weight: 500;
+      text-align: center;
+      margin-bottom: 10px;
+      color: #071127;
+    }
+
+    .noCount {
+      text-align: center;
+      color: #5E6472;
+      font-size: 14px;
+      margin-top: -10px;
+    }
+
+    .changeBtn {
+      display: flex;
+      justify-content: space-between;
+      text-align: right;
+      align-items: center;
+      margin-bottom: 17px;
+      margin-top: -5px;
+    }
+
+    .bottomBtn {
+      display: flex;
+      justify-content: space-between;
+    }
+  }
+}
+
+.emailWrap {
+  padding: 20px 0;
+  text-align: center;
+  padding-bottom: 50px;
+
+  .hasSend {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .first {
+      width: 114px;
+      height: 106px;
+      background: url('./assets/email.png') no-repeat;
+      background-size: cover;
+    }
+
+    .second {
+      font-weight: 500;
+      font-size: 22px;
+      color: #071127;
+      margin-bottom: 12px;
+      margin-top: 7px;
+    }
+
+    .third {
+      width: 312px;
+      color: #5E6472;
+    }
+  }
+}

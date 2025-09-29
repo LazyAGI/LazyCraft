@@ -1,0 +1,40 @@
+.canvas-panel-animate .react-flow__viewport {
+  transition: transform 0.3s ease-in-out;
+}
+
+.graph-node-animate .react-flow__node {
+  transition: transform 0.2s ease-in-out;
+}
+
+#graph-canvas .graphreact-flow__nodesselection-rect {
+  border: 1px solid #529BFF;
+  background: rgba(21, 94, 239, 0.05);
+  cursor: move;
+}
+
+#graph-canvas .react-flow__selection {
+  border: 1px solid #529BFF;
+  background: rgba(21, 94, 239, 0.05);
+}
+
+#graph-canvas .react-flow__attribution a[href="https://reactflow.dev"] {
+  display: none !important;
+}
+
+.canvas-panel-wrap {
+  border-radius: 0;
+}
+
+.canvas-panel-head {
+  border-color: #F0F1F3;
+}
+
+.canvas-panel-title {
+  font-size: 16px;
+  color: #071127;
+}
+
+.canvas-panel-desc {
+  font-size: 14px;
+  color: #5E6472;
+}

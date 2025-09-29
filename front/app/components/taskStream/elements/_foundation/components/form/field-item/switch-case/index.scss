@@ -1,0 +1,14 @@
+.ant-input.ant-input-outlined:not(.ant-input-disabled) {
+  &.switch-case-error-input {
+    border-color: #ff4d4f;
+  }
+  &.switch-case-normal-input {
+    border-color: #d9d9d9;
+    &:hover {
+      border-color: #327de6;
+    }
+    &:focus-within {
+      border-color: #327de6;
+    }
+  }
+}

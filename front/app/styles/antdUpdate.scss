@@ -1,0 +1,124 @@
+.ant-modal {
+  .ant-modal-content {
+    overflow: hidden;
+    border-radius: 4px;
+    box-shadow: 0 10px 30px 0 rgba(7, 29, 60, 0.15);
+    padding: 0 !important;
+
+    .ant-modal-close {
+      right: 10px;
+      color: #738197;
+      display: flex;
+      align-items: center;
+
+      &:hover {
+        background-color: #F5F6F7 !important;
+      }
+
+      .ant-modal-close-x {
+        width: auto;
+        height: 50px;
+      }
+    }
+
+    .ant-modal-header {
+      height: 50px;
+      padding: 13px 20px 14px;
+      background-color: #F5F6F7;
+
+      .ant-modal-title {
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 24px;
+        color: #071127;
+      }
+    }
+
+    .ant-modal-body {
+      padding: 0 20px;
+
+      .ant-modal-confirm-title {
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 24px;
+        color: #212b42;
+      }
+
+      .ant-modal-confirm-content {
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 22px;
+        color: #888d98;
+      }
+    }
+
+    .ant-modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid #F0F1F3;
+    }
+  }
+}
+
+.ant-form-item {
+  .ant-form-item-label {
+    label {
+      color: #5E6472 !important;
+    }
+  }
+}
+
+.ant-drawer {
+
+  // 抽屉关闭按钮
+  .ant-drawer-header {
+    padding: 13.5px 30px;
+    background: #F5F6F7;
+
+    .ant-drawer-close {
+      position: absolute;
+      right: 10px;
+    }
+  }
+
+  .ant-drawer-body {
+    padding: 30px;
+  }
+}
+
+.controller-modal-confirm {
+  .ant-modal-confirm-body-wrapper {
+    padding: 20px 30px 20px 20px;
+
+    .user-group-cell {
+      padding: 10px 0;
+    }
+  }
+}
+
+.agent-app-upload {
+  position: relative;
+
+  .ant-upload-list.ant-upload-list-text {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    transform: translate(-110%, 0);
+
+    .ant-upload-list-item-container {
+      display: none;
+
+      &:last-child {
+        display: block;
+      }
+    }
+  }
+  .ant-upload-list .ant-upload-list-item .ant-upload-list-item-name{
+    max-width: 300px !important;
+  }
+}
+
+.ant-card {
+  border-radius: 12px !important;
+  box-shadow: 0px 0px 4px 0px rgba(7, 17, 39, 0.12);
+  border: none !important;
+}

@@ -1,0 +1,98 @@
+.container {
+    padding: 8px 1.5625vw;
+}
+
+.breadcrumb {
+    margin-bottom: 8px;
+}
+
+.title {
+    font-size: 22px;
+    color: #071127;
+    font-weight: bold;
+}
+
+.name {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+    color: #071127;
+    font-weight: bold;
+}
+
+.tags {
+    margin-top: 8px;
+    display: flex;
+
+    .tagItem {
+        background: #F6F7F8;
+        border-radius: 4px;
+        border: 1px solid #F0F1F3;
+        padding: 2px 8px;
+        margin-right: 2px;
+        color: #5E6472;
+    }
+}
+
+.desc {
+    margin-top: 4px;
+    width: 100%;
+    color: #5E6472;
+    line-height: 22px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tableHeader {
+    width: 100%;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.statusWrap {
+    display: inline-block;
+    font-size: 12px;
+    padding: 2px 4px;
+    border: 1px solid;
+    border-radius: 2px;
+    text-align: center;
+}
+
+.doing {
+    background: #F0F5FC;
+    border-color: #0E5DD8;
+    color: #0E5DD8;
+}
+
+.failed {
+    background: #FFF6F6;
+    border-color: #FF5E5E;
+    color: #FF5E5E;
+}
+
+.done {
+    background: #F6FCF7;
+    border-color: #69D17B;
+    color: #69D17B
+}
+
+.options {
+    position: absolute;
+    right: 20px;
+    top: 54px;
+}
+
+.fontSty {
+    color: #5E6472;
+    column-gap: 30px !important;
+}
+
+.carBody {
+    height: 50vh;
+    overflow-y: auto;
+}

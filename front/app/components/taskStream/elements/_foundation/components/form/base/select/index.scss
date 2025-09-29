@@ -1,0 +1,35 @@
+.custom-select {
+  &.ant-select-outlined:not(.ant-select-customize-input) {
+    // border color
+    .ant-select-selector {
+      border: 1px solid #D9DBE0;
+    }
+    // arrow color
+    .ant-select-arrow .anticon >svg {
+      fill: #5E6472;
+      transform: scaleY(0.75);
+    }
+  }
+  // placeholder color
+  &.ant-select .ant-select-selection-placeholder {
+    color: #C1C3C9;
+  }
+}
+
+.custom-select-readonly {
+  &.ant-select-outlined.ant-select-disabled:not(.ant-select-customize-input) {
+    cursor: auto;
+    background: #ffffff;
+    color: #071127;
+  
+    .ant-select-selector {
+      cursor: auto;
+      background: #ffffff;
+      color: #071127;
+    }
+    // arrow color
+    .ant-select-arrow .anticon >svg {
+      fill: #D9DBE0;
+    }
+  }
+}

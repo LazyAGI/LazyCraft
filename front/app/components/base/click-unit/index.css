@@ -1,0 +1,215 @@
+/* 按钮基础样式 */
+.button-base {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.button-disabled {
+  cursor: not-allowed;
+}
+
+/* 按钮尺寸 */
+.button-small {
+  padding: 0 0.5rem;
+  height: 1.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.button-medium {
+  padding: 0 0.875rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  font-size: 13px;
+  line-height: 1rem;
+  font-weight: 500;
+}
+
+.button-large {
+  padding: 0 1rem;
+  height: 2.25rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* 主要按钮样式 */
+.button-primary {
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.06), 0px 1px 3px 0px rgba(16, 24, 40, 0.10);
+  background-color: #155eef;
+  border: 1px solid #155eef;
+  color: white;
+}
+
+.button-primary:hover {
+  background-color: #004eeb;
+  border-color: #004eeb;
+}
+
+.button-primary.button-Terminate {
+  background-color: #dc2626;
+  border-color: #dc2626;
+}
+
+.button-primary.button-Terminate:hover {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.button-primary.button-disabled {
+  box-shadow: none;
+  background-color: #d0d5dd;
+  border-color: #d0d5dd;
+  color: #667085;
+}
+
+.button-primary.button-Terminate.button-disabled {
+  box-shadow: none;
+  background-color: #fecaca;
+  border-color: #fecaca;
+  color: #f87171;
+}
+
+/* 次要按钮样式 */
+.button-secondary {
+  border: 0.5px solid #d0d5dd;
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+  background-color: white;
+  color: #475467;
+}
+
+.button-secondary:hover {
+  background-color: #f9fafb;
+  border-color: #98a2b3;
+}
+
+.button-secondary.button-disabled {
+  background-color: #f9fafb;
+  border-color: #eaecf0;
+  color: #98a2b3;
+}
+
+.button-secondary.button-Terminate {
+  background-color: white;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.button-secondary.button-Terminate:hover {
+  background-color: #fef2f2;
+  border-color: #f87171;
+}
+
+.button-secondary.button-Terminate.button-disabled {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #fca5a5;
+}
+
+/* 次要强调按钮样式 */
+.button-secondary-accent {
+  border: 0.5px solid #d0d5dd;
+  box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+  background-color: white;
+  color: #155eef;
+}
+
+.button-secondary-accent:hover {
+  background-color: #f9fafb;
+  border-color: #98a2b3;
+}
+
+.button-secondary-accent.button-disabled {
+  background-color: #f9fafb;
+  border-color: #eaecf0;
+  color: #a4bcfd;
+}
+
+/* 警告按钮样式 */
+.button-warning {
+  background-color: #dc2626;
+  border: 1px solid #dc2626;
+  color: white;
+}
+
+.button-warning:hover {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.button-warning.button-disabled {
+  background-color: #fecaca;
+  border-color: #fecaca;
+  color: #f87171;
+}
+
+/* 第三级按钮样式 */
+.button-tertiary {
+  background-color: #f2f4f7;
+  color: #475467;
+}
+
+.button-tertiary:hover {
+  background-color: #eaecf0;
+}
+
+.button-tertiary.button-disabled {
+  background-color: #f9fafb;
+  color: #98a2b3;
+}
+
+.button-tertiary.button-Terminate {
+  background-color: #fecaca;
+  color: #dc2626;
+}
+
+.button-tertiary.button-Terminate:hover {
+  background-color: #fca5a5;
+}
+
+.button-tertiary.button-Terminate.button-disabled {
+  background-color: #f9fafb;
+  color: #98a2b3;
+}
+
+/* 幽灵按钮样式 */
+.button-ghost {
+  color: #475467;
+}
+
+.button-ghost:hover {
+  background-color: #f2f4f7;
+}
+
+.button-ghost.button-disabled {
+  color: #98a2b3;
+}
+
+.button-ghost.button-Terminate {
+  color: #dc2626;
+}
+
+.button-ghost.button-Terminate:hover {
+  background-color: #fecaca;
+}
+
+.button-ghost.button-Terminate.button-disabled {
+  color: #fca5a5;
+}
+
+/* 幽灵强调按钮样式 */
+.button-ghost-accent {
+  color: #155eef;
+}
+
+.button-ghost-accent:hover {
+  background-color: #f5f8ff;
+}
+
+.button-ghost-accent.button-disabled {
+  color: #a4bcfd;
+}

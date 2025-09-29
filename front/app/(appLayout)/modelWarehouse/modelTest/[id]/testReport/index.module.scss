@@ -1,0 +1,68 @@
+.testReportWrap {
+  width: 100%;
+  height: 100%;
+  background: #FFFFFF;
+  overflow-y: auto;
+  padding: 5px 1.5625vw;
+
+  .container {
+
+    // width: 87.5vw;
+    // margin: 0 auto;
+    .title {
+      font-size: 22px;
+      color: #071127;
+      font-weight: bold;
+    }
+
+    .breadcrumb {
+      margin-bottom: 8px;
+      margin-top: 8px;
+    }
+
+    .infoWrap {
+      color: #5E6472;
+
+      .first {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+
+        .name {
+          font-size: 16px;
+          color: #071127;
+          line-height: 24px;
+          font-weight: bold;
+        }
+
+      }
+
+      .detailWrap {
+        margin-top: 8px;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 60px;
+      }
+    }
+
+    .resultWrap {
+      height: 29.4167vw;
+      overflow-y: auto;
+
+      .resultItem {
+        margin-bottom: 35px;
+
+        .first {
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          gap: 30px;
+          color: #5E6472;
+          margin-bottom: 15px;
+        }
+      }
+    }
+  }
+}
