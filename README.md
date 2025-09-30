@@ -102,10 +102,9 @@ http://127.0.0.1:30382
 
 ### 4. 注意事项
 
-如果在mac下docker compose命令找不到，则可以尝试通过`brew install --cask docker`安装docker
-或者通过`brew install docker-compose`,此时要把 `docker compose up -d` 替换为 `docker-compose up -d`
-
-在docker启动后，可以通过 `docker ps`命令观察启动状态，找到对应的IP
+1. 如果在mac下docker compose命令找不到，则可以尝试通过`brew install --cask docker`安装docker； 或者通过`brew install docker-compose`,此时要把 `docker compose up -d` 替换为 `docker-compose up -d`
+2. 在docker启动后，可以通过 `docker ps`命令观察启动状态，找到对应的IP
+3. 登录之后，会有一些预置的已发布应用，在使用这些应用之前，请确保它依赖的模型都被正确的配置好Key。 Sensenova的模型需要同时申请ak和sk，并且以`ak:sk`的形式配置
 
 ## 四、自定义构建镜像
 
