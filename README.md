@@ -15,7 +15,7 @@
 - **全流程闭环**  
   从应用创建、调试、发布到监控与 Bad Case 分析，完整覆盖研发链路，支持快速原型迭代直达生产部署。  
 - **灵活可插拔架构**  
-  核心模块可替换，兼容多种向量库与 RAG 策略，支持自定义知识库编排，满足不同场景需求。
+  核心模块可替换，兼容多种向量库与 RAG 策略，支持自定义知识库编排，包括定制离线解析策略和在线召回策略，以满足不同场景需求。
 
 
 ---
@@ -58,11 +58,11 @@
 
 ### 6. 视频介绍
 
-- 自定义RAG的离线解析和在线召回流程
+- 自定义RAG的离线解析和在线召回流程，解决知识库 “不好用还不能改” 的困境
   
 https://github.com/user-attachments/assets/12a703df-6df4-4136-8957-ca2d46bbd5f2
 
-- 微调 + 部署一站操作
+- 微调 + 部署一站操作，彻底告别 “仅能用在线模型” 的时代
 
 https://github.com/user-attachments/assets/5d78e69d-9874-4bc7-9c36-e38fd8c8a8e3
 
@@ -82,8 +82,8 @@ cd LazyCraft
 [更多环境变量配置](docker/README.md)
 
 ```bash
-# 设置环境变量为平台登录地址，例如 http://127.0.0.1:30382
-export WEB_CONSOLE_ENDPOINT="http://your-console-url"
+# 设置环境变量为平台登录地址为http://127.0.0.1:30382，此链接用于在密码重置邮件、github登录回调的请求地址，如果你申请好域名并配置好反向代理，这个链接需修改成你的域名。
+export WEB_CONSOLE_ENDPOINT="http://127.0.0.1:30382"
 
 cd docker
 docker compose up -d
