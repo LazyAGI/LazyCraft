@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - lwj/fix_workflow
     tags:
       - "v*"
       - "V*"
@@ -15,9 +16,12 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Get datasets
         run: |
+          mkdir -p back/src/parts/data/common_datasets
           wget https://github.com/LazyAGI/LazyCraft/releases/download/common_datasets/common_datasets.zip \
                 -O back/src/parts/data/common_datasets/common_datasets.zip
 
@@ -70,7 +74,15 @@ jobs:
     runs-on: ubuntu-22.04-arm
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
+      - name: Get datasets
+        run: |
+          mkdir -p back/src/parts/data/common_datasets
+          wget https://github.com/LazyAGI/LazyCraft/releases/download/common_datasets/common_datasets.zip \
+                -O back/src/parts/data/common_datasets/common_datasets.zip
+                
       - name: Set IMAGE_TAG
         run: |
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
@@ -119,6 +131,7 @@ jobs:
   manifest:
     runs-on: ubuntu-22.04
     needs: [build-amd64, build-arm64]
+    if: false 
     steps:
       - name: Set IMAGE_TAG
         run: |
@@ -158,4 +171,5 @@ jobs:
               --amend $IMAGE_ALIYUN:${IMAGE_TAG}-amd64 \
               --amend $IMAGE_ALIYUN:${IMAGE_TAG}-arm64
             docker manifest push $IMAGE_ALIYUN:${IMAGE_TAG}
+
           done
