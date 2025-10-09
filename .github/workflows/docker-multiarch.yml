@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - lwj/fix_workflow
     tags:
       - "v*"
       - "V*"
@@ -131,7 +130,6 @@ jobs:
   manifest:
     runs-on: ubuntu-22.04
     needs: [build-amd64, build-arm64]
-    if: false 
     steps:
       - name: Set IMAGE_TAG
         run: |
@@ -173,3 +171,4 @@ jobs:
             docker manifest push $IMAGE_ALIYUN:${IMAGE_TAG}
 
           done
+
