@@ -456,17 +456,8 @@ class ModelService:
 
         res = False
         try:
-            split_keys = api_key.split(":")
-            secret_key = None
-            origin_key = api_key
-            if model_brand == "SenseNova" and len(split_keys) < 2:
-                raise CommonError("key 无效！")
-            if len(split_keys) >= 2:
-                origin_key = split_keys[0]
-                secret_key = split_keys[1]
-            m = lazyllm.OnlineChatModule(source=model_brand.lower(),api_key=origin_key, secret_key=secret_key)
+            m = lazyllm.OnlineChatModule(source=model_brand.lower(), api_key=api_key)
             res = m._validate_api_key()
-            
             if not res:
                 raise CommonError("key 无效！")
         except Exception as e:
