@@ -22,7 +22,6 @@ export const calculateVariableNameLimit = (inputValue: string) => {
 // API前缀配置
 let apiPrefix = ''
 let publicApiPrefix = ''
-
 if (process.env.FRONTEND_CORE_API && process.env.FRONTEND_APP_API) {
   apiPrefix = process.env.FRONTEND_CORE_API
   publicApiPrefix = process.env.FRONTEND_APP_API

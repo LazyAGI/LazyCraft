@@ -140,6 +140,10 @@ const nextConfig = {
     return []
   },
   output: 'standalone',
+  env: {
+    FRONTEND_CORE_API: process.env.FRONTEND_CORE_API,
+    FRONTEND_APP_API: process.env.FRONTEND_APP_API,
+  },
 }
 
 module.exports = withMDX(nextConfig)
