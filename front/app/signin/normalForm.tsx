@@ -1,211 +1,295 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, Checkbox, Form, Input, Modal, Tabs } from 'antd'
-import { GithubOutlined, LockOutlined, UserOutlined } from '@ant-design/icons'
+import type { CheckboxChangeEvent } from 'antd/es/checkbox'
+import { LockOutlined, UserOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import Captcha from '../register/captcha'
 import IconFont from '../components/base/iconFont'
+import { AgreementButton, GitHubLoginButton, UserAgreementContent } from './components'
 import style from './page.module.scss'
 import { userEmailValidationRegex } from '@/app-specs'
 import { checkExist, login, sendForgotPasswordEmail } from '@/infrastructure/api/common'
+
+// 常量定义
+const PHONE_REGEX = /^1[3-9]\d{9}$/
+const INPUT_HEIGHT = 40
+const SCROLL_THRESHOLD = 5
+
+// 样式常量
+const commonStyles = {
+  inputIcon: { color: '#5E6472' },
+  buttonHeight: { height: 35 },
+}
 
 const NormalForm = () => {
   const router = useRouter()
   const [form] = Form.useForm()
   const [emailForm] = Form.useForm()
-  const [loginType, setLoginType] = useState('pwd')
-  const [rememberMe, setRememberMe] = useState<any>(false)
+  const [loginType, setLoginType] = useState<'pwd' | 'code'>('pwd')
+  const [rememberMe, setRememberMe] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [verificationKeyError, setVerificationKeyError] = useState<any>(null)
+  const [verificationKeyError, setVerificationKeyError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isEmailSent, setIsEmailSent] = useState(false)
   const [email, setEmail] = useState('')
-  // const [isLogin, setIsLogin] = useState<undefined | boolean>()
-  const handleSubmit = async (values: { [key: string]: any }) => {
+  const [isManualRead, setIsManualRead] = useState(false)
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false)
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
+
+  // 处理登录提交
+  const handleSubmit = useCallback(async (values: Record<string, any>) => {
     const params = loginType === 'pwd' ? { ...values, remember_me: rememberMe } : { ...values }
     const resUrl = loginType === 'pwd' ? '/login' : 'login_sms'
+
     try {
       setIsLoading(true)
-      const res = await login({
-        url: resUrl,
-        body: params,
-      })
+      const res = await login({ url: resUrl, body: params })
+
       if (res.result === 'success') {
         localStorage.setItem('console_token', res.data)
-        loginType === 'pwd' && localStorage.setItem('loginData', JSON.stringify(params))
-        // setIsLogin(true)
+        if (loginType === 'pwd')
+          localStorage.setItem('loginData', JSON.stringify(params))
         router.push('/apps')
       }
     }
     catch (error: any) {
-      if (error && error.json) {
+      if (error?.json) {
         try {
           const errorData = await error.json()
           const message = errorData.message || ''
           if (message.includes('该手机号未注册')) {
-            const phone = values.phone || ''
-            const verifyCode = values.verify_code || ''
             const searchParams = new URLSearchParams()
-            if (phone)
-              searchParams.set('phone', phone)
-            if (verifyCode)
-              searchParams.set('verify_code', verifyCode)
+            if (values.phone)
+              searchParams.set('phone', values.phone)
+            if (values.verify_code)
+              searchParams.set('verify_code', values.verify_code)
             router.push(`/register?${searchParams.toString()}`)
           }
         }
-        catch (parseError) {
+        catch {
+          // 忽略 JSON 解析错误
         }
       }
     }
     finally {
       setIsLoading(false)
     }
-  }
+  }, [loginType, rememberMe, router])
+
+  // 初始化记住密码
   useEffect(() => {
     const loginData = localStorage.getItem('loginData')
-    const parsedData = loginData ? JSON.parse(loginData) : null
-    if (parsedData?.remember_me) {
-      form.setFieldsValue({ name: parsedData?.name, password: parsedData?.password })
-      setRememberMe(true)
+    if (loginData) {
+      try {
+        const parsedData = JSON.parse(loginData)
+        if (parsedData?.remember_me) {
+          form.setFieldsValue({ name: parsedData.name, password: parsedData.password })
+          setRememberMe(true)
+        }
+      }
+      catch {
+        // 忽略解析错误
+      }
     }
-  }, [])
-  const getFakeCaptcha = () => {
-    return form
-      .validateFields(['phone'])
-      .then(async (values: any) => {
-        const res: any = await checkExist({
-          url: '/sendsms',
-          body: { ...values, operation: 'login' },
-        })
-        return Promise.resolve(res)
+  }, [form])
+
+  // 获取短信验证码
+  const getFakeCaptcha = useCallback(async () => {
+    try {
+      const values = await form.validateFields(['phone'])
+      return await checkExist({
+        url: '/sendsms',
+        body: { ...values, operation: 'login' },
       })
-      .catch((e) => {
-        return Promise.reject(e)
-      })
-  }
-  const changeLoginType = (type: string) => {
-    setLoginType(type)
+    }
+    catch (error) {
+      return Promise.reject(error)
+    }
+  }, [form])
+
+  // 切换登录方式
+  const changeLoginType = useCallback((type: string) => {
+    setLoginType(type as 'pwd' | 'code')
     if (!rememberMe)
       form.resetFields()
-  }
-  const onChange = (e: any) => {
+  }, [form, rememberMe])
+
+  // 记住密码复选框变化
+  const handleRememberMeChange = useCallback((e: CheckboxChangeEvent) => {
     setRememberMe(e.target.checked)
-  }
-  const forgotPwd = () => {
-    emailForm.validateFields().then(async (values) => {
-      try {
-        const res = await sendForgotPasswordEmail({
-          url: '/forgot-password',
-          body: values,
-        })
-        if (res.result === 'success') {
-          setIsEmailSent(true)
-          setEmail(values?.email)
-        }
-        else { console.error('Email verification failed') }
+  }, [])
+
+  // 忘记密码
+  const handleForgotPassword = useCallback(async () => {
+    try {
+      const values = await emailForm.validateFields()
+      const res = await sendForgotPasswordEmail({
+        url: '/forgot-password',
+        body: values,
+      })
+      if (res.result === 'success') {
+        setIsEmailSent(true)
+        setEmail(values.email)
       }
-      catch (error) {
-        console.error('Request failed:', error)
-      }
-    })
-  }
-  const closeModal = () => {
+    }
+    catch (error) {
+      console.error('Request failed:', error)
+    }
+  }, [emailForm])
+
+  // 关闭忘记密码弹窗
+  const closeModal = useCallback(() => {
     setIsModalOpen(false)
     setIsEmailSent(false)
     emailForm.resetFields()
-  }
+  }, [emailForm])
+
+  // 打开用户协议弹窗
+  const openManualModal = useCallback(() => {
+    setIsManualModalOpen(true)
+    // 如果用户已经阅读过协议，再次打开时直接设置为已滚动到底部
+    setHasScrolledToBottom(isManualRead)
+  }, [isManualRead])
+
+  // 关闭用户协议弹窗
+  const closeManualModal = useCallback(() => {
+    setIsManualModalOpen(false)
+  }, [])
+
+  // 确认已读用户协议
+  const confirmManualRead = useCallback(() => {
+    setIsManualRead(true)
+    setIsManualModalOpen(false)
+  }, [])
+
+  // 处理协议滚动
+  const handleManualScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement
+    const isBottom = Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) < SCROLL_THRESHOLD
+    if (isBottom && !hasScrolledToBottom)
+      setHasScrolledToBottom(true)
+  }, [hasScrolledToBottom])
+
+  // Tabs 配置
+  const tabItems = useMemo(() => [
+    {
+      label: '密码登录',
+      key: 'pwd',
+      children: (
+        <Form form={form} style={{ marginTop: 8 }} onFinish={handleSubmit}>
+          <Form.Item
+            validateTrigger="onBlur"
+            name="name"
+            rules={[{ required: true, message: '请输入用户名' }]}
+          >
+            <Input
+              prefix={<UserOutlined style={commonStyles.inputIcon} />}
+              placeholder='用户名'
+              maxLength={30}
+              style={{ height: INPUT_HEIGHT }}
+            />
+          </Form.Item>
+          <Form.Item
+            rules={[{ required: true, message: '请输入密码' }]}
+            name="password"
+            validateTrigger="onBlur"
+          >
+            <Input.Password
+              prefix={<LockOutlined style={commonStyles.inputIcon} />}
+              placeholder='请输入密码'
+              maxLength={30}
+              style={{ height: INPUT_HEIGHT }}
+              iconRender={visible =>
+                visible ? <IconFont type='icon-yanjing-kai' /> : <IconFont type='icon-yanjing-bi' />
+              }
+            />
+          </Form.Item>
+          <div className={style.changeBtn}>
+            <Checkbox onChange={handleRememberMeChange} checked={rememberMe}>
+              <span style={commonStyles.inputIcon}>记住密码</span>
+            </Checkbox>
+            <Button type='link' onClick={() => setIsModalOpen(true)}>忘记密码</Button>
+          </div>
+          <AgreementButton isRead={isManualRead} onClick={openManualModal} />
+          <Form.Item>
+            <Button
+              style={commonStyles.buttonHeight}
+              type="primary"
+              htmlType="submit"
+              block
+              disabled={!isManualRead}
+            >
+              登录
+            </Button>
+            <GitHubLoginButton />
+          </Form.Item>
+        </Form>
+      ),
+    },
+    {
+      label: '验证码登录',
+      key: 'code',
+      children: (
+        <Form style={{ marginTop: 8 }} form={form} className="bg_Form" onFinish={handleSubmit}>
+          <Form.Item
+            name="phone"
+            validateTrigger="onBlur"
+            rules={[
+              { required: true, message: '请输入手机号' },
+              { pattern: PHONE_REGEX, message: '请输入正确的手机号码' },
+            ]}
+          >
+            <Input
+              prefix={<UserOutlined style={commonStyles.inputIcon} />}
+              placeholder='请输入手机号'
+              maxLength={11}
+              style={{ height: INPUT_HEIGHT }}
+            />
+          </Form.Item>
+          <Captcha
+            name="verify_code"
+            btnType="ghost"
+            placeholder="请输入验证码"
+            countDown={60}
+            getCaptchaButtonText={'获取验证码'}
+            getCaptchaSecondText="S"
+            rules={[{ required: true, message: '请输入验证码' }]}
+            getFakeCaptcha={getFakeCaptcha}
+            validateStatus={verificationKeyError ? 'error' : undefined}
+            help={verificationKeyError || undefined}
+            onChange={() => verificationKeyError && setVerificationKeyError(null)}
+          />
+          <AgreementButton isRead={isManualRead} onClick={openManualModal} />
+          <Form.Item>
+            <Button
+              loading={isLoading}
+              style={commonStyles.buttonHeight}
+              type="primary"
+              htmlType="submit"
+              block
+              disabled={!isManualRead}
+            >
+              登录
+            </Button>
+            <GitHubLoginButton />
+          </Form.Item>
+        </Form>
+      ),
+    },
+  ], [form, handleSubmit, rememberMe, handleRememberMeChange, isManualRead, openManualModal, getFakeCaptcha, verificationKeyError, isLoading])
 
   return (
     <div className={style.formWrap}>
       <div className={style.cWrap}>
         <h2 className={style.title}>登录</h2>
-        <Tabs destroyInactiveTabPane activeKey={loginType} onChange={changeLoginType} centered items={[{
-          label: '密码登录',
-          key: 'pwd',
-          children: <Form form={form} style={{ marginTop: 8 }} onFinish={handleSubmit}>
-            <Form.Item validateTrigger="onBlur" name="name" rules={[{ required: true, message: '请输入用户名' },
-            ]}>
-              <Input
-                prefix={<UserOutlined style={{ color: '#5E6472' }} />}
-                placeholder='用户名'
-                maxLength={30}
-                style={{ height: 40 }}
-              />
-            </Form.Item>
-            <Form.Item
-              rules={[{ required: true, message: '请输入密码' }]}
-              name="password"
-              validateTrigger="onBlur"
-            >
-              <Input.Password
-                prefix={<LockOutlined style={{ color: '#5E6472' }} />}
-                placeholder='请输入密码'
-                maxLength={30}
-                style={{ height: 40 }}
-                iconRender={visible =>
-                  visible ? <IconFont type='icon-yanjing-kai' /> : <IconFont type='icon-yanjing-bi' />
-                }
-              />
-            </Form.Item>
-            <div className={style.changeBtn}>
-              <Checkbox onChange={onChange} checked={rememberMe}><span style={{ color: '#5E6472' }}>记住密码</span></Checkbox>
-              <Button type='link' onClick={() => setIsModalOpen(true)}>忘记密码</Button>
-            </div>
-            <Form.Item>
-              <Button style={{ height: 35 }} type="primary" htmlType="submit" block>
-                登录
-              </Button>
-              <Button onClick={() => window.location.replace('/console/api/oauth/login/github')} style={{ height: 35 }} className='mt-[15px]' block>
-                <GithubOutlined />使用 GitHub 登录
-              </Button>
-            </Form.Item>
-          </Form>,
-        },
-        {
-          label: '验证码登录',
-          key: 'code',
-          children: <Form style={{ marginTop: 8 }} form={form} className="bg_Form" onFinish={handleSubmit}>
-            <Form.Item name="phone" validateTrigger="onBlur" rules={[{ required: true, message: '请输入手机号' }, {
-              pattern: /^1[3-9]\d{9}$/,
-              message: '请输入正确的手机号码',
-            }]}>
-              <Input
-                prefix={<UserOutlined style={{ color: '#5E6472' }} />}
-                placeholder='请输入手机号'
-                maxLength={11}
-                style={{ height: 40 }}
-              />
-            </Form.Item>
-            <Captcha
-              name="verify_code"
-              btnType="ghost"
-              placeholder="请输入验证码"
-              countDown={60}
-              getCaptchaButtonText={'获取验证码'}
-              getCaptchaSecondText="S"
-              rules={[
-                {
-                  required: true,
-                  message: '请输入验证码',
-                },
-              ]}
-              getFakeCaptcha={getFakeCaptcha}
-              validateStatus={verificationKeyError ? 'error' : undefined}
-              help={verificationKeyError || undefined}
-              onChange={() => verificationKeyError && setVerificationKeyError(null)}
-            />
-            <Form.Item>
-              <Button loading={isLoading} style={{ height: 35 }} type="primary" htmlType="submit" block>
-                登录
-              </Button>
-              <Button onClick={() => window.location.replace('/console/api/oauth/login/github')} style={{ height: 35 }} className='mt-[15px]' block>
-                <GithubOutlined />使用 GitHub 登录
-              </Button>
-            </Form.Item>
-          </Form>,
-        },
-        ]}>
-        </Tabs>
+        <Tabs
+          destroyInactiveTabPane
+          activeKey={loginType}
+          onChange={changeLoginType}
+          centered
+          items={tabItems}
+        />
         <div className={style.noCount}>
           <span>没有账号？</span>
           <Button type='link' href={'/register'}>立即注册</Button>
@@ -216,7 +300,7 @@ const NormalForm = () => {
             <Button key="back" onClick={() => setIsModalOpen(false)}>
               取消
             </Button>,
-            <Button key="submit" type="primary" onClick={forgotPwd}>
+            <Button key="submit" type="primary" onClick={handleForgotPassword}>
               发送邮件
             </Button>,
           ]} centered open={isModalOpen} onCancel={closeModal}>
@@ -246,6 +330,28 @@ const NormalForm = () => {
                 </Form.Item>
               </Form>}
           </div>
+        </Modal>
+        <Modal
+          width={700}
+          title="用户协议"
+          footer={[
+            <Button key="back" onClick={closeManualModal}>
+              取消
+            </Button>,
+            <Button
+              key="submit"
+              type="primary"
+              onClick={confirmManualRead}
+              disabled={!hasScrolledToBottom}
+            >
+              {hasScrolledToBottom ? '同意并继续' : '请阅读完整内容'}
+            </Button>,
+          ]}
+          centered
+          open={isManualModalOpen}
+          onCancel={closeManualModal}
+        >
+          <UserAgreementContent onScroll={handleManualScroll} />
         </Modal>
       </div>
       {/* } */}
