@@ -97,6 +97,12 @@ online_model_list = {
                 "type": "embedding",
             }
         ],
+        "vqa_list": [
+            {"model_name": "SenseNova-V6-5-Pro", "support_finetune": False, "type": "VQA"},
+            {"model_name": "SenseNova-V6-5-Turbo", "support_finetune": False, "type": "VQA"},
+            {"model_name": "SenseNova-V6-Turbo", "support_finetune": False, "type": "VQA"},
+            {"model_name": "SenseNova-V6-Pro", "support_finetune": False, "type": "VQA"}
+        ],
     },
     "Deepseek": {
         "llm_list": [
