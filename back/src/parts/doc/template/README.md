@@ -201,8 +201,6 @@ LLM兼容本地和云算力协同工作，无需额外购买maas平台即可直�
 
   - 支持根据需求动态调整算力资源，更高效支持Agent应用的开发和运行
 
-![](./media/media/jh4gvne-9h0ympnwcu_xm.png)
-
 # 二、功能介绍
 
 ## 1、在Studio中搭建应用
