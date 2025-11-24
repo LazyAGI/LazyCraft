@@ -571,6 +571,8 @@ export const useWorkflowInit = () => {
         params,
       }).then((response) => {
         workflowContext.getState().setDraftUpdatedAt(response.updated_at)
+        // 设置 hash，确保后续同步请求使用正确的 hash
+        setSyncWorkflowDraf(response.hash)
         handleGetInitialWorkflowData()
         if (flowReqRef.current.subFlowCreating)
           flowReqRef.current.subFlowCreating = false
