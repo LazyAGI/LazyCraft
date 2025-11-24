@@ -20,7 +20,11 @@
     "uglify-embed": "node ./bin/uglify-embed",
     "remote": "evf2e-deploy setup:docker --config=./docker/deploy && evf2e-deploy build:docker-cloud && evf2e-deploy remote:docker-compose",
     "remote:arm": "evf2e-deploy setup:docker --config=./docker/deploy_arm && evf2e-deploy build:docker-cloud && evf2e-deploy remote:docker",
-    "prepare": "node -e \"if (process.env.NODE_ENV !== 'production'){process.exit(1)} \" || husky install"
+    "prepare": "node -e \"if (process.env.NODE_ENV !== 'production'){process.exit(1)} \" || (test -d ../.git && husky install ../.git || true)",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --maxWorkers=2"
   },
   "dependencies": {
     "@ahooksjs/use-url-state": "^3.5.1",
@@ -125,8 +129,13 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.36.0",
+    "@swc/jest": "^0.2.39",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/crypto-js": "^4.1.1",
     "@types/dagre": "^0.7.52",
+    "@types/jest": "^30.0.0",
     "@types/js-cookie": "^3.0.3",
     "@types/lodash-es": "^4.17.7",
     "@types/negotiator": "^0.6.1",
@@ -146,6 +155,9 @@
     "eslint": "^8.36.0",
     "eslint-config-next": "^14.0.4",
     "husky": "^8.0.3",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
     "lint-staged": "^13.2.2",
     "postcss": "^8.4.31",
     "sass": "^1.61.0",

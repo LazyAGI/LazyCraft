@@ -158,6 +158,9 @@ class DraftWorkflowStatusApi(Resource):
     def get(self, app_id):
         """查询草稿调试的状态"""
         app_model = AppService().get_app(app_id, raise_error=False)
+        if app_model:
+            self.check_can_read_object(app_model)
+            
         if not app_model:
             return {"status": "stop"}
         app_run = AppRunService.create(app_model, mode="draft")
@@ -173,7 +176,7 @@ class DraftWorkflowStartApi(Resource):
         app_model = AppService().get_app(app_id, raise_error=False)
 
         if app_model:
-            self.check_can_read_object(app_model)
+            self.check_can_write_object(app_model)
 
         # 检查gpu配额
         gpu_count = workflow.refer_model_count
@@ -209,7 +212,9 @@ class DraftWorkflowRunApi(Resource):
         args = parser.parse_args()
 
         app_model = AppService().get_app(app_id, raise_error=False)
-
+        if app_model:
+            self.check_can_write_object(app_model)
+            
         # 创建调试会话管理器，获取下一个交互轮次turn_number
         session_manager = DebugSessionManager(app_id, current_user.id, mode="draft")
         session_manager.get_next_turn_number()
@@ -229,6 +234,8 @@ class DraftWorkflowStopApi(Resource):
         """结束草稿调试"""
         workflow = WorkflowService().get_draft_workflow(app_id)
         app_model = AppService().get_app(app_id, raise_error=False)
+        if app_model:
+            self.check_can_read_object(app_model)
 
         app_run = AppRunService.create(app_model, mode="draft")
         app_run.stop()
@@ -254,6 +261,9 @@ class DraftWorkflowResetSessionApi(Resource):
     @login_required
     def post(self, app_id):
         """重置调试会话"""
+        app_model = AppService().get_app(app_id, raise_error=False)
+        if app_model:
+            self.check_can_write_object(app_model)
 
         # 重置草稿模式的调试会话
         draft_session_manager = DebugSessionManager(
@@ -283,6 +293,9 @@ class NodeRunStreamApi(Resource):
         args = parser.parse_args()
 
         app_model = AppService().get_app(app_id)
+        if app_model:
+            self.check_can_write_object(app_model)
+        
         workflow = WorkflowService().get_draft_workflow(app_id)
 
         # 创建调试会话管理器，获取下一个交互轮次turn_number
@@ -304,6 +317,9 @@ class PublishedWorkflowApi(Resource):
     def get(self, app_id):
         """Get published workflow"""
         app_model = AppService().get_app(app_id)
+        if app_model:
+            self.check_can_read_object(app_model)
+            
         if app_model.status == "normal":
             workflow = WorkflowService().get_published_workflow(app_id)
         else:
@@ -372,6 +388,7 @@ class NewWorkflowFromEmpty(Resource):
     @login_required
     def post(self):
         """创建空白workflow"""
+        self.check_can_write()
         new_workflow = Workflow.new_empty(current_user, False)
         db.session.add(new_workflow)
         db.session.commit()
@@ -392,6 +409,13 @@ class NewWorkflowFromApp(Resource):
         args = parser.parse_args()
 
         app_model = AppService().get_app(args["app_id"])
+        if app_model:
+            self.check_can_write_object(app_model)
+        
+        main_app_model = AppService().get_app(args["main_app_id"], raise_error=False)
+        if main_app_model:
+            self.check_can_write_object(main_app_model)
+
         new_workflow = WorkflowService().get_published_workflow(app_model.id)
         if not new_workflow:
             raise ValueError("未发布的应用不能创建子画布")
@@ -425,7 +449,11 @@ class NewWorkflowFromTemplate(Resource):
         )
         args = parser.parse_args()
 
+        self.check_can_write()
         template = TemplateService().get_app(args["app_id"])
+        if template:
+            self.check_can_read_object(template)
+        
         source_workflow = Workflow.default_getone(template.id, "publish")
 
         new_workflow = Workflow.new_empty(
@@ -451,6 +479,10 @@ class WorkflowAddLog(Resource):
         parser.add_argument("node_name", type=str, required=False, location="json")
         parser.add_argument("res_name", type=str, required=False, location="json")
         args = parser.parse_args()
+
+        app_model = AppService().get_app(args["app_id"], raise_error=False)
+        if app_model:
+            self.check_can_write_object(app_model)
 
         name = args["app_name"]
         action = "新增" if args["action"] == "add" else "删除"
@@ -492,6 +524,10 @@ class WorkflowBatchLog(Resource):
         ok_count = args["ok_count"]
         fail_count = args["fail_count"]
 
+        app_model = AppService().get_app(args["app_id"], raise_error=False)
+        if app_model:
+            self.check_can_write_object(app_model)
+
         if node_name:
             LogService().add(
                 Module.APP_STORE,
@@ -525,7 +561,7 @@ class DocParseApi(Resource):
         app_model = AppService().get_app(app_id, raise_error=False)
 
         if app_model:
-            self.check_can_read_object(app_model)
+            self.check_can_write_object(app_model)
 
         # # 检查gpu配额
         # gpu_count = workflow.refer_model_count
@@ -619,6 +655,9 @@ class AICodeAssistant(Resource):
         parser.add_argument("query", type=str, required=True, location="json")
         parser.add_argument("session", type=str, required=False, location="json")
         args = parser.parse_args()
+        
+        self.check_can_write()
+        
         query = args["query"]
         session = args.get("session", "")
         model = AITools.query.filter(
@@ -764,6 +803,9 @@ class AIPromptAssistant(Resource):
         parser.add_argument("query", type=str, required=True, location="json")
         parser.add_argument("session", type=str, required=False, location="json")
         args = parser.parse_args()
+        
+        self.check_can_write()
+        
         query = args["query"]
         session = args.get("session", "")
         filter_prompt = """
@@ -772,26 +814,26 @@ class AIPromptAssistant(Resource):
         我需要你帮过滤用户的请求，判断请求是否和大模型提示语(prompt)有关
 
         ## 技能
-        精准判断用户输入是否与生成大模型提示语(prompt)有关，若有关回复1，若无关恢复2
+        精准判断用户输入是否与生成大模型提示语(prompt)有关，若有关回复:和prompt有关，若无关回复：和prompt无关
 
         ## 回复格式要求
-        - 仅回复1或2
+        - 仅回复"和prompt有关"或"和prompt无关"
 
         ### 示例
         #### 示例 1
         输入: 我感觉好无聊呀
-        输出: 2
+        输出: 和prompt无关
 
         #### 示例 2
         输入: 帮我写个提示语，与医学科普相关
-        输出: 1
+        输出: 和prompt有关
 
         #### 示例 3
         输入: 你是谁
-        输出: 2
+        输出: 和prompt无关
 
         ### 限制
-        - 若遇到难以理解或把握不准的，统一回复2。
+        - 若遇到难以理解或把握不准的，统一回复: 和prompt无关。
         """
         prompt = """
         ## 任务
@@ -830,10 +872,11 @@ class AIPromptAssistant(Resource):
                         }, 400
                 filter = llm.share(filter_prompt)
                 filte_res = filter(query)
-                if "2" in filte_res:
-                    ret = "输入与生成提示语无关，请重新组织语言"
-                else:
+                if "和prompt有关" in filte_res:
                     ret = llm(query)
+                else:
+                    ret = "输入与生成提示语无关，请重新组织语言。示例：帮我写个提示语，与医学科普相关。"
+                    
             else:
                 model = LazymodelOnlineModels.query.filter_by(
                     model_key=model_name
@@ -855,10 +898,10 @@ class AIPromptAssistant(Resource):
                 ).prompt(prompt)
                 filter = llm.share(filter_prompt)
                 filte_res = filter(query)
-                if "2" in filte_res:
-                    ret = "输入与生成提示语无关，请重新组织语言"
-                else:
+                if "和prompt有关" in filte_res:
                     ret = llm(query)
+                else:
+                    ret = "输入与生成提示语无关，请重新组织语言。示例：帮我写个提示语，与医学科普相关。"
         except Exception as e:
             msg = f"发生错误:{e}"
             msg = msg.replace("400 Bad Request:", "")

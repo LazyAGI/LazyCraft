@@ -61,8 +61,20 @@ const parameterExtractorDefaults: ExecutionNodeDefault<ParameterParserNodeType> 
     if (!validationErrors && payload.config__input_shape.length === 0)
       validationErrors = '输入变量 字段必填'
 
-    if (!validationErrors && !payload.payload__base_model)
-      validationErrors = '模型 字段必填'
+    // 根据模型来源验证不同的字段
+    if (!validationErrors) {
+      const isInferenceService = payload.payload__model_source === 'inference_service'
+      if (isInferenceService) {
+        // 平台推理服务：检查 payload__inference_service
+        if (!payload.payload__inference_service)
+          validationErrors = '推理服务 字段必填'
+      }
+      else {
+        // 在线模型：检查 payload__base_model 或 payload__source
+        if (!payload.payload__base_model && !payload.payload__source)
+          validationErrors = '模型 字段必填'
+      }
+    }
 
     if (!validationErrors && !payload.payload__params?.length)
       validationErrors = '提取参数 字段必填'

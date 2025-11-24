@@ -78,6 +78,9 @@ class McpServerListApi(Resource):
             "user_id", type=list, location="json", required=False, default=[]
         )
         args = parser.parse_args()
+        
+        self.check_can_read()
+        
         pagination = McpServerService(current_user).get_pagination(args)
         return marshal(pagination, fields.mcp_server_pagination)
 
@@ -97,9 +100,12 @@ class McpServerDetailApi(Resource):
 
         Raises:
             ValueError: 当找不到指定的MCP服务器时抛出。
+            ForbiddenError: 当用户没有读取权限时抛出。
         """
         mcp_server_id = request.args.get("mcp_server_id", type=int)
         mcp_server = McpServerService(current_user).get_by_id(mcp_server_id)
+        if mcp_server:
+            self.check_can_read_object(mcp_server)
         return marshal(mcp_server, fields.mcp_server_detail)
 
 
@@ -122,6 +128,9 @@ class McpServerCheckName(Resource):
         data = request.json
         if not data:
             raise ValueError("输入的参数格式有误")
+        
+        self.check_can_read()
+        
         if not McpServerService(current_user).exist_by_name(data.get("name")):
             return {"message": "success", "code": 200}
         raise ValueError("工具名称已经存在，请更换")
@@ -303,6 +312,7 @@ class McpToolListApi(Resource):
 
         Raises:
             ValueError: 当输入参数不合法或MCP服务器ID为空时抛出。
+            ForbiddenError: 当用户没有读取权限时抛出。
         """
         data = request.json
         if not data:
@@ -311,6 +321,11 @@ class McpToolListApi(Resource):
         mcp_server_id = data.get("mcp_server_id")
         if not mcp_server_id:
             raise ValueError("MCP服务ID不能为空")
+
+        # 检查权限
+        mcp_server = McpServerService(current_user).get_by_id(mcp_server_id)
+        if mcp_server:
+            self.check_can_read_object(mcp_server)
 
         tools = McpToolService(current_user).get_by_mcp_server_id(mcp_server_id)
         return marshal({"data": tools}, fields.mcp_tool_list)
@@ -334,6 +349,10 @@ class McpToolDetailApi(Resource):
         """
         tool_id = request.args.get("tool_id", type=int)
         tool_instance = McpToolService(current_user).get_by_id(tool_id)
+        if tool_instance and tool_instance.mcp_server_id:
+            mcp_server = McpServerService(current_user).get_by_id(tool_instance.mcp_server_id)
+            if mcp_server:
+                self.check_can_read_object(mcp_server)
         return marshal(tool_instance, fields.mcp_tool_detail)
 
 
@@ -352,6 +371,7 @@ class McpServerSyncToolsApi(Resource):
 
         Raises:
             ValueError: 当输入参数不合法或MCP服务器ID为空时抛出。
+            ForbiddenError: 当用户没有写入权限时抛出。
         """
         data = request.json
         if not data:
@@ -360,6 +380,11 @@ class McpServerSyncToolsApi(Resource):
         mcp_server_id = data.get("id")
         if not mcp_server_id:
             raise ValueError("MCP服务ID不能为空")
+        
+        # 检查权限
+        mcp_server = McpServerService(current_user).get_by_id(mcp_server_id)
+        self.check_can_write_object(mcp_server)
+        
         service = McpToolService(current_user)
 
         def event_stream():
@@ -390,12 +415,17 @@ class McpToolTestApi(Resource):
 
         Raises:
             ValueError: 当输入参数不合法或缺少必要参数时抛出。
+            ForbiddenError: 当用户没有写入权限时抛出。
         """
         data = request.json
         if not data:
             raise ValueError("输入的参数格式有误")
         if not data.get("mcp_server_id") or not data.get("tool_id"):
             raise ValueError("MCP服务ID和工具ID不能为空")
+
+        # 检查权限
+        mcp_server = McpServerService(current_user).get_by_id(data["mcp_server_id"])
+        self.check_can_write_object(mcp_server)
 
         service = McpToolService(current_user)
        
@@ -439,6 +469,7 @@ class McpToolTestApi(Resource):
         
 
 class MCPToolReferenceResult(Resource):
+    @login_required
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument("id", type=int, location="args")
@@ -447,6 +478,12 @@ class MCPToolReferenceResult(Resource):
 
         service = McpServerService(current_user)
         tool = service.get_by_id(mcp_tool_id)
+        if not tool:
+            return []
+        
+        # 检查用户是否有权限查看该MCP工具的引用结果（需要能读取该MCP服务器）
+        self.check_can_read_object(tool)
+        
         if not tool.enable:
             return []
 

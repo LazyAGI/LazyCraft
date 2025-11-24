@@ -135,6 +135,9 @@ class FinetuneListPageApi(Resource):
             "user_id", type=list, location="json", required=False, default=[]
         )
         args = parser.parse_args()
+        
+        self.check_can_read()
+        
         client = FinetuneService(current_user)
         pagination = client.get_paginate_tasks(current_user, args)
         return marshal(pagination, fields.finetune_pagination_fields)
@@ -253,6 +256,7 @@ class FinetuneCustomParamApi(Resource):
         Raises:
             Exception: 当获取参数列表失败时
         """
+        self.check_can_read()
         service = FinetuneService(current_user)
         list = service.get_custom_param()
         return marshal(list, fields.finetune_param_fields)
@@ -273,6 +277,7 @@ class FinetuneCustomParamApi(Resource):
             ValidationError: 当参数数据验证失败时
             Exception: 当保存参数失败时
         """
+        self.check_can_write()
         data = request.get_json()
         service = FinetuneService(current_user)
         config = service.save_custom_param(data)
@@ -300,8 +305,11 @@ class FinetuneCustomParamApi(Resource):
         parser.add_argument(
             "record_id", type=int, required=False, default=0, location="args"
         )
-        service = FinetuneService(current_user)
         args = parser.parse_args()
+        
+        self.check_can_write()
+        
+        service = FinetuneService(current_user)
         res = service.del_custom_param(args["record_id"])
         if res:
             return {"message": "success", "code": 200}, 200
@@ -331,7 +339,9 @@ class FinetuneModelApi(Resource):
             "qtype", type=str, location="args", required=True, default="already"
         )  # mine/group/builtin/already
         args = parser.parse_args()
-        args = parser.parse_args()
+        
+        self.check_can_read()
+        
         g.qtype = args["qtype"]
         if g.qtype == "mine":
             g.qtype = "mine_builtin"
@@ -368,8 +378,11 @@ class FinetuneDatasetApi(Resource):
         parser.add_argument(
             "qtype", type=str, location="args", required=True, default="already"
         )  # mine/group/builtin/already
-        dataService = DataService(current_user)
         args = parser.parse_args()
+        
+        self.check_can_read()
+        
+        dataService = DataService(current_user)
         return dataService.get_data_tree(qtype=args["qtype"])
 
 
@@ -390,7 +403,8 @@ class FinetuneLogApi(Resource):
             PermissionError: 当用户没有读取权限时
             FileNotFoundError: 当日志文件不存在时
         """
-        self.check_can_read()
+        task = db.session.query(FinetuneTask).filter(FinetuneTask.id == task_id,).first()
+        self.check_can_read_object(task)
         service = FinetuneService(current_user)
         headers = {
             "Content-Disposition": "attachment; filename=finetune.log",
@@ -416,6 +430,15 @@ class FinetuneStartApi(Resource):
             ValueError: 当任务不存在时
             Exception: 当启动任务失败时
         """
+        task = (
+            db.session.query(FinetuneTask)
+            .filter(
+                FinetuneTask.id == task_id,
+            )
+            .first()
+        )
+        if task:
+            self.check_can_write_object(task)
 
         def async_task(app):
             with app.app_context():
@@ -551,6 +574,7 @@ class FinetuneFTModelApi(Resource):
         Raises:
             Exception: 当获取模型列表失败时
         """
+        self.check_can_read()
         service = FinetuneService(current_user)
         get_ft_model_list_result, get_ft_model_list_return = service.get_ft_models()
         if get_ft_model_list_result:

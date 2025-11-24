@@ -26,7 +26,7 @@ from core.restful import Resource
 from libs.login import login_required
 from models.model_account import Tenant
 from parts.apikey.apikey_service import ApikeyService
-from parts.apikey.model import ApiKeyStatus
+from parts.apikey.model import ApiKey, ApiKeyStatus
 from parts.app.app_service import AppService
 from parts.app.node_run.app_run_service import AppRunService
 from parts.urls import api
@@ -46,6 +46,7 @@ class ApikeyApi(Resource):
         Raises:
             CommonError: 当查询失败时抛出
         """
+        self.check_can_read()
         result = ApikeyService.query(current_user.id)  # 根据当前用户查询其名下的apikey
         tenslist = Tenant.query.all()
 
@@ -131,7 +132,10 @@ class ApikeyApi(Resource):
         id = args.get("id", None)
         if id is None:
             return {"message": "id参数不能为空"}, 400
-        self.check_can_write()
+        api_key = ApiKey.query.get(id)
+        if api_key is None:
+            return {"message": "API Key不存在"}, 400
+        self.check_can_admin_object(api_key)
         ApikeyService.delete_api_key(id=id, user_id=current_user.id)
 
         return {"result": "success"}, 204
@@ -164,6 +168,10 @@ class ApikeyApi(Resource):
         ]
         if status not in allowed_statuses:
             return {"message": f"不支持的状态: {status}"}, 400
+        api_key = ApiKey.query.get(id)
+        if api_key is None:
+            return {"message": "API Key不存在"}, 400
+        self.check_can_write_object(api_key)
         result = ApikeyService.update_status(
             id=id, user_id=current_user.id, new_status=status
         )

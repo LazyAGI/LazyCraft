@@ -91,7 +91,8 @@ def get_finetune_model_list(only_model_key=False):
                 .filter(
                     Lazymodel.model_type == "local",
                     Lazymodel.can_finetune_model == True,
-                    Lazymodel.deleted_flag == 0
+                    Lazymodel.deleted_flag == 0,
+                    Lazymodel.model_status == ModelStatus.SUCCESS.value  # 只返回已下载的模型
                 )
                 .all()
             )

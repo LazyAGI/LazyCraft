@@ -392,7 +392,13 @@ class InferService:
             service_info_temp["deploy_method"] = get_service_info_map.get(
                 "framework", ""
             )
-
+        # 根据status参数过滤服务信息
+        if status:
+            service_info = [
+                info for info in service_info
+                if info.get("status") in status
+            ]
+            
         return service_info
 
     def list_infer_model_service(

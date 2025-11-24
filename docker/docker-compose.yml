@@ -4,7 +4,7 @@ x-share-env: &lazy-env
   WEB_CONSOLE_ENDPOINT: ${WEB_CONSOLE_ENDPOINT:-http://127.0.0.1:30382} # 平台登录的ip+port（例如：http://10.210.0.49:5002），密码重置时给用户发送邮件时使用，供用户跳转到该应用
   MIGRATION_ENABLED: 'true' # 当表结构有更新时，是否自动执行数据库迁移操作
   RESET_PASSWORD_TOKEN_EXPIRY_HOURS: ${RESET_PASSWORD_TOKEN_EXPIRY_HOURS:-24} # 重置密码过期时间
-  INTERNET_FEATURES_ENABLED: ${INTERNET_FEATURES_ENABLED:-false} # 互联网功能开关，默认false(关闭状态)，设置为true时启用相关功能
+  INTERNET_FEATURES_ENABLED: ${INTERNET_FEATURES_ENABLED:-true} # 互联网功能开关，默认true(开启状态)，设置为false时关闭相关功能
   # tidb
   DB_USERNAME: root
   DB_PASSWORD: ''
@@ -92,6 +92,7 @@ services:
     volumes:
       - ./volumes/app/storage:/app/storage
       - ./volumes/app/upload:/app/upload
+      - ./volumes/app/logs:/app/logs  # 日志目录持久化
       - ./volumes/share_data:/mnt/lustre/share_data  #模型路径
   worker:
     image: ${BACK_IMAGE:-registry.cn-hangzhou.aliyuncs.com/lazyllm/lazycraft-back:latest}
@@ -111,6 +112,7 @@ services:
     volumes:
       - ./volumes/app/storage:/app/storage
       - ./volumes/app/upload:/app/upload
+      - ./volumes/app/logs:/app/logs  # 日志目录持久化
       - ./volumes/share_data:/mnt/lustre/share_data  #模型路径
   beat:
     image: ${BACK_IMAGE:-registry.cn-hangzhou.aliyuncs.com/lazyllm/lazycraft-back:latest}
@@ -130,6 +132,7 @@ services:
     volumes:
       - ./volumes/app/storage:/app/storage
       - ./volumes/app/upload:/app/upload
+      - ./volumes/app/logs:/app/logs  # 日志目录持久化
       - ./volumes/share_data:/mnt/lustre/share_data  #模型路径
   web:
     image: ${FRONT_IMAGE:-registry.cn-hangzhou.aliyuncs.com/lazyllm/lazycraft-front:latest}

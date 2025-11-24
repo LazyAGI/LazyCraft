@@ -165,7 +165,8 @@ const nodeDefault: ExecutionNodeDefault<QuestionClassifierNodeType> = {
                         tooltip: '选择推理服务',
                         _check_names: [],
                         itemProps: {
-                          model_type: 'localLLM',
+                          model_kind: 'localLLM',
+                          model_show_type: 'localLLM',
                         },
                       },
                       {}, {}, {},

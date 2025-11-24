@@ -6,7 +6,7 @@ type IProps = {
   treeData: any
 }
 
-export default (props: IProps) => {
+const DatasetTreeSelect = (props: IProps) => {
   const {
     treeData = [],
   } = props
@@ -52,11 +52,12 @@ export default (props: IProps) => {
         style={{ width: '100%' }}
         multiple
         dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
-        placeholder='请选择模型'
+        placeholder='请选择训练数据集'
       >
         {renderTreeNodes(treeData)}
       </TreeSelect>
     </Form.Item>
-
   )
 }
+
+export default DatasetTreeSelect

@@ -101,17 +101,39 @@ const Panel: FC<NodePanelProps<UniverseNodeType>> = ({
 
   // 动态获取universeNodes配置
   const config__parameters = useMemo(() => {
-    // 如果节点名称是parameter-extractor，使用ParameterExtractor配置
-    if (data.name === 'parameter-extractor')
-      return ParameterExtractor.config__parameters || []
+    // 如果节点名称是parameter-extractor，需要根据 payload__model_source 动态调整配置
+    if (data.name === 'parameter-extractor' || data.payload__kind === 'parameterextractor') {
+      const baseParams = ParameterExtractor.config__parameters || []
 
-    // 如果节点的payload__kind是parameterextractor，使用ParameterExtractor配置
-    if (data.payload__kind === 'parameterextractor')
-      return ParameterExtractor.config__parameters || []
+      // 根据 payload__model_source 的值，动态替换第3个参数（索引2）
+      const params = [...baseParams]
+      const modelSource = inputs.payload__model_source
 
-    // 否则使用节点自身的配置
+      if (modelSource === 'inference_service') {
+        params[2] = {
+          label: '推理服务',
+          name: 'payload__inference_service',
+          type: 'inference_service_select',
+          required: true,
+          tooltip: '选择推理服务',
+          _check_names: [],
+          itemProps: {
+            model_kind: 'localLLM',
+            model_show_type: 'localLLM',
+          },
+        }
+      }
+      else {
+        params[2] = {
+          type: 'online_model_select',
+          _check_names: ['payload__source', 'payload__base_model_selected_keys'],
+          required: true,
+        }
+      }
+      return params
+    }
     return data.config__parameters || []
-  }, [data.name, data.payload__kind, data.config__parameters])
+  }, [data.name, data.payload__kind, data.config__parameters, inputs.payload__model_source])
 
   const [form] = Form.useForm()
 

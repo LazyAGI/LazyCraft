@@ -29,7 +29,7 @@ from models.model_account import Account, Tenant
 from parts.data.model import DataSetVersion
 from parts.finetune.model import FinetuneCustomParam, FinetuneTask, TaskStatus
 from parts.logs import Action, LogService, Module
-from parts.models_hub.model import Lazymodel, get_finetune_model_list
+from parts.models_hub.model import Lazymodel, ModelStatus, get_finetune_model_list
 from utils.util_database import db
 from utils.util_storage import storage
 
@@ -229,19 +229,24 @@ class FinetuneService:
         Returns:
             tuple: (bool, list) 获取结果元组，包含：
                 - bool: 是否成功获取
-                - list: 微调模型列表，失败时返回空列表
+                - list: 微调模型列表，失败时返回空列表（只包含已下载的模型）
         """
         get_ft_model_list_result, get_ft_model_list_return = get_finetune_model_list(only_model_key=False)
         if get_ft_model_list_result:
             model_names = [item.get("model") for item in get_ft_model_list_return if item.get("model")]
             builtin_map = {}
+            downloaded_model_names = set()  # 已下载的模型名称集合
             if model_names:
                 rows = (
-                    db.session.query(Lazymodel.model_name, Lazymodel.builtin_flag)
+                    db.session.query(Lazymodel.model_name, Lazymodel.builtin_flag, Lazymodel.model_status)
                     .filter(Lazymodel.model_name.in_(model_names))
                     .all()
                 )
-                builtin_map = {name: builtin for name, builtin in rows}
+                # 构建 builtin_map 并记录已下载的模型
+                for name, builtin, status in rows:
+                    builtin_map[name] = builtin
+                    if status == ModelStatus.SUCCESS.value:  # 只保留已下载的模型（model_status == 3）
+                        downloaded_model_names.add(name)
 
             used_keys = {
                 row[0]
@@ -255,13 +260,19 @@ class FinetuneService:
                 if row[0]
             }
 
+            # 过滤掉未下载的模型
+            filtered_ft_model_list = []
             for item in get_ft_model_list_return:
                 name = item.get("model")
                 if not name:
-                    item["need_confirm"] = False
                     continue
-                builtin_flag = builtin_map.get(name, False)
-                item["need_confirm"] = False if builtin_flag else (name not in used_keys)
+                # 只保留已下载的模型
+                if name in downloaded_model_names:
+                    builtin_flag = builtin_map.get(name, False)
+                    item["need_confirm"] = False if builtin_flag else (name not in used_keys)
+                    filtered_ft_model_list.append(item)
+            
+            return get_ft_model_list_result, filtered_ft_model_list
         return get_ft_model_list_result, get_ft_model_list_return
 
     def create_task(self, config):

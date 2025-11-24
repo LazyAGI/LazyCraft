@@ -53,3 +53,5 @@ package-lock.json
 pnpm-lock.yaml
 
 .favorites.json
+
+.env
