@@ -878,7 +878,66 @@ class SqlManagerNode(BaseNode):
             self.db_name = self.get_data().get("payload__db_name")
             self.options_str = self.get_data().get("payload__options_str")
 
+    def _validate_db_params(self) -> None:
+        """校验数据库连接参数，确保不会通过连接 URL 携带多余命令或进行URL注入。
+
+        由于这些参数会被直接拼接到数据库连接URL中，需要校验：
+        1. 禁止SQL注入相关的字符（分号、换行、注释符等）
+        2. 禁止URL中的特殊字符，防止URL注入
+        """
+        # SQL注入相关的禁止字符
+        sql_forbidden_tokens = [";", "\n", "\r", "--", "/*", "*/"]
+        
+        # URL特殊字符（用于URL注入防护）
+        # 注意：host可能包含IPv6地址（如[::1]），需要特殊处理
+        url_forbidden_for_user = ["@", ":", "/", "?", "#"]
+        url_forbidden_for_host = ["@", "/", "?", "#"]  # 允许:和[]（IPv6）
+        url_forbidden_for_db_name = ["/", "?", "#"]
+        url_forbidden_for_options = ["#"]  # options_str是查询字符串，允许&和=
+
+        def _check_sql_injection(name: str, value: str) -> None:
+            """检查SQL注入相关的字符"""
+            if value is None:
+                return
+            s = str(value)
+            for token in sql_forbidden_tokens:
+                if token in s:
+                    raise ValueError(f"非法数据库连接参数 {name} 中包含非法字符: {token}")
+
+        def _check_url_special_chars(name: str, value: str, forbidden_chars: list) -> None:
+            """检查URL特殊字符"""
+            if value is None:
+                return
+            s = str(value)
+            for char in forbidden_chars:
+                if char in s:
+                    raise ValueError(f"非法数据库连接参数 {name} 中包含URL特殊字符: {char}")
+
+        # 校验所有字段的SQL注入风险
+        _check_sql_injection("user", self.user)
+        _check_sql_injection("host", self.host)
+        _check_sql_injection("db_name", self.db_name)
+        _check_sql_injection("options_str", self.options_str)
+
+        # 校验URL特殊字符（防止URL注入）
+        _check_url_special_chars("user", self.user, url_forbidden_for_user)
+        _check_url_special_chars("host", self.host, url_forbidden_for_host)
+        _check_url_special_chars("db_name", self.db_name, url_forbidden_for_db_name)
+        _check_url_special_chars("options_str", self.options_str, url_forbidden_for_options)
+
+        # 端口必须是数字
+        if self.port is not None:
+            port_str = str(self.port)
+            if not port_str.isdigit():
+                raise ValueError("非法数据库连接参数 port 必须为数字")
+            port_num = int(port_str)
+            if port_num < 1 or port_num > 65535:
+                raise ValueError("非法数据库连接参数 port 必须在1-65535范围内")
+
     def _to_dict(self, result):
+        # 在序列化前再次校验，确保数据安全
+        self._validate_db_params()
+        
         result["args"] = {
             "db_type": self.db_type,
             "user": self.user,
