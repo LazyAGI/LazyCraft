@@ -37,6 +37,7 @@ const NormalForm = () => {
   const [isManualRead, setIsManualRead] = useState(false)
   const [isManualModalOpen, setIsManualModalOpen] = useState(false)
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
+  const agreementContentRef = React.useRef<HTMLDivElement>(null)
 
   // 处理登录提交
   const handleSubmit = useCallback(async (values: Record<string, any>) => {
@@ -155,7 +156,13 @@ const NormalForm = () => {
   const openManualModal = useCallback(() => {
     setIsManualModalOpen(true)
     // 如果用户已经阅读过协议，再次打开时直接设置为已滚动到底部
-    setHasScrolledToBottom(isManualRead)
+    if (isManualRead) {
+      setHasScrolledToBottom(true)
+    }
+    else {
+      // 重置滚动状态，等待检查
+      setHasScrolledToBottom(false)
+    }
   }, [isManualRead])
 
   // 关闭用户协议弹窗
@@ -176,6 +183,27 @@ const NormalForm = () => {
     if (isBottom && !hasScrolledToBottom)
       setHasScrolledToBottom(true)
   }, [hasScrolledToBottom])
+
+  // 检查滚动位置（用于弹层打开时检查是否已经在底部）
+  const checkScrollPosition = useCallback(() => {
+    if (agreementContentRef.current) {
+      const target = agreementContentRef.current
+      const isBottom = Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) < SCROLL_THRESHOLD
+      if (isBottom)
+        setHasScrolledToBottom(true)
+    }
+  }, [])
+
+  // 当弹层打开时，检查滚动位置
+  useEffect(() => {
+    if (isManualModalOpen && !isManualRead) {
+      // 使用 setTimeout 确保 DOM 已经渲染完成
+      const timer = setTimeout(() => {
+        checkScrollPosition()
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [isManualModalOpen, isManualRead, checkScrollPosition])
 
   // Tabs 配置
   const tabItems = useMemo(() => [
@@ -357,7 +385,7 @@ const NormalForm = () => {
           open={isManualModalOpen}
           onCancel={closeManualModal}
         >
-          <UserAgreementContent onScroll={handleManualScroll} />
+          <UserAgreementContent ref={agreementContentRef} onScroll={handleManualScroll} />
         </Modal>
       </div>
       {/* } */}
