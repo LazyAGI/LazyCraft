@@ -40,14 +40,6 @@ TEXT_BASED_TYPES = {
     'tex',      # LaTeX 文本
 }
 
-# Office Open XML 格式（本质上是zip压缩包）
-# filetype库会将这些格式识别为zip，需要特殊处理
-OFFICE_OPEN_XML_TYPES = {
-    'docx',     # Word文档
-    'xlsx',     # Excel文档
-    'pptx',     # PowerPoint文档
-}
-
 # 扩展名映射（处理一些特殊情况，如 jpg/jpeg）
 EXTENSION_MAPPING = {
     'jpg': 'jpeg',
@@ -114,7 +106,7 @@ def validate_file_type(
         current_pos = file_obj.tell()
         file_obj.seek(0)
         
-        file_data = file_obj.read(512)
+        file_data = file_obj.read()
         file_obj.seek(current_pos)
         
         if len(file_data) == 0:
@@ -146,15 +138,6 @@ def validate_file_type(
         
         normalized_file_ext = normalize_extension(file_ext)
         normalized_detected_ext = normalize_extension(detected_ext)
-        
-        # 特殊处理：Office Open XML格式（docx, xlsx, pptx）本质上是zip压缩包
-        # 如果文件扩展名是Office格式，且检测到的类型是zip，则允许通过
-        if normalized_file_ext in OFFICE_OPEN_XML_TYPES and normalized_detected_ext == 'zip':
-            logger.debug(
-                f"Office Open XML file detected: filename={filename}, "
-                f"extension={file_ext}, detected_type=zip (allowed)"
-            )
-            return True, file_ext, None
         
         if normalized_detected_ext != normalized_file_ext:
             error_msg = (
