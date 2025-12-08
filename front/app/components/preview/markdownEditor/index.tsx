@@ -16,6 +16,9 @@ import './lib/styles/editor.css'
 
 import '@toast-ui/editor-plugin-code-syntax-highlight/dist/toastui-editor-plugin-code-syntax-highlight.css'
 
+// 引入中文语言包
+import '@toast-ui/editor/dist/i18n/zh-cn'
+
 // 工具类
 // import { Dialog } from '@alifd/next';
 import { useInterval, useMount, useToggle, useUpdateEffect } from 'ahooks'
