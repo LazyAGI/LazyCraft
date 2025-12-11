@@ -17,7 +17,7 @@ import functools
 import os
 import shutil
 import zipfile
-
+import logging
 import sqlalchemy
 
 from libs.filetools import FileTools
@@ -180,6 +180,7 @@ class FileService:
                     ) 
 
                 file_record.file_path = new_path
+                file_record.tenant_id = knowledge_base.tenant_id
                 file_record.used = True
                 file_record.knowledge_base_id = knowledge_base_id
                 file_record.updated_at = TimeTools.get_china_now()
@@ -270,10 +271,10 @@ class FileService:
         )
 
     def batch_delete_files(self, file_ids):
-        """批量删除文件的数据库记录。
+        """批量删除文件的数据库记录和物理文件。
 
         删除文件在数据库中的记录，并恢复租户的存储空间使用量。
-        注意：目前不删除实际的文件，以防同样 MD5 的文件被误删。
+        同时删除物理文件，但会检查是否有其他记录使用相同的文件路径，避免误删。
 
         Args:
             file_ids: 要删除的文件 ID 列表。
@@ -283,6 +284,9 @@ class FileService:
         """
         if not file_ids:
             return 0  # 或者抛出一个适当的异常
+
+        # 先获取所有要删除的文件记录，以便删除物理文件
+        files_to_delete = db.session.query(FileRecord).filter(FileRecord.id.in_(file_ids)).all()
 
         # 使用数据库查询来计算文件大小
         total_size = (
@@ -294,8 +298,30 @@ class FileService:
         # 恢复已使用的存储空间
         Tenant.restore_used_storage(self.current_tenant_id, total_size)
 
-        # 使用批量删除
-        # 目前没有删除文件实体,以防同样md5的文件被误删; 后续可以优化,节省磁盘空间
+        # 删除物理文件（在删除数据库记录之前）
+        for file_record in files_to_delete:
+            file_path = file_record.file_path
+            if file_path:
+                # 检查是否有其他 FileRecord 使用相同的文件路径
+                # 只检查当前租户的记录，且 tenant_id 不为空
+                other_records = db.session.query(FileRecord).filter(
+                    FileRecord.file_path == file_path,
+                    FileRecord.id.notin_(file_ids),
+                    FileRecord.tenant_id == self.current_tenant_id
+                ).count()
+                
+                # 如果没有其他记录使用该文件，则删除物理文件
+                if other_records == 0 and os.path.exists(file_path):
+                    try:
+                        if os.path.isfile(file_path):
+                            os.remove(file_path)
+                        elif os.path.isdir(file_path):
+                            shutil.rmtree(file_path, ignore_errors=True)
+                    except Exception as e:
+                        # 记录错误但不中断删除流程
+                        logging.warning(f"删除文件失败: {file_path}, 错误: {e}")
+
+        # 使用批量删除数据库记录
         delete_stmt = sqlalchemy.delete(FileRecord).where(FileRecord.id.in_(file_ids))
         result = db.session.execute(delete_stmt)
         deleted_count = result.rowcount

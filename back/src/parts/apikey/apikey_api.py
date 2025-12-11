@@ -102,6 +102,9 @@ class ApikeyApi(Resource):
         for tid in tenant_id_list:
             if tid not in tenant_ids:
                 return {"message": f"空间ID {tid} 不属于当前用户的空间"}, 400
+            # 检查当前用户是否对该空间有写权限
+            if not current_user.can_write_in_tenant(tid):
+                return {"message": f"您对空间ID {tid} 没有写权限"}, 403
         self.check_can_write()
         result = ApikeyService.create_new(
             user_id=current_user.id,

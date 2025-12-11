@@ -192,8 +192,8 @@ class FileGetApi(Resource):
         parser.add_argument("file_id", type=str, required=True, location="json")
         args = parser.parse_args()
         file_model = FileService(current_user).get_file_by_id(args["file_id"])
-        if file_model:
-            self.check_can_read_object(file_model)
+        # if file_model:
+        #     self.check_can_read_object(file_model)
 
         result = FileService(current_user).get_file_by_id(args["file_id"])
         return marshal(result, fields.file_fields)
