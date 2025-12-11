@@ -141,7 +141,7 @@ class AssetManager:
                 return False
 
         # 检查只有 tenant_id 的模型
-        if tenant_id:
+        if tenant_id and not account_id:
             odict = OrderedDict()
             odict["tenant_id"] = str(tenant_id)
             for modelcls in TENANT_ONLY_MODELS:

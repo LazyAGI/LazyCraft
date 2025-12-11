@@ -113,7 +113,8 @@ def get_finetune_model_list(only_model_key=False):
                         "template": model.prompt_keys,
                         "display_name": model.model_name,
                         "token_estimation": None,
-                        "model_unit_price": None
+                        "model_unit_price": None,
+                        "model_kind": model.model_kind,
                     }
                     ft_model_list.append(model_info)
             
