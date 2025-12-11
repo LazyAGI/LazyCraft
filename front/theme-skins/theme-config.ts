@@ -8,7 +8,7 @@ const theme: ThemeConfig = {
   },
   components: {
     Dropdown: {
-      controlItemBgHover: '#F2F6FF',
+      controlItemBgHover: '#F00',
     },
   },
 }

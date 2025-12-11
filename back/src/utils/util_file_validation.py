@@ -106,7 +106,7 @@ def validate_file_type(
         current_pos = file_obj.tell()
         file_obj.seek(0)
         
-        file_data = file_obj.read(512)
+        file_data = file_obj.read()
         file_obj.seek(current_pos)
         
         if len(file_data) == 0:

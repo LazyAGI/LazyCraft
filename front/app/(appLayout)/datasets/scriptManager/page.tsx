@@ -14,6 +14,7 @@ import Iconfont from '@/app/components/base/iconFont'
 import useAuthPermissions from '@/shared/hooks/use-radio-auth'
 import { createPrompt, deletePrompt } from '@/infrastructure/api/prompt'
 import { getDatasetListNew } from '@/infrastructure/api/data'
+import { API_PREFIX } from '@/app-specs'
 const { Dragger } = Upload
 const ScriptManage = () => {
   const [form] = Form.useForm()
@@ -191,13 +192,35 @@ const ScriptManage = () => {
 
     else if (info.file.status === 'done') {
       setLoading(false)
-      setFileList(info?.fileList)
-      form.setFieldValue('script_url', info.file.response.file_path)
+      if (info.file.response?.file_path) {
+        setFileList(info?.fileList)
+        form.setFieldValue('script_url', info.file.response.file_path)
+        message.success('上传成功')
+      }
+      else {
+        // 响应数据异常，移除文件并清空 script_url
+        const filteredFileList = info.fileList.filter((file: any) => file.status !== 'done' || file.response?.file_path)
+        setFileList(filteredFileList)
+        form.setFieldValue('script_url', '')
+        message.error('上传失败，响应数据异常')
+      }
     }
 
-    else { setLoading(false) }
+    else if (info.file.status === 'error') {
+      setLoading(false)
+      // 上传失败时，移除失败的文件，并清空 script_url
+      const filteredFileList = info.fileList.filter((file: any) => file.status !== 'error')
+      setFileList(filteredFileList)
+      form.setFieldValue('script_url', '')
+      const errorMessage = info.file.response?.message || info.file.error?.message || '上传失败，请重试'
+      message.error(errorMessage)
+    }
+
+    else {
+      setLoading(false)
+    }
   }
-  const onDelete = () => {
+  const onRemove = () => {
     setFileList([])
     form.setFieldValue('script_url', '')
     return true
@@ -209,7 +232,7 @@ const ScriptManage = () => {
     return e?.fileList
   }
   const beforeUpload = (file: any) => {
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>((resolve, _reject) => {
       // 检查文件类型
       const isPyFile = file.name.toLowerCase().endsWith('.py')
       if (!isPyFile) {
@@ -228,6 +251,69 @@ const ScriptManage = () => {
 
       resolve(true)
     })
+  }
+  const customRequest = async (options: any) => {
+    const { file, onSuccess, onError, onProgress } = options
+    const formData = new FormData()
+    formData.append('file', file as File)
+
+    try {
+      const xhr = new XMLHttpRequest()
+
+      // 监听上传进度
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable && onProgress) {
+          const percent = (event.loaded / event.total) * 100
+          onProgress({ percent })
+        }
+      })
+
+      // 监听请求完成
+      xhr.addEventListener('load', () => {
+        try {
+          const response = JSON.parse(xhr.responseText)
+
+          // 检查响应的 code 字段
+          if (response.code === 200) {
+            // code 是 200，表示成功
+            if (response.file_path)
+              onSuccess?.(response)
+            else
+              onError?.(new Error('上传失败，响应数据异常'))
+          }
+          else if (xhr.status === 400 || response.code === 400) {
+            // 400 错误，显示接口返回的 message
+            const errorMessage = response.message || '上传失败'
+            onError?.(new Error(errorMessage))
+          }
+          else {
+            // 其他错误
+            const errorMessage = response.message || `上传失败: ${xhr.status}`
+            onError?.(new Error(errorMessage))
+          }
+        }
+        catch (error) {
+          // 响应解析失败
+          onError?.(new Error(`响应解析失败: ${xhr.status}`))
+        }
+      })
+
+      // 监听错误
+      xhr.addEventListener('error', () => {
+        onError?.(new Error('网络错误，上传失败'))
+      })
+
+      // 打开请求
+      xhr.open('POST', `${API_PREFIX}/script/upload`)
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+      // 不要手动设置 Content-Type，让浏览器自动设置（包含 boundary）
+
+      // 发送请求
+      xhr.send(formData)
+    }
+    catch (error) {
+      onError?.(error)
+    }
   }
   const canEdit = (val) => {
     if (val === '00000000-0000-0000-0000-000000000000')
@@ -442,13 +528,12 @@ const ScriptManage = () => {
                 accept='.py'
                 disabled={isView}
                 maxCount={1}
-                headers={{ Authorization: `Bearer ${token}` }}
                 fileList={fileList}
                 name="file"
-                action="/console/api/script/upload"
+                customRequest={customRequest}
                 onChange={handleUpChange}
                 beforeUpload={beforeUpload}
-                onDelete={onDelete}
+                onRemove={onRemove}
               >
                 <p className="ant-upload-drag-icon">
                   <InboxOutlined />

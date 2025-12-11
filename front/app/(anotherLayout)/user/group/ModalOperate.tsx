@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Form, Input, InputNumber, Modal, message } from 'antd'
-import ApplicationModal from './applicationMOdel'
+import ApplicationModal from './applicationModel'
 import { getquotaApplication, updateUserGroup } from '@/infrastructure/api/user'
 import PickerUser from '@/app/components/app/picker-user'
 import { usePermitCheck } from '@/app/components/app/permit-check'
