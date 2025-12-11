@@ -233,7 +233,7 @@ def validate_python_file(file_obj: FileStorage) -> Tuple[bool, Optional[str]]:
                 except UnicodeDecodeError:
                     continue
             if content_str is None:
-                return False, "文件不是有效的文本文件，无法解析为Python代码"
+                return False, "文件不是有效的文本文件"
         else:
             content_str = str(file_content)
         
@@ -246,11 +246,11 @@ def validate_python_file(file_obj: FileStorage) -> Tuple[bool, Optional[str]]:
         except SyntaxError as e:
             error_msg = f"文件不是有效的Python代码: {e.msg} (行 {e.lineno})"
             logger.warning(f"Python file validation failed: {error_msg}")
-            return False, error_msg
+            return False, "请提供有效的Python文件"
         except Exception as e:
             error_msg = f"解析Python文件时发生错误: {str(e)}"
             logger.warning(f"Python file validation failed: {error_msg}")
-            return False, error_msg
+            return False, "请提供有效的Python文件"
             
     except Exception as e:
         logger.error(f"Error during Python file validation: {e}", exc_info=True)
