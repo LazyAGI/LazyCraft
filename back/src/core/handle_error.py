@@ -15,7 +15,7 @@
 
 import sys
 
-from flask import current_app, got_request_exception
+from flask import Response, current_app, got_request_exception
 from flask_restful import Api, http_status_message
 from werkzeug.datastructures import Headers
 from werkzeug.exceptions import HTTPException
@@ -25,6 +25,15 @@ class HandleErrorApi(Api):
     """
     提供自定义的错误处理机制，统一处理各种异常并返回标准化的错误响应。
     """
+
+    def make_response(self, data, *args, **kwargs):
+        """重写 make_response 方法，确保 Response 对象不会被序列化为 JSON。
+        
+        当 data 是 Response 对象时，直接返回，不进行 JSON 序列化。
+        """
+        if isinstance(data, Response):
+            return data
+        return super().make_response(data, *args, **kwargs)
 
     def _create_error_data(self, code, message, status_code):
         """创建标准化的错误数据结构。

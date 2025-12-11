@@ -119,6 +119,9 @@ class AppListApi(Resource):
         )
         args = parser.parse_args()
 
+        # 权限校验：列表接口需要 read 权限
+        self.check_can_read()
+
         client = AppService()
         pagination = client.get_paginate_apps(current_user, args)
         response = marshal(pagination, fields.app_pagination_fields)
@@ -214,6 +217,8 @@ class AppListPageApi(Resource):
             "enable_api", type=inputs.boolean, location="json", required=False
         )
         args = parser.parse_args()
+        
+        self.check_can_read()
         client = AppService()
         pagination = client.get_paginate_apps(current_user, args)
         response = marshal(pagination, fields.app_pagination_fields)
@@ -244,6 +249,9 @@ class AppDetailApi(Resource):
         """
         # 如果是通过子画布的接口来访问，会拿不到app_model
         app_model = AppService().get_app(app_id, raise_error=False)
+        if app_model:
+            self.check_can_read_object(app_model)
+            
         return marshal(app_model, fields.app_detail_fields)
 
     @login_required
@@ -490,6 +498,9 @@ class AppExportApi(Resource):
         args = parser.parse_args()
 
         app_model = AppService().get_app(app_id, raise_error=False)
+        if app_model:
+            self.check_can_write_object(app_model)
+
         result = marshal(app_model, fields.app_export_fields)
         workflow = Workflow.default_getone(app_id, args["version"])
         result["graph"] = workflow.nested_graph_dict if workflow else {}
@@ -573,6 +584,10 @@ class DraftImportFromFile(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("file", type=FileStorage, required=True, location="files")
         uploaded_file = parser.parse_args()["file"]
+        
+        app_model = AppService().get_app(app_id, raise_error=False)
+        if app_model:
+            self.check_can_write_object(app_model)
 
         rawdata = json.loads(uploaded_file.read())
 
@@ -622,6 +637,7 @@ class TemplateListApi(Resource):
         )  # mine/group/builtin/already
         args = parser.parse_args()
 
+        self.check_can_read()
         client = TemplateService()
         app_pagination = client.get_paginate_apps(current_user, args)
         if not app_pagination:
@@ -644,6 +660,7 @@ class TemplateDetailApi(Resource):
             ValueError: 当模板不存在时抛出
         """
         template = TemplateService().get_app(app_id)
+        self.check_can_read_object(template)
         return marshal(template, fields.app_detail_fields)
 
     @login_required
@@ -729,6 +746,9 @@ class TemplateConvertToApp(Resource):
 
         client = TemplateService()
         template = client.get_app(args["id"])
+        if template:
+            self.check_can_read_object(template)
+
         app = client.convert_to_app(current_user, template, args)
         LogService().add(Module.APP_STORE, Action.CREATE_APP_TMP, name=app.name)
         return app, 201
@@ -1176,7 +1196,11 @@ class AppVersion(Resource):
 
 
 class CheckVersionsCount(Resource):
+    @login_required
     def get(self, app_id):
+        app_model = AppService().get_app(app_id, raise_error=False)
+        if app_model:
+            self.check_can_write_object(app_model)
         version_count = AppService().get_version_count(app_id)
         message = ""
         is_over_limit = False

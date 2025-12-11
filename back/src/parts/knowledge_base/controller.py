@@ -64,6 +64,8 @@ class KnowledgeBaseListApi(Resource):
         )
         args = parser.parse_args()
 
+        self.check_can_read()
+
         pagination = KnowledgeBaseService(current_user).get_pagination(args)
         return marshal(pagination, fields.knowledge_pagination_fields)
 
@@ -189,6 +191,9 @@ class FileGetApi(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("file_id", type=str, required=True, location="json")
         args = parser.parse_args()
+        file_model = FileService(current_user).get_file_by_id(args["file_id"])
+        # if file_model:
+        #     self.check_can_read_object(file_model)
 
         result = FileService(current_user).get_file_by_id(args["file_id"])
         return marshal(result, fields.file_fields)
@@ -207,6 +212,8 @@ class FileUploadApi(Resource):
         Returns:
             dict: 上传成功的文件信息
         """
+        self.check_can_write()
+
         support_file_types = (
             ".xls",
             ".xlsx",
@@ -413,6 +420,7 @@ class FileDownloadApi(Resource):
 
 
 class KnowledgeBaseReferenceResult(Resource):
+    @login_required
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument("id", type=str, location="args")
@@ -423,6 +431,9 @@ class KnowledgeBaseReferenceResult(Resource):
         kb = service.get_by_id(kb_id)
         if not kb:
             return []
+        
+        # 检查用户是否有权限查看该知识库的引用结果（需要能读取该知识库）
+        self.check_can_read_object(kb)
 
         # 2. 查询数据
         refs = service.get_ref_apps(kb_id)

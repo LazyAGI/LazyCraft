@@ -87,6 +87,8 @@ class ToolListApi(Resource):
         )
         args = parser.parse_args()
 
+        self.check_can_read()
+
         pagination = ToolService(current_user).get_pagination(args)
         return marshal(pagination, fields.tool_pagination)
 
@@ -97,6 +99,8 @@ class ToolDetailApi(Resource):
         """工具详情"""
         tool_id = request.args.get("tool_id", type=str)
         tool_instance = ToolService(current_user).get_by_id_with_auth(tool_id, True)
+        if tool_instance:
+            self.check_can_read_object(tool_instance)
         return marshal(tool_instance, fields.tool_detail)
 
 
@@ -107,6 +111,8 @@ class ToolCheckName(Resource):
         data = request.json
         if not data:
             raise ValueError("输入的参数格式有误")
+
+        self.check_can_read()
 
         if not ToolService(current_user).existToolByName(data.get("name")):
             return {"message": "success", "code": 200}
@@ -191,7 +197,16 @@ class ToolFieldCreateAndUpdateApi(Resource):
             else:
                 create_list.append(item)
 
+        # 检查权限：如果有 tool_id，需要检查对 tool 的写权限
         tool_service = ToolService(current_user)
+        tool_id = data[0].get("tool_id") if data else None
+        if tool_id:
+            tool = tool_service.get_by_id(tool_id)
+            if tool:
+                self.check_can_write_object(tool)
+        else:
+            self.check_can_write()
+
         saved_entities, save_errors = tool_service.createToolFields(create_list)
         updated_entities, update_errors = tool_service.updateToolFields(update_list)
 
@@ -211,6 +226,9 @@ class ToolFieldsDetailApi(Resource):
         """field部分的数据详情(API+IDE两种模式都有)"""
         # 获取 JSON 数据
         data = request.get_json(force=True)
+        
+        self.check_can_write()
+        
         parsed_fields = self.parse_fields(data.get("fields", []))
 
         queryset = ToolService(current_user).getToolFields(parsed_fields)
@@ -258,6 +276,16 @@ class ToolApiCreateAndUpdateApi(Resource):
         if not data:
             raise ValueError("输入的参数格式有误")
 
+        # 检查权限：如果有 tool_id，需要检查对 tool 的写权限
+        tool_id = data.get("tool_id")
+        if tool_id:
+            service = ToolService(current_user)
+            tool = service.get_by_id(tool_id)
+            if tool:
+                self.check_can_write_object(tool)
+        else:
+            self.check_can_write()
+
         tool_api_instance = ToolService(current_user).upsertToolApi(
             data, data.get("id")
         )
@@ -273,6 +301,12 @@ class ToolApiDetailApi(Resource):
         if tool_api_id == 0:
             return {}
         instance = ToolService(current_user).get_toolapi_by_id(tool_api_id)
+        # 通过 tool_api_id 查找对应的 tool 进行权限检查
+        if instance:
+            from .model import Tool
+            tool = Tool.query.filter_by(tool_api_id=tool_api_id).first()
+            if tool:
+                self.check_can_read_object(tool)
         return marshal(instance, fields.tool_api_fileds)
 
 
@@ -382,10 +416,15 @@ class ToolTestApi(Resource):
         if not data:
             raise ValueError("输入的参数格式有误")
 
-        if not ToolService(current_user).checkToolCanTest(data.get("id")):
+        service = ToolService(current_user)
+        tool = service.get_by_id(data.get("id"))
+        if tool:
+            self.check_can_write_object(tool)
+
+        if not service.checkToolCanTest(data.get("id")):
             raise ValueError("当前工具不可运行")
 
-        return ToolService(current_user).testTool(
+        return service.testTool(
             data.get("id"), data.get("input", {}), data.get("vars_for_code", {})
         )
 
@@ -396,6 +435,11 @@ class TestApi(Resource):
         data = request.json
         if not data:
             raise ValueError("输入的参数格式有误")
+
+        service = ToolService(current_user)
+        tool = service.get_by_id(data.get("id"))
+        if tool:
+            self.check_can_write_object(tool)
 
         logger = get_tool_logger(data["id"])
         logger.info("test")
@@ -408,7 +452,13 @@ class ToolAuthByUserReturnUrlApi(Resource):
         data = request.json
         if not data:
             raise ValueError("输入的参数格式有误")
-        return ToolService(current_user).tool_auth_by_user_return_url(
+        
+        service = ToolService(current_user)
+        tool = service.get_by_id(data.get("tool_id"))
+        if tool:
+            self.check_can_write_object(tool)
+        
+        return service.tool_auth_by_user_return_url(
             data.get("tool_id")
         )
 
@@ -419,7 +469,13 @@ class ToolAuthShare(Resource):
         data = request.json
         if not data:
             raise ValueError("输入的参数格式有误")
-        ToolService(current_user).tool_auth_share(
+        
+        service = ToolService(current_user)
+        tool = service.get_by_id(data.get("tool_id"))
+        if tool:
+            self.check_can_write_object(tool)
+        
+        service.tool_auth_share(
             data.get("tool_id"), data.get("share_status")
         )
         return {"code": 200, "message": "success"}
@@ -431,7 +487,13 @@ class ToolAuthDeleteAuthByUser(Resource):
         data = request.json
         if not data:
             raise ValueError("输入的参数格式有误")
-        ToolService(current_user).delete_tool_auth(data.get("tool_id"))
+        
+        service = ToolService(current_user)
+        tool = service.get_by_id(data.get("tool_id"))
+        if tool:
+            self.check_can_write_object(tool)
+        
+        service.delete_tool_auth(data.get("tool_id"))
         return {"code": 200, "message": "success"}
 
 

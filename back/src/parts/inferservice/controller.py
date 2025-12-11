@@ -88,6 +88,8 @@ class ListService(Resource):
         """
         data = request.get_json() or {}  # 处理请求体为空的情况
 
+        self.check_can_read()
+
         page = data.get("page", 1)
         per_page = data.get("per_page", 10)
         qtype = data.get("qtype", "already")
@@ -117,6 +119,8 @@ class CloudServiceStatusApi(Resource):
 
     @login_required
     def get(self):
+        self.check_can_read()
+        
         infer_service = InferService()
         enabled, message = infer_service.is_cloud_service_available()
         return {"enabled": enabled, "message": message}
@@ -209,6 +213,10 @@ class CreateService(Resource):
         
         # 根据模型名称查询对应的模型记录
         group_info = InferModelServiceGroup.query.get(group_id)
+        # 如果模型不存在，返回404错误
+        if not group_info:
+            return build_response(status=400, message="Group not found")
+        # 检查权限
         self.check_can_write_object(group_info)
         if group_info.tenant_id != current_user.current_tenant_id:
             return build_response(status=400, message="当前用户无权限操作")
@@ -217,9 +225,6 @@ class CreateService(Resource):
             and current_user.id != Account.get_administrator_id()
         ):
             return build_response(status=400, message="当前用户无权限操作")
-        # 如果模型不存在，返回404错误
-        if not group_info:
-            return jsonify({"error": "Model not found"})
         # 将新建的服务信息以JSON格式返回
         self.infer_service.create_infer_model_service(
             data.get("group_id"), group_info.model_id, data.get("services")
@@ -258,8 +263,11 @@ class StartServiceGroup(Resource):
         data = request.get_json()
         # 根据服务ID查询对应的服务记录
         group_info = InferModelServiceGroup.query.get(data.get("group_id"))
-        self.check_can_write_object(group_info)
+        # 如果服务不存在，返回404错误
+        if not group_info:
+            return build_response(status=400, message="Group not found")
         # 检查权限
+        self.check_can_write_object(group_info)
         if group_info.tenant_id != current_user.current_tenant_id:
             return build_response(status=400, message="当前用户无权限操作")
         if (
@@ -267,9 +275,6 @@ class StartServiceGroup(Resource):
             and current_user.id != Account.get_administrator_id()
         ):
             return build_response(status=400, message="当前用户无权限操作")
-        # 如果服务不存在，返回404错误
-        if not group_info:
-            return build_response(status=400, message="Group not found")
         start_service_group_result = self.infer_service.start_service_group(
             data.get("group_id")
         )
@@ -310,6 +315,10 @@ class StartService(Resource):
         data = request.get_json()
         # 根据服务ID查询对应的服务记录
         service = InferModelService.query.get(data.get("service_id"))
+        # 如果服务不存在，返回404错误
+        if not service:
+            return build_response(status=400, message="Service not found")
+        # 检查权限
         self.check_can_write_object(service)
         if service.tenant_id != current_user.current_tenant_id:
             return build_response(status=400, message="当前用户无权限操作")
@@ -318,9 +327,6 @@ class StartService(Resource):
             and current_user.id != Account.get_administrator_id()
         ):
             return build_response(status=400, message="当前用户无权限操作")
-        # 如果服务不存在，返回404错误
-        if not service:
-            return build_response(status=400, message="Service not found")
         # 启动推理服务
         start_service_result = self.infer_service.start_service(data.get("service_id"))
         if start_service_result:
@@ -359,6 +365,10 @@ class StopService(Resource):
         data = request.get_json()
         # 根据服务ID查询对应的服务记录
         service = InferModelService.query.get(data.get("service_id"))
+        # 如果服务不存在，返回404错误
+        if not service:
+            return build_response(status=400, message="Service not found")
+        # 检查权限
         self.check_can_write_object(service)
         if service.tenant_id != current_user.current_tenant_id:
             return build_response(status=400, message="当前用户无权限操作")
@@ -367,9 +377,6 @@ class StopService(Resource):
             and current_user.id != Account.get_administrator_id()
         ):
             return build_response(status=400, message="当前用户无权限操作")
-        # 如果服务不存在，返回404错误
-        if not service:
-            return build_response(status=400, message="Service not found")
         stop_service_result = self.infer_service.stop_service(data.get("service_id"))
         if stop_service_result:
             # # 返回操作成功的消息
@@ -407,6 +414,10 @@ class DeleteService(Resource):
         data = request.get_json()
         # 根据服务ID查询对应的服务记录
         service = InferModelService.query.get(data.get("service_id"))
+        # 如果服务不存在，返回404错误
+        if not service:
+            return build_response(status=400, message="Service not found")
+        # 检查权限
         self.check_can_write_object(service)
         if service.tenant_id != current_user.current_tenant_id:
             return build_response(status=400, message="当前用户无权限操作")
@@ -467,6 +478,9 @@ class CloseServiceGroup(Resource):
         # 如果服务不存在，返回404错误
         if not group_info:
             return build_response(status=400, message="Group not found")
+        
+        # 检查用户是否有权限关闭该服务组（需要对该服务组有写权限）
+        self.check_can_write_object(group_info)
         close_service_group_result = self.infer_service.close_service_group(
             data.get("group_id")
         )
@@ -505,6 +519,8 @@ class ModelListService(Resource):
         model_type = request.args.get("model_type", "local", type=str)
         model_kind = request.args.get("model_kind", "", type=str)
         qtype = request.args.get("qtype", "", type=str)
+        
+        self.check_can_read()
  
         res = self.infer_service.list_local_model(qtype, model_kind, model_type)
         ams_local_model_list_original = ams_local_model_list.get(model_type, [])
@@ -569,6 +585,8 @@ class ListForDrawService(Resource):
             Exception: 当获取在线模型列表失败时抛出异常。
         """
         model_kind = request.args.get("model_kind", "", type=str)
+        
+        self.check_can_read()
 
         result, pagination_info = self.infer_service.list_infer_model_service(
             page=None,
@@ -610,6 +628,8 @@ class AMSModelListService(Resource):
             Exception: 当获取AMS模型列表失败时抛出异常。
         """
         model_type = request.args.get("model_type", "", type=str)
+        
+        self.check_can_read()
 
         if model_type == "localLLM":
             used_model_ids = self.infer_service._get_used_infer_model_ids()
