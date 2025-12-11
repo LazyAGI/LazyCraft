@@ -227,7 +227,7 @@ class ToolFieldsDetailApi(Resource):
         # 获取 JSON 数据
         data = request.get_json(force=True)
         
-        self.check_can_read()
+        self.check_can_write()
         
         parsed_fields = self.parse_fields(data.get("fields", []))
 

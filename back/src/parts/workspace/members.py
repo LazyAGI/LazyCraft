@@ -254,7 +254,7 @@ class SwitchTenantApi(Resource):
         parser.add_argument("tenant_id", type=str, required=True, location="json")
         args = parser.parse_args()
 
-        self.check_can_write()
+        self.check_can_read()
         TenantService.switch_tenant(current_user, args["tenant_id"])
         return {"result": "success"}
 
@@ -315,7 +315,7 @@ class DetailTenantApi(Resource):
         args = parser.parse_args()
 
         # self.check_can_admin()  # 错误用法,应该改为下面的调用
-        if not current_user.can_admin_in_tenant(args["tenant_id"]):
+        if not current_user.can_write_in_tenant(args["tenant_id"]):
             raise ForbiddenError()
 
         tenant = TenantService.get_tenant_by_id(args["tenant_id"])
@@ -553,6 +553,8 @@ class ExitTenantApi(Resource):
             raise ValueError("超管不能退出用户组")
         if current_user.get_role_in_tenant(tenant.id) == RoleTypes.OWNER:
             raise ValueError("创建者不能退出用户组")
+        if current_user.tenant_id != args["tenant_id"]:
+            raise ValueError("您不属于该用户组，无法退出")
 
         # 检查租户下该用户的资产
         AssetManager(current_user).check_tenant_account_assets(tenant, current_user)
@@ -677,12 +679,11 @@ class CoopStatusApi(Resource):
         target_type = args["target_type"]
         target_id = args["target_id"]
 
+        self.check_can_read()
         client = CooperationService(current_user)
         client.check_target(target_type, target_id)  # 检查类型与ID
 
         instance = client.get_object(target_type, target_id)
-        if instance:
-            self.check_can_read_object(instance)
         return marshal(instance, fields.cooperation_fields)
 
 
@@ -699,12 +700,11 @@ class CoopOpenApi(Resource):
         target_type = args["target_type"]
         target_id = args["target_id"]
 
+        self.check_can_write()
         client = CooperationService(current_user)
         client.check_target(target_type, target_id)  # 检查类型与ID
 
         instance = client.get_object(target_type, target_id)
-        if instance:
-            self.check_can_write_object(instance)
         instance = client.set_object_accounts(target_type, target_id, args["accounts"])
         return marshal(instance, fields.cooperation_fields)
 
@@ -721,12 +721,11 @@ class CoopCloseApi(Resource):
         target_type = args["target_type"]
         target_id = args["target_id"]
 
+        self.check_can_write()
         client = CooperationService(current_user)
         client.check_target(target_type, target_id)  # 检查类型与ID
 
         instance = client.get_object(target_type, target_id)
-        if instance:
-            self.check_can_write_object(instance)
         instance = client.close_object(target_type, target_id)
         return marshal(instance, fields.cooperation_fields)
 
@@ -818,6 +817,9 @@ class QuotaRequestApi(Resource):
 
         # 仅允许对当前租户发起配额申请，防止为无关租户提交请求
         if tenant_id != current_user.current_tenant_id:
+            raise ForbiddenError()
+
+        if not current_user.can_admin_in_tenant(tenant_id):
             raise ForbiddenError()
 
         self.check_can_write()

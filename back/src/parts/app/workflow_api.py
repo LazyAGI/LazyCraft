@@ -235,7 +235,7 @@ class DraftWorkflowStopApi(Resource):
         workflow = WorkflowService().get_draft_workflow(app_id)
         app_model = AppService().get_app(app_id, raise_error=False)
         if app_model:
-            self.check_can_read_object(app_model)
+            self.check_can_write_object(app_model)
 
         app_run = AppRunService.create(app_model, mode="draft")
         app_run.stop()
@@ -410,7 +410,7 @@ class NewWorkflowFromApp(Resource):
 
         app_model = AppService().get_app(args["app_id"])
         if app_model:
-            self.check_can_write_object(app_model)
+            self.check_can_read_object(app_model)
         
         main_app_model = AppService().get_app(args["main_app_id"], raise_error=False)
         if main_app_model:

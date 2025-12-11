@@ -37,7 +37,10 @@ from libs.login import login_required
 from parts.logs import Action, LogService, Module
 from parts.urls import api
 from utils.util_database import db
-from utils.util_file_validation import validate_file_type_and_raise
+from utils.util_file_validation import (
+    validate_file_type_and_raise,
+    validate_python_file_and_raise,
+)
 
 from . import fields
 from .data_service import DataService
@@ -228,6 +231,9 @@ class ScriptUploadApi(Resource):
         file_size = FileTools.get_file_size(file)
         if file_size > 1 * 1024 * 1024:
             raise ValueError("文件大小不能超过1MB")
+
+        # 验证文件是否是真正的Python文件
+        validate_python_file_and_raise(file)
 
         self.check_can_write()
 
@@ -915,7 +921,7 @@ class DataSetFileApi(Resource):
                     data_set_version.data_set_id
                 )
                 if data_set:
-                    self.check_can_read_object(data_set)
+                    self.check_can_write_object(data_set)
 
         return DataService(current_user).get_data_set_file_by_file_id(
             data["data_set_file_id"], data.get("start"), data.get("end")
