@@ -65,26 +65,27 @@ def get_service_info(service_id):
             model_info = Lazymodel.query.get(service.model_id)
             if model_info.model_from == "finetune":
                 model_name = model_info.model_key_ams
-                get_service_info_res["model_name"] = model_info.model_key_ams
-                try:
-                    ams_get_url = os.getenv("AMS_ENDPOINT", "NOT_SET_AMS_ENDPOINT!!") + "/v1/inference_services/" + service.gid
-                    logging.info(f"Getting deploy_method from LazyLLM for finetune model: {ams_get_url}")
-                    response = requests.get(ams_get_url, timeout=10)
-                    if response.status_code == 200:
-                        response_data = response.json()
-                        deploy_method = response_data.get("deploy_method")
-                        logging.info(f"Got deploy_method from LazyLLM: {deploy_method}")
-                        if deploy_method:
-                            get_service_info_res["framework"] = deploy_method
-                    else:
-                        logging.warning(f"Failed to get deploy_method from LazyLLM: status_code={response.status_code}, response={response.text}")
-                except Exception as e:
-                    logging.warning(f"Failed to get deploy_method from LazyLLM for finetune model: {e}")
+            get_service_info_res["model_name"] = model_name
+            try:
+                ams_get_url = os.getenv("AMS_ENDPOINT", "NOT_SET_AMS_ENDPOINT!!") + "/v1/inference_services/" + service.gid
+                logging.info(f"Getting deploy_method from LazyLLM for model: {ams_get_url}")
+                response = requests.get(ams_get_url, timeout=10)
+                if response.status_code == 200:
+                    response_data = response.json()
+                    deploy_method = response_data.get("deploy_method")
+                    logging.info(f"Got deploy_method from LazyLLM: {deploy_method}")
+                    if deploy_method:
+                        get_service_info_res["framework"] = deploy_method
+                else:
+                    logging.warning(f"Failed to get deploy_method from LazyLLM: status_code={response.status_code}, response={response.text}")
+            except Exception as e:
+                logging.warning(f"Failed to get deploy_method from LazyLLM for model: {e}")
             
             if "framework" not in get_service_info_res:
                 for local_ams_model in ams_local_model_list_ams:
-                    if local_ams_model["model_name"] == model_name:
-                        get_service_info_res["framework"] = local_ams_model["framework"]
+                    lm_name = (local_ams_model.get("name") or local_ams_model.get("key") or "").lower()
+                    if lm_name and lm_name == (model_name or "").lower():
+                        get_service_info_res["framework"] = local_ams_model.get("framework", "")
                         break
 
     except Exception as e:
@@ -332,17 +333,21 @@ class InferService:
                     model_info = Lazymodel.query.get(service.model_id)
                     if model_info.model_from == "finetune":
                         ams_model_name = model_info.model_key_ams
-                    for local_ams_model in ams_local_model_list_ams:
-                        if local_ams_model["model_name"] == ams_model_name:
-                            if "http" in ams_get_service_status_endpoint:
-                                endpoint_url = ams_get_service_status_endpoint
-                            else:
+
+                    endpoint_url = ""
+                    if "http" in ams_get_service_status_endpoint:
+                        endpoint_url = ams_get_service_status_endpoint
+                    else:
+                        for local_ams_model in ams_local_model_list_ams:
+                            if local_ams_model["name"] == ams_model_name:
                                 endpoint_url = (
-                                    "http://"
-                                    + ams_get_service_status_endpoint
-                                    + local_ams_model["endpoint"]
+                                "http://"
+                                + ams_get_service_status_endpoint
+                                + local_ams_model["endpoint"]
                                 )
-                            ams_service_endpoint[str(service.gid)] = endpoint_url
+                                break
+                    ams_service_endpoint[str(service.gid)] = endpoint_url
+
         return ams_service_status, ams_service_endpoint
 
     def _process_status_filter(self, status):
@@ -619,23 +624,24 @@ class InferService:
         ams_get_service_status_result, ams_get_service_status_status, ams_get_service_status_endpoint = self.ams_get_service_status(
             service_info_map["service_name_ams"]
         )
+        service_info_map["url"] = ""
         
         # 如果AMS服务状态获取失败，返回空URL
         if not ams_get_service_status_result or not ams_get_service_status_endpoint:
-            service_info_map["url"] = ""
             return service_info_map
             
-        for local_ams_model in ams_local_model_list_ams:
-            if local_ams_model["model_name"] == service_info_map["model_name"]:
-                if "http" in ams_get_service_status_endpoint:
-                    service_info_map["url"] = ams_get_service_status_endpoint
-                else:
+        if "http" in ams_get_service_status_endpoint:
+            service_info_map["url"] = ams_get_service_status_endpoint
+        else:
+            for local_ams_model in ams_local_model_list_ams:
+                if local_ams_model["name"] == service_info_map["model_name"]:
                     service_info_map["url"] = (
                         "http://"
                         + ams_get_service_status_endpoint
                         + local_ams_model["endpoint"]
                     )
-                break
+                    break
+
         return service_info_map
 
     def create_infer_model_service_group(
