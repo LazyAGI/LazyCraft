@@ -54,4 +54,6 @@ pnpm-lock.yaml
 
 .favorites.json
 
+# env files
 .env
+.env.example

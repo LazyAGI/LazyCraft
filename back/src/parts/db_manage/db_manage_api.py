@@ -130,6 +130,9 @@ class DBManageDatabaseBaseList(Resource):
         )  # mine/group/builtin/already
         parser.add_argument("user_id", type=list, default=[], location="json", help="")
         args = parser.parse_args()
+        
+        self.check_can_read()
+        
         """Get all databases"""
         service = DBManageService(current_user)
         result = service.get_all_databases(args)
@@ -161,6 +164,10 @@ class DBManageDatabase(Resource):
         parser.add_argument("comment", type=str, required=True, location="json")
         args = parser.parse_args()
         service = DBManageService(current_user)
+        database_model = service.get_database_info_by_id(database_id)
+        if database_model:
+            self.check_can_write_object(database_model)
+        
         try:
             result = service.update_db(
                 database_id=database_id,
@@ -185,8 +192,15 @@ class DBManageDatabase(Resource):
         Returns:
             dict: 包含删除结果的响应字典
         """
-        self.check_can_admin()
         service = DBManageService(current_user)
+
+        database_model = service.get_database_info_by_id(database_id)
+        if not database_model:
+            raise ValueError("数据库不存在")
+        
+        # 检查用户是否有权限删除该数据库（需要对该数据库有管理员权限）
+        self.check_can_admin_object(database_model)
+            
         result, message = service.delete_db(database_id=database_id)
         if result:
             return {"message": message, "code": 200}, 200
@@ -233,6 +247,11 @@ class DBManageTableList(Resource):
         )
         args = parser.parse_args()
         service = DBManageService(current_user)
+
+        database_model = service.get_database_info_by_id(database_id)
+        if database_model:
+            self.check_can_read_object(database_model)
+            
         result = service.get_all_table(database_id=database_id, args=args)
         return table_pagination_schema.dump(result)
 
@@ -253,6 +272,10 @@ class DBManageTableByName(Resource):
             dict: 包含表结构信息的响应字典
         """
         service = DBManageService(current_user)
+        database_model = service.get_database_info_by_id(database_id)
+        if database_model:
+            self.check_can_read_object(database_model)
+        
         try:
             result = service.get_table_structure(
                 database_id=database_id, table_id=None, table_name=table_name
@@ -278,6 +301,10 @@ class DBManageTable(Resource):
             dict: 包含表结构信息的响应字典
         """
         service = DBManageService(current_user)
+        database_model = service.get_database_info_by_id(database_id)
+        if database_model:
+            self.check_can_read_object(database_model)
+            
         try:
             result = service.get_table_structure(
                 database_id=database_id, table_id=table_id
@@ -317,8 +344,11 @@ class DBManageTable(Resource):
             "columns", type=dict, required=True, action="append", location="json"
         )
         args = parser.parse_args()
-        self.check_can_write()
         service = DBManageService(current_user)
+        database_model = service.get_database_info_by_id(database_id)
+        if database_model:
+            self.check_can_write_object(database_model)
+            
         try:
             for col in args["columns"]:
                 if not col["type"]:
@@ -351,8 +381,14 @@ class DBManageTable(Resource):
         Returns:
             dict: 包含删除结果的响应字典
         """
-        self.check_can_admin()
         service = DBManageService(current_user)
+        database_model = service.get_database_info_by_id(database_id)
+        if not database_model:
+            raise ValueError("数据库不存在")
+        
+        # 检查用户是否有权限删除该表（需要对该数据库有管理员权限）
+        self.check_can_admin_object(database_model)
+        
         try:
             result, message = service.delete_table(
                 database_id=database_id, table_id=table_id
@@ -395,8 +431,14 @@ class DBManageTableCreate(Resource):
             "columns", type=dict, required=True, action="append", location="json"
         )
         args = parser.parse_args()
-        self.check_can_write()
         service = DBManageService(current_user)
+        database_model = service.get_database_info_by_id(database_id)
+        if not database_model:
+            raise ValueError("数据库不存在")
+        
+        # 检查用户是否有权限在该数据库中创建表（需要对该数据库有写权限）
+        self.check_can_write_object(database_model)
+            
         try:
             for col in args["columns"]:
                 if not col["type"]:
@@ -486,6 +528,10 @@ class DataImport(Resource):
         file = request.files["file"]
         try:
             service = DBManageService(current_user)
+            database_model = service.get_database_info_by_id(database_id)
+            if database_model:
+                self.check_can_write_object(database_model)
+            
             table_info = service.get_table_info_by_id(table_id)
             columns = service.get_table_structure(
                 database_id=database_id, table_id=table_info.id
@@ -565,8 +611,12 @@ class DataImport(Resource):
         )
         args = parser.parse_args()
 
+        service = DBManageService(current_user)
+        database_model = service.get_database_info_by_id(database_id)
+        if database_model:
+            self.check_can_write_object(database_model)
+
         try:
-            service = DBManageService(current_user)
             if args["action"] == "import":
                 # 执行数据导入
                 flag, error, exception = service.import_data(
@@ -615,7 +665,8 @@ class TableDataManager(Resource):
         )
         args = parser.parse_args()
         database = db.session.get(DataBaseInfo, database_id)
-        self.check_can_read_object(database)
+        if database:
+            self.check_can_read_object(database)
 
         service = DBManageService(current_user)
         page_data = service.select_data(
@@ -669,7 +720,9 @@ class TableDataManager(Resource):
         parser.add_argument("table_name", type=str, help="Limit must be an integer")
         args = parser.parse_args()
         database = db.session.get(DataBaseInfo, database_id)
-        self.check_can_write(database)
+        if database:
+            self.check_can_write_object(database)
+
         service = DBManageService(current_user)
         flag, error, exception = service.update_data(
             database_id=database_id,
@@ -705,7 +758,8 @@ class TableDataManager(Resource):
         parser.add_argument("table_name", type=str, help="Limit must be an integer")
         args = parser.parse_args()
         database = db.session.get(DataBaseInfo, database_id)
-        self.check_can_write(database)
+        if database:
+            self.check_can_write_object(database)
         service = DBManageService(current_user)
         flag, error, exception = service.delete_data(
             database_id=database_id, table_id=table_id, data=args["data_items"]

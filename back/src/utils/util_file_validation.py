@@ -19,6 +19,7 @@
 使用 filetype 库检测文件的真实类型，防止通过修改文件扩展名绕过安全检查。
 """
 
+import ast
 import logging
 from typing import List, Optional, Tuple
 
@@ -189,3 +190,90 @@ def validate_file_type_and_raise(
     
     if not is_valid:
         raise ValueError(error_message or "文件类型验证失败")
+
+
+def validate_python_file(file_obj: FileStorage) -> Tuple[bool, Optional[str]]:
+    """
+    验证文件是否是真正的Python文件
+    
+    通过尝试解析文件内容为Python AST来验证文件是否为有效的Python代码。
+    这可以防止用户通过修改文件扩展名来绕过安全检查。
+    
+    Args:
+        file_obj: Flask上传的文件对象
+    
+    Returns:
+        (is_valid, error_message)
+        - is_valid: 是否为有效的Python文件
+        - error_message: 错误信息（如果验证失败）
+    """
+    current_pos = file_obj.tell()
+    try:
+        file_obj.seek(0)
+        
+        try:
+            file_content = file_obj.read()
+        except Exception as e:
+            return False, f"无法读取文件内容: {str(e)}"
+        finally:
+            # 确保文件指针总是被恢复
+            file_obj.seek(current_pos)
+        
+        if len(file_content) == 0:
+            return False, "文件为空，无法验证Python语法"
+        
+        # 尝试将文件内容解码为字符串
+        content_str = None
+        if isinstance(file_content, bytes):
+            # 尝试多种编码
+            for encoding in ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252']:
+                try:
+                    content_str = file_content.decode(encoding)
+                    break
+                except UnicodeDecodeError:
+                    continue
+            if content_str is None:
+                return False, "文件不是有效的文本文件"
+        else:
+            content_str = str(file_content)
+        
+        # 尝试使用AST解析Python代码
+        try:
+            ast.parse(content_str)
+            # 如果解析成功，说明是有效的Python代码
+            logger.debug("Python file validation passed: file is valid Python code")
+            return True, None
+        except SyntaxError as e:
+            error_msg = f"文件不是有效的Python代码: {e.msg} (行 {e.lineno})"
+            logger.warning(f"Python file validation failed: {error_msg}")
+            return False, "请提供有效的Python文件"
+        except Exception as e:
+            error_msg = f"解析Python文件时发生错误: {str(e)}"
+            logger.warning(f"Python file validation failed: {error_msg}")
+            return False, "请提供有效的Python文件"
+            
+    except Exception as e:
+        logger.error(f"Error during Python file validation: {e}", exc_info=True)
+        return False, f"验证Python文件时发生错误: {str(e)}"
+    finally:
+        # 确保文件指针总是被恢复
+        try:
+            file_obj.seek(current_pos)
+        except Exception:
+            pass
+
+
+def validate_python_file_and_raise(file_obj: FileStorage) -> None:
+    """
+    验证文件是否是真正的Python文件，如果验证失败则抛出 ValueError 异常
+    
+    Args:
+        file_obj: Flask上传的文件对象
+    
+    Raises:
+        ValueError: 当文件不是有效的Python文件时
+    """
+    is_valid, error_message = validate_python_file(file_obj)
+    
+    if not is_valid:
+        raise ValueError(error_message or "文件不是有效的Python文件")

@@ -21,10 +21,11 @@ import tarfile
 import time
 import urllib.parse
 import zipfile
+from io import BytesIO
 from threading import Thread
 
 from flask import (Response, copy_current_request_context, current_app,
-                   jsonify, request, send_file, stream_with_context)
+                   jsonify, make_response, request, send_file, stream_with_context)
 from flask_login import current_user
 from flask_restful import marshal, marshal_with, reqparse
 
@@ -36,11 +37,14 @@ from libs.login import login_required
 from parts.logs import Action, LogService, Module
 from parts.urls import api
 from utils.util_database import db
-from utils.util_file_validation import validate_file_type_and_raise
+from utils.util_file_validation import (
+    validate_file_type_and_raise,
+    validate_python_file_and_raise,
+)
 
 from . import fields
 from .data_service import DataService
-from .model import DataSetVersionStatus
+from .model import DataSetVersionStatus, DataSetFile, DataSetVersion, DataSet
 from .script_service import ScriptService
 
 
@@ -97,6 +101,8 @@ class ScriptListApi(Resource):
             "user_id", type=list, location="json", required=False, default=[]
         )
         args = parser.parse_args()
+
+        self.check_can_read()
 
         pagination = ScriptService(current_user).get_script_by_account(args)
         return marshal(pagination, fields.script_pagination)
@@ -226,6 +232,11 @@ class ScriptUploadApi(Resource):
         if file_size > 1 * 1024 * 1024:
             raise ValueError("文件大小不能超过1MB")
 
+        # 验证文件是否是真正的Python文件
+        validate_python_file_and_raise(file)
+
+        self.check_can_write()
+
         storage_dir = FileTools.create_script_storage(current_user.id)
         file_path = ScriptService(current_user).upload_file_by_path(storage_dir, file)
         return {"file_path": file_path, "message": "success", "code": 200}, 200
@@ -306,6 +317,9 @@ class ScriptListByTypeApi(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("script_type", type=str, default="", location="args")
         args = parser.parse_args()
+        
+        self.check_can_read()
+        
         script_list = ScriptService(current_user).get_list_by_type(args["script_type"])
         return marshal(script_list, fields.script_field)
 
@@ -364,6 +378,8 @@ class DataSetListApi(Resource):
         )
 
         args = parser.parse_args()
+        
+        self.check_can_read()
         pagination = DataService(current_user).get_data_set_list(data=args)
         return marshal(pagination, fields.data_set_pagination)
 
@@ -559,6 +575,8 @@ class UploadDataSetFileApi(Resource):
             allowed_ext = (".json", ".csv", ".jsonl", ".txt", ".parquet")
             self.check_compres_package(file, allowed_ext)
 
+        self.check_can_write()
+
         storage_dir = FileTools.create_temp_storage(current_user.id)
         file_path = ScriptService(current_user).upload_file_by_path(storage_dir, file)
         return {"file_path": file_path, "message": "success", "code": 200}, 200
@@ -621,6 +639,12 @@ class DataSetVersionListApi(Resource):
         parser.add_argument("data_set_id", type=str, default="", location="args")
         args = parser.parse_args()
 
+        # 检查用户是否有权限访问该数据集
+        if args.get("data_set_id"):
+            data_set = DataService(current_user).get_data_set_by_id(args["data_set_id"])
+            if data_set:
+                self.check_can_read_object(data_set)
+
         pagination = DataService(current_user).get_data_set_version_list_by_id(args)
         return marshal(pagination, fields.data_set_version_pagination)
 
@@ -658,6 +682,17 @@ class DataSetFileListApi(Resource):
         )
         args = parser.parse_args()
 
+        if args.get("data_set_version_id"):
+            data_set_version = DataService(current_user).get_data_set_version_by_id(
+                args["data_set_version_id"]
+            )
+            if data_set_version:
+                data_set = DataService(current_user).get_data_set_by_id(
+                    data_set_version.data_set_id
+                )
+                if data_set:
+                    self.check_can_read_object(data_set)
+            
         pagination = DataService(current_user).get_data_set_file_by_id(args)
         return marshal(pagination, fields.data_set_file_pagination)
 
@@ -684,6 +719,14 @@ class DataSetTagListApi(Resource):
             dict: 包含数据集标签列表的响应。
         """
         data_set_id = request.args.get("data_set_id", default="", type=str)
+
+        # 如果有 data_set_id，检查对该数据集的读权限
+        if data_set_id:
+            data_set = DataService(current_user).get_data_set_by_id(data_set_id)
+            if data_set:
+                self.check_can_read_object(data_set)
+        else:
+            self.check_can_read()
 
         datasets = DataService(current_user).get_data_set_tag_list(data_set_id)
 
@@ -722,12 +765,18 @@ class CreateDataSetVersionByTagApi(Resource):
         data = request.get_json()
         if data["data_set_version_id"] is None or data["data_set_version_id"] == "":
             raise ValueError("输入的参数格式有误")
-        data_set_version_instance = DataService(
-            current_user
-        ).create_data_set_version_by_tag(data["data_set_version_id"], data["name"])
-        data_set = DataService(current_user).get_data_set_by_id(
-            data_set_version_instance.data_set_id
-        )
+        
+        service = DataService(current_user)
+        data_set_version = service.get_data_set_version_by_id(data["data_set_version_id"])
+        if not data_set_version:
+            raise ValueError("数据集版本不存在")
+        
+        data_set = service.get_data_set_by_id(data_set_version.data_set_id)
+        if not data_set:
+            raise ValueError("数据集不存在")
+        
+        self.check_can_write_object(data_set)
+        data_set_version_instance = service.create_data_set_version_by_tag(data["data_set_version_id"], data["name"])
         if data_set.data_type == "doc":
             data_type = "文本数据集"
             LogService().add(
@@ -788,7 +837,16 @@ class DataSetVersionPublishApi(Resource):
         old_data_set_version_instance = service.get_data_set_version_by_id(
             data["data_set_version_id"]
         )
+        if not old_data_set_version_instance:
+            raise ValueError("数据集版本不存在")
+        
         data_set = service.get_data_set_by_id(old_data_set_version_instance.data_set_id)
+        if not data_set:
+            raise ValueError("数据集不存在")
+        
+        # 检查权限：发布操作需要写权限
+        self.check_can_write_object(data_set)
+        
         data_set_version_instance = service.publish_data_set_version(
             data["data_set_version_id"]
         )
@@ -853,6 +911,18 @@ class DataSetFileApi(Resource):
         if data["data_set_file_id"] is None or data["data_set_file_id"] == "":
             raise ValueError("输入的参数格式有误")
 
+        data_set_file_model = DataSetFile.query.get(data["data_set_file_id"])
+        if data_set_file_model:
+            data_set_version = DataService(current_user).get_data_set_version_by_id(
+                data_set_file_model.data_set_version_id
+            )
+            if data_set_version:
+                data_set = DataService(current_user).get_data_set_by_id(
+                    data_set_version.data_set_id
+                )
+                if data_set:
+                    self.check_can_write_object(data_set)
+
         return DataService(current_user).get_data_set_file_by_file_id(
             data["data_set_file_id"], data.get("start"), data.get("end")
         )
@@ -894,11 +964,23 @@ class DataSetFileUpdateApi(Resource):
             ValueError: 当必要参数缺失时抛出异常。
         """
         data = request.get_json()
-        self.check_can_write()
         if data["data_set_file_id"] is None or data["data_set_file_id"] == "":
             raise ValueError("输入的参数格式有误")
         if data["content"] is None or data["content"] == "":
             raise ValueError("输入的参数格式有误")
+        
+        data_set_file_model = DataSetFile.query.get(data["data_set_file_id"])
+        if data_set_file_model:
+            data_set_version = DataService(current_user).get_data_set_version_by_id(
+                data_set_file_model.data_set_version_id
+            )
+            if data_set_version:
+                data_set = DataService(current_user).get_data_set_by_id(
+                    data_set_version.data_set_id
+                )
+                if data_set:
+                    self.check_can_write_object(data_set)
+        
         new_total = DataService.update_data_set_file(
             data.get("data_set_file_id"),
             data.get("content"),
@@ -937,7 +1019,6 @@ class DataSetDeleteApi(Resource):
             ValueError: 当数据集ID为空或数据集正在被使用时抛出异常。
         """
         data = request.get_json()
-        self.check_can_admin()
         if data["data_set_id"] is None or data["data_set_id"] == "":
             raise ValueError("输入的参数格式有误")
         service = DataService(current_user)
@@ -992,14 +1073,22 @@ class DataSetVersionDeleteApi(Resource):
             ValueError: 当数据集版本ID为空或版本正在被使用时抛出异常。
         """
         data = request.get_json()
-        self.check_can_admin()
         if data["data_set_version_id"] is None or data["data_set_version_id"] == "":
             raise ValueError("输入的参数格式有误")
         service = DataService(current_user)
         data_set_version_instance = service.get_data_set_version_by_id(
             data["data_set_version_id"]
         )
+        if not data_set_version_instance:
+            raise ValueError("数据集版本不存在")
+        
         data_set = service.get_data_set_by_id(data_set_version_instance.data_set_id)
+        if not data_set:
+            raise ValueError("数据集不存在")
+        
+        # 检查用户是否有权限删除该数据集版本（需要对该数据集有管理员权限）
+        self.check_can_admin_object(data_set)
+        
         delete_num = service.delete_data_set_version(
             data["data_set_version_id"], True, data_set.from_type
         )
@@ -1050,7 +1139,6 @@ class DataSetFileDeleteApi(Resource):
             ValueError: 当文件ID列表为空或数据集版本正在被使用时抛出异常。
         """
         data = request.get_json()
-        self.check_can_admin()
         data_set_file_ids = data.get("data_set_file_ids", [])
         if not data_set_file_ids or len(data_set_file_ids) == 0:
             raise ValueError("输入的参数格式有误")
@@ -1058,10 +1146,18 @@ class DataSetFileDeleteApi(Resource):
         data_set_file_instance = service.get_data_set_file_by_data_set_file_id(
             data_set_file_ids[0]
         )
+        if not data_set_file_instance:
+            raise ValueError("数据集文件不存在")
         data_set_version_instance = service.get_data_set_version_by_id(
             data_set_file_instance.data_set_version_id
         )
+        if not data_set_version_instance:
+            raise ValueError("数据集版本不存在")
         data_set = service.get_data_set_by_id(data_set_file_instance.data_set_id)
+        if not data_set:
+            raise ValueError("数据集不存在")
+        # 检查用户是否有权限删除该数据集文件
+        self.check_can_admin_object(data_set)
         if service.check_data_set_version_by_fine_tune(data_set_version_instance.id):
             raise ValueError("该数据集版本正在被使用，无法删除数据集或内部数据")
 
@@ -1114,6 +1210,8 @@ class DataSetApi(Resource):
         """
         data_set_id = request.args.get("data_set_id", default="", type=str)
         data_set = DataService(current_user).get_data_set_by_id(data_set_id)
+        if data_set:
+            self.check_can_read_object(data_set)
         return marshal(data_set, fields.data_set_field)
 
 
@@ -1150,9 +1248,15 @@ class DataSetVersionApi(Resource):
         data_set_version = DataService(current_user).get_data_set_version_by_id(
             data_set_version_id
         )
+        if not data_set_version:
+            raise ValueError("数据集版本不存在")
+        
         data_set = DataService(current_user).get_data_set_by_id(
             data_set_version.data_set_id
         )
+        if data_set:
+            self.check_can_read_object(data_set)
+        
         data_set_version.description = data_set.description
         data_set_version.label = data_set.label
         data_set_version.tags = data_set.tags
@@ -1206,7 +1310,13 @@ class DataSetVersionAddFile(Resource):
         data_set_version_instance = service.get_data_set_version_by_id(
             data["data_set_version_id"]
         )
+        if not data_set_version_instance:
+            raise ValueError("数据集版本不存在")
         data_set = service.get_data_set_by_id(data_set_version_instance.data_set_id)
+        if not data_set:
+            raise ValueError("数据集不存在")
+        self.check_can_write_object(data_set)
+        
         data_set_version_obj = service.add_data_set_version_file(data)
         # file_size = len(data["file_paths"])+len(data["file_urls"])
         old_file_size = len(
@@ -1342,27 +1452,67 @@ class DataSetVersionExport(Resource):
             raise ValueError("输入的参数有误")
 
         service = DataService(current_user)
+     
+        checked_data_set_ids = set()
+        for version_id in data_set_version_ids:
+            data_set_version = service.get_data_set_version_by_id(version_id)
+            if not data_set_version:
+                raise ValueError(f"数据集版本不存在: {version_id}")
+            data_set_id = data_set_version.data_set_id
+            if data_set_id not in checked_data_set_ids:
+                data_set = service.get_data_set_by_id(data_set_id)
+                if not data_set:
+                    raise ValueError(f"数据集不存在: {data_set_id}")
+                self.check_can_read_object(data_set)
+                checked_data_set_ids.add(data_set_id)
+        
         try:
             if len(data_set_version_ids) == 1:
                 # 如果只有一个数据集 ID，直接返回该数据集的压缩包
                 zip_filename = service.create_individual_zip(data_set_version_ids[0])
-                encoded_filename = urllib.parse.quote(zip_filename)
-                response = send_file(
-                    zip_filename, as_attachment=True, download_name=encoded_filename
-                )
-                os.remove(zip_filename)
+                try:
+                    with open(zip_filename, 'rb') as f:
+                        zip_buffer = BytesIO(f.read())
+                    zip_buffer.seek(0)
+                    download_filename = os.path.basename(zip_filename)
+                    encoded_filename = urllib.parse.quote(download_filename)
+                    
+                    response = send_file(
+                        zip_buffer,
+                        mimetype="application/zip",
+                        as_attachment=True,
+                        download_name=encoded_filename,
+                    )
+                finally:
+                    try:
+                        if os.path.exists(zip_filename):
+                            os.remove(zip_filename)
+                    except Exception as e:
+                        logging.warning(f"删除临时压缩包文件失败: {zip_filename}, 错误: {str(e)}")
             else:
                 # 如果有多个数据集 ID，创建一个总的压缩包
                 combined_zip_filename = service.create_combined_zip(
                     data_set_version_ids
                 )
-                encoded_filename = urllib.parse.quote(combined_zip_filename)
-                response = send_file(
-                    combined_zip_filename,
-                    as_attachment=True,
-                    download_name=encoded_filename,
-                )
-                os.remove(combined_zip_filename)
+                try:
+                    with open(combined_zip_filename, 'rb') as f:
+                        zip_buffer = BytesIO(f.read())
+                    zip_buffer.seek(0)
+                    download_filename = os.path.basename(combined_zip_filename)
+                    encoded_filename = urllib.parse.quote(download_filename)
+                    
+                    response = send_file(
+                        zip_buffer,
+                        mimetype="application/zip",
+                        as_attachment=True,
+                        download_name=encoded_filename,
+                    )
+                finally:
+                    try:
+                        if os.path.exists(combined_zip_filename):
+                            os.remove(combined_zip_filename)
+                    except Exception as e:
+                        logging.warning(f"删除临时压缩包文件失败: {combined_zip_filename}, 错误: {str(e)}")
             data_set_instance, version_type, version_list = (
                 service.get_data_set_info_by_version_ids(data_set_version_ids)
             )
@@ -1421,6 +1571,14 @@ class TestDataSetVersionStatus(Resource):
         data = request.get_json()
         data_set_version_id = data.get("data_set_version_id")
         service = DataService(current_user)
+        
+        # 检查权限：需要能写入数据集
+        data_set_version = service.get_data_set_version_by_id(data_set_version_id)
+        if data_set_version:
+            data_set = service.get_data_set_by_id(data_set_version.data_set_id)
+            if data_set:
+                self.check_can_write_object(data_set)
+        
         try:
             data_set_version_instance = service.change_data_set_version_status(
                 data_set_version_id
@@ -1490,7 +1648,8 @@ class CleanOrAugmentDataSetVersion(Resource):
         )
         if data_set_instance is None:
             raise ValueError(f"数据集不存在: {data_set_version_instance.data_set_id}")
-
+        
+        self.check_can_write_object(data_set_instance)
         try:
             data_set_version_instance.status = DataSetVersionStatus.version_doing.value
             db.session.commit()
@@ -1683,6 +1842,13 @@ class CleanOrAugmentDataSetVersionAsync(Resource):
             raise ValueError("脚本ID不能为空")
 
         service = DataService(current_user)
+        
+        # 检查权限：需要能写入数据集
+        data_set_version = service.get_data_set_version_by_id(data_set_version_id)
+        if data_set_version:
+            data_set = service.get_data_set_by_id(data_set_version.data_set_id)
+            if data_set:
+                self.check_can_write_object(data_set)
 
         try:
             # 启动异步任务
@@ -1755,6 +1921,13 @@ class CleanOrAugmentDataSetVersionAsyncWithItemCount(Resource):
             raise ValueError("脚本ID不能为空")
 
         service = DataService(current_user)
+        
+        # 检查权限：需要能写入数据集
+        data_set_version = service.get_data_set_version_by_id(data_set_version_id)
+        if data_set_version:
+            data_set = service.get_data_set_by_id(data_set_version.data_set_id)
+            if data_set:
+                self.check_can_write_object(data_set)
 
         try:
             # 启动异步任务（基于数据条数）
@@ -1802,6 +1975,8 @@ class DataProcessingTaskProgress(Resource):
         Raises:
             Exception: 当任务不存在时抛出异常。
         """
+        self.check_can_read()
+        
         service = DataService(current_user)
         progress = service.get_processing_task_progress(task_id)
 
@@ -1837,6 +2012,8 @@ class DataProcessingTaskCancel(Resource):
         Raises:
             Exception: 当任务不存在或无法取消时抛出异常。
         """
+        self.check_can_write()
+        
         service = DataService(current_user)
         success = service.cancel_processing_task(task_id)
 
@@ -1860,6 +2037,8 @@ class DataProcessingTaskList(Resource):
         Returns:
             dict: 包含所有任务列表的响应信息。
         """
+        self.check_can_read()
+        
         service = DataService(current_user)
         tasks = service.list_processing_tasks()
 
@@ -1892,6 +2071,7 @@ class DataProcessingTaskStream(Resource):
         Raises:
             Exception: 当任务不存在时抛出异常。
         """
+        self.check_can_read()
 
         def generate():
             service = DataService(current_user)

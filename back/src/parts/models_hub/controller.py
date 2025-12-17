@@ -85,6 +85,9 @@ class modelHubListApi(Resource):
             "tenant", type=str, location="json", required=False, default=""
         )        
         args = parser.parse_args()
+        
+        self.check_can_read()
+        
         g.qtype = args["qtype"]
         g.current_user = current_user
         pagination = ModelService(current_user).get_pagination(args)
@@ -426,6 +429,9 @@ class ModelHubUpdateApiKeyApi(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("model_brand", type=str, required=True, location="json")
         data = parser.parse_args()
+        
+        self.check_can_write()
+        
         service = ModelService(current_user)
         result = service.clear_api_key(data["model_brand"])
         return {"status": "success", "result": result}
@@ -490,6 +496,8 @@ class modelIconUploadApi(Resource):
         Raises:
             ValueError: 当文件格式不支持或未上传文件时抛出。
         """
+        self.check_can_write()
+        
         file = request.files["file"]
 
         if "file" not in request.files:
@@ -587,6 +595,9 @@ class ModelHubDeleteUploadedFileApi(Resource):
         file_dir = data.get("file_dir")
         if not filename or not file_dir:
             return {"message": "filename&file_dir不能为空"}, 400
+        
+        self.check_can_write()
+        
         service = ModelService(current_user)
         try:
             result = service.delete_uploaded_file(filename, file_dir)
@@ -614,6 +625,8 @@ class modelHubCheckModelNameApi(Resource):
         parser.add_argument("model_name", type=str, required=True, location="json")
         parser.add_argument("model_from", type=str, required=False, location="json")
         data = parser.parse_args()
+
+        self.check_can_read()
 
         if ModelService(current_user).exist_model_by_name(data["model_name"]):
             # 如果model_from为existModel则报错:该模型下已添加
@@ -645,6 +658,9 @@ class ModelHubModelsTreeApi(Resource):
         parser.add_argument("model_type", type=str, default="", location="args")
         parser.add_argument("model_kind", type=str, default="", location="args")
         args = parser.parse_args()
+        
+        self.check_can_read()
+        
         g.qtype = args["qtype"]
         if g.qtype == "mine":
             g.qtype = "mine_builtin"
@@ -682,6 +698,10 @@ class ModelHubModelInfoApi(Resource):
         g.qtype = args["qtype"]
         g.current_user = current_user
         service = ModelService(current_user)
+        model = service.get_model_by_id(model_id)
+        if model:
+            self.check_can_read_object(model)
+            
         return service.get_model_info(model_id, qtype=args["qtype"])
 
 
@@ -713,6 +733,12 @@ class ModelCreateFinetuneApi(Resource):
         parser.add_argument("model_dir", type=str, location="json", required=False)
         parser.add_argument("model_name", type=str, location="json", required=False)
         data = parser.parse_args()
+        
+        service = ModelService(current_user)
+        base_model = service.get_model_by_id(data["base_model_id"])
+        if base_model:
+            self.check_can_write_object(base_model)
+        
         if (data.get("model_type") or "") == "local" and data[
             "model_from"
         ] == "localModel":
@@ -814,9 +840,19 @@ class ModelHubModelFinetuneListApi(Resource):
             "qtype", type=str, default="already", location="json", required=False
         )
         args = parser.parse_args()
+        
+        service = ModelService(current_user)
+        
+        # 如果提供了 model_id，检查用户是否有权限读取该基础模型
+        if args.get("model_id") and args["model_id"] != 0:
+            model = service.get_model_by_id(args["model_id"])
+            if model:
+                self.check_can_read_object(model)
+        else:
+            self.check_can_read()
+        
         g.qtype = args["qtype"]
         g.current_user = current_user
-        service = ModelService(current_user)
         pagination = service.get_finetune_pagination(args, qtype=args["qtype"])
         return marshal(pagination, fields.finetune_pagination_fields)
 
@@ -829,6 +865,7 @@ class ModelHubOnlineModelSupportListApi(Resource):
         Returns:
             list: 支持的在线模型列表。
         """
+        self.check_can_read()
         return online_model_list
 
 
@@ -883,6 +920,7 @@ class ModelHubExistModelListApi(Resource):
         Returns:
             list: 已存在的第三方模型列表。
         """
+        self.check_can_read()
         # 读取第三方模型列表（从配置路径读取）
         service = ModelService(current_user)
         return service.exist_model_list()
@@ -896,6 +934,7 @@ class ModelHubDefaultIconListApi(Resource):
         Returns:
             list: 默认图标列表。
         """
+        self.check_can_read()
         # 读取默认图片路径）
         service = ModelService(current_user)
         return service.default_icon_list()

@@ -101,10 +101,10 @@ class GetPrompt(Resource):
             ValueError: 当提示信息不存在时返回400状态码。
         """
         prompt = self.prompt_service.get_prompt(id)
-        if not prompt.is_builtin:
-            self.check_can_read_object(prompt)
         if prompt is None:
             return build_response(status=400, message="提示不存在")
+        if not prompt.is_builtin:
+            self.check_can_read_object(prompt)
         result = {
             "id": prompt.id,
             "name": prompt.name,
@@ -149,6 +149,8 @@ class UpdatePrompt(Resource):
             if not args["name"]:
                 raise ValueError("参数错误")
             prompt = self.prompt_service.get_prompt(id)
+            if prompt is None:
+                return build_response(status=400, message="提示不存在")
             if prompt.is_builtin:
                 self.check_is_super()
             self.check_can_write_object(prompt)
@@ -182,11 +184,12 @@ class DeletePrompt(Resource):
         - 如果删除成功，记录日志并返回成功消息。
         - 如果提示信息不存在，记录错误日志并返回错误消息。
         """
-        self.check_can_admin()
         prompt = self.prompt_service.get_prompt(id)
+        if prompt is None:
+            return build_response(status=400, message="提示不存在")
         if prompt.is_builtin:
             self.check_is_super()
-        self.check_can_write_object(prompt)
+        self.check_can_admin_object(prompt)
         deleted = self.prompt_service.delete_prompt(prompt)
         if deleted:
             logging.info(f"Prompt {id} successfully deleted.")
@@ -223,6 +226,8 @@ class ListPrompts(Resource):
         search_tags = data.get("search_tags", [])  # 默认空字符串
         search_name = data.get("search_name", "")  # 默认空字符串
         user_id = data.get("user_id", [])
+
+        self.check_can_read()
 
         prompts, pagination_info = self.prompt_service.list_prompt(
             page, per_page, qtype, search_tags, search_name, user_id

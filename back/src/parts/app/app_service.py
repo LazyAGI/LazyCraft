@@ -553,6 +553,7 @@ class TemplateService(AppServiceMixin):
         """
         target = App(**source.to_copy_dict())
         target.created_by = account.id
+        target.tenant_id = account.current_tenant_id
         target.enable_site = target.enable_api = False
         target.status = "draft"
         target.name = args.get("name") or target.name
