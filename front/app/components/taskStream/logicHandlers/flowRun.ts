@@ -15,7 +15,7 @@ import { useStore as useAppStore } from '@/app/components/app/store'
 import type { IOtherOptions } from '@/infrastructure/api/base'
 import { ssePost } from '@/infrastructure/api/base'
 import { fetchPublishedWorkflow, stopWorkflowRun } from '@/infrastructure/api/workflow'
-import { useFeaturesStore as useFeaturesStoreApi } from '@/app/components/base/features/hooks'
+import { useFeaturesStore as useFeaturesStoreApi } from '@/app/components/base/features'
 import { fetchDebuggingList } from '@/infrastructure/api/log'
 
 /**

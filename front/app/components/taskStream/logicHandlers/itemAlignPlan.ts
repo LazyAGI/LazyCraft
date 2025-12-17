@@ -11,7 +11,7 @@ import { useReadonlyNodes } from './flowCore'
 import { useWorkflowTemplate, useWorkflowUpdate } from '.'
 import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
 import { fetchWorkflowDraft, syncWorkflowDraft } from '@/infrastructure/api//workflow'
-import { useFeaturesStore } from '@/app/components/base/features/hooks'
+import { useFeaturesStore } from '@/app/components/base/features'
 import { API_PREFIX } from '@/app-specs'
 import { useResources } from '@/app/components/taskStream/logicHandlers/resStore'
 

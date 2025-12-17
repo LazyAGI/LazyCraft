@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Dispatch, RefObject, SetStateAction } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
+import type { RefObject } from 'react'
 import type { Klass, LexicalCommand, LexicalEditor, TextNode } from 'lexical'
 import {
   COMMAND_PRIORITY_LOW,
@@ -28,7 +28,6 @@ export const usePickOrDelete: usePickOrDeleteHandler = (nodeKey: string, command
   const processDelete = useCallback(
     (event: KeyboardEvent) => {
       const currentSelection = getSelection()
-      const _selectedNodes = currentSelection?.getNodes()
 
       if (isSelected && isNodeSelection(currentSelection)) {
         event.preventDefault()
@@ -110,11 +109,11 @@ export function useVariableTriggerMatch(): TriggerFunction {
       // 专门用于变量引用的正则表达式，匹配 { 后的内容
       const variableTriggerRegex = /(.*)(\{)(.*)$/
       const regexMatch = variableTriggerRegex.exec(text)
-      
+
       if (regexMatch !== null) {
         const leadingWhitespace = regexMatch[1]
         const matchingString = regexMatch[3]
-        
+
         return {
           leadOffset: regexMatch.index + leadingWhitespace.length,
           matchingString,

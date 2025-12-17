@@ -35,25 +35,28 @@ const SelectUserGroup = memo((props: ISelectUserGroup) => {
 
   const tenantId = userSpecified?.tenant?.id
 
-  if (!tenantId)
-    return null
-
   const timer = useRef<NodeJS.Timeout | null>(null)
-  const getCurrentWorkspace = () => {
-    get('/workspaces/current/tenant').then((res) => {
-      if (res.tenant_id) {
-        if (res.tenant_id !== tenantId) {
-          clearInterval(timer.current)
-          message.warning('当前工作空间已切换，将刷新界面')
-          sleep(1000).then(() => {
-            window.location.href = `${location.origin}/apps`
-          })
-        }
-      }
-    })
-  }
 
   useEffect(() => {
+    if (!tenantId)
+      return
+
+    const getCurrentWorkspace = () => {
+      get('/workspaces/current/tenant').then((res: any) => {
+        if (res.tenant_id) {
+          if (res.tenant_id !== tenantId) {
+            if (timer.current)
+              clearInterval(timer.current)
+
+            message.warning('当前工作空间已切换，将刷新界面')
+            sleep(1000).then(() => {
+              window.location.href = `${location.origin}/apps`
+            })
+          }
+        }
+      })
+    }
+
     if (timer.current)
       clearInterval(timer.current)
 
@@ -64,7 +67,7 @@ const SelectUserGroup = memo((props: ISelectUserGroup) => {
       if (timer.current)
         clearInterval(timer.current)
     }
-  }, [])
+  }, [tenantId])
 
   useEffect(() => {
     if (tenantId && userGroups) {
@@ -73,6 +76,9 @@ const SelectUserGroup = memo((props: ISelectUserGroup) => {
     }
   }, [tenantId, userGroups, setStatusAi])
 
+  if (!tenantId)
+    return null
+
   const defaultOptions = [{ label: '加载中...', value: tenantId }]
 
   return (
@@ -80,10 +86,12 @@ const SelectUserGroup = memo((props: ISelectUserGroup) => {
       value={tenantId}
       style={{ width: '11.4583vw', marginRight: '18px' }}
       onChange={groupChange}
-      options={userGroupList && userGroupList.length > 0 ? userGroupList : defaultOptions}
+      options={(userGroupList && userGroupList.length > 0) ? userGroupList : defaultOptions}
       {...others}
     />
   )
 })
+
+SelectUserGroup.displayName = 'SelectUserGroup'
 
 export default SelectUserGroup

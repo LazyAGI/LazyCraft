@@ -42,48 +42,6 @@ export function useLazyLLMFeatureStore() {
   return featureStore
 }
 
-/**
- * LazyLLM 功能特性操作钩子
- * 提供常用的功能特性操作方法
- * @returns 功能特性操作方法集合
- */
-export function useLazyLLMFeatureActions() {
-  const store = useLazyLLMFeatureStore()
-
-  return {
-    // 获取当前功能特性配置
-    getCurrentFeatures: () => store.getState().features,
-
-    // 更新功能特性配置
-    updateFeatures: (features: ReturnType<typeof store.getState>['features']) => {
-      const { setFeatures } = store.getState()
-      setFeatures(features)
-    },
-
-    // 切换模态框显示状态
-    toggleModal: (visible?: boolean) => {
-      const state = store.getState()
-      const currentState = state.showFeaturesDialog
-      state.setShowFeaturesModal(visible ?? !currentState)
-    },
-
-    // 重置功能特性到默认状态
-    resetToDefaults: () => {
-      const { setFeatures } = store.getState()
-      const defaultFeatures = {
-        opening: { enabled: false },
-        suggested: { enabled: false },
-        text2speech: { enabled: false },
-        speech2text: { enabled: false },
-        citation: { enabled: false },
-        moderation: { enabled: false },
-        file: { image: { enabled: false } },
-      }
-      setFeatures(defaultFeatures)
-    },
-  }
-}
-
 // 向后兼容的别名导出
 export const useFeatures = useLazyLLMFeatureSelector
 export const useFeaturesStore = useLazyLLMFeatureStore

@@ -230,7 +230,7 @@ const InferenceService = () => {
     form.validateFields().then(async (values) => {
       if (!isEdit) {
         const selectedModel = modelList.find((item: any) => item.id === values.model_id)
-        if (selectedModel && selectedModel.need_confirm === false) {
+        if (selectedModel && selectedModel.need_confirm === true) {
           setPendingValues(values)
           setRiskModalOpen(true)
           return

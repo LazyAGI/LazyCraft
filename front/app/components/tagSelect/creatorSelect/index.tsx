@@ -10,7 +10,7 @@ type IProps = {
   setCreator: any
 }
 
-export default forwardRef((props: IProps, ref) => {
+const CreatorSelect = forwardRef((props: IProps, ref) => {
   const { value, type, setCreator } = props
   const [data, setData] = useState<any>([])
 
@@ -50,3 +50,7 @@ export default forwardRef((props: IProps, ref) => {
     </Select>
   )
 })
+
+CreatorSelect.displayName = 'CreatorSelect'
+
+export default CreatorSelect

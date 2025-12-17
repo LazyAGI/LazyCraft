@@ -86,9 +86,8 @@ import { generateDefaultConfig } from './module-panel/components/utils'
 import { syncDownstreamAggregators } from './logicHandlers/mergerAdjust'
 import { useCheckNodeShape } from '@/app/components/taskStream/logicHandlers/checkList'
 import Loading from '@/app/components/base/loading'
-import { FeaturesProvider } from '@/app/components/base/features'
+import { FeaturesProvider, useFeaturesStore } from '@/app/components/base/features'
 import type { Features as FeaturesData } from '@/app/components/base/features/types'
-import { useFeaturesStore } from '@/app/components/base/features/hooks'
 import { useEmitterContext } from '@/shared/hooks/event-emitter'
 
 // 动态导入ReactFlow组件
@@ -376,6 +375,7 @@ const WorkflowComponent: FC<WorkflowComponentProps> = memo(({
     e.preventDefault()
     const moduleInfo = sessionStorage.getItem('drag_module_info') || e.dataTransfer.getData('module_info')
     const moduleDefaultData = moduleInfo ? JSON.parse(moduleInfo) : {}
+    console.log('Dropped module info:', moduleDefaultData)
     if (sessionStorage.getItem('drag_module_info')) {
       setTimeout(() => {
         sessionStorage.removeItem('drag_module_info')

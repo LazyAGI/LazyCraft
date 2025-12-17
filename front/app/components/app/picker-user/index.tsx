@@ -3,7 +3,6 @@ import { CloseOutlined } from '@ant-design/icons'
 import { Checkbox, Input, Modal, Select, Typography, message } from 'antd'
 import { RoleCategory, roleOptions } from './constants'
 import { getGroupDetail, getUserList, moveUserAssets, removeGroupUser } from '@/infrastructure/api//user'
-import { useApplicationContext } from '@/shared/hooks/app-context'
 import PermitCheck, { usePermitCheck } from '@/app/components/app/permit-check'
 
 const { Paragraph } = Typography
@@ -12,7 +11,6 @@ const PickerUser = memo((props: any) => {
   const { defaultValue, value, configData, disabled, onChange } = props
   const { groupId, groupName, isOnlyDeleteUser, isAdminSpace, isCooperation } = configData || {}
   const selfRef = useRef<any>({ transferTargetId: undefined })
-  const { permitData } = useApplicationContext()
   const { hasPermit } = usePermitCheck()
   const [userList, setUserList] = useState<any[] | undefined>()
   const [valueList, setValueList] = useState<any[] | undefined>()
@@ -258,5 +256,7 @@ const PickerUser = memo((props: any) => {
     </div>
   )
 })
+
+PickerUser.displayName = 'PickerUser'
 
 export default PickerUser

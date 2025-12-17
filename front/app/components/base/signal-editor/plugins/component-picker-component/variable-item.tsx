@@ -21,10 +21,10 @@ export const VariableDropdownItem = memo(({
     <div
       className={menuItemClassName}
       tabIndex={-1}
-      style={{ 
+      style={{
         pointerEvents: 'auto',
         zIndex: 9999,
-        position: 'relative'
+        position: 'relative',
       }}
       onMouseEnter={onMouseEnter}
       onMouseDown={(e) => {
