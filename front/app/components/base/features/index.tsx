@@ -4,7 +4,6 @@ export { FeaturesProvider } from './context'
 export {
   useLazyLLMFeatureSelector,
   useLazyLLMFeatureStore,
-  useLazyLLMFeatureActions,
   useFeatures,
   useFeaturesStore,
 } from './hooks'

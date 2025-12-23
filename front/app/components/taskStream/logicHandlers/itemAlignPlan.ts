@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import produceMethod from 'immer'
 import { useStoreApi as useStoreApiFun } from 'reactflow'
 import { useParams } from 'next/navigation'
@@ -11,7 +11,7 @@ import { useReadonlyNodes } from './flowCore'
 import { useWorkflowTemplate, useWorkflowUpdate } from '.'
 import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
 import { fetchWorkflowDraft, syncWorkflowDraft } from '@/infrastructure/api//workflow'
-import { useFeaturesStore } from '@/app/components/base/features/hooks'
+import { useFeaturesStore } from '@/app/components/base/features'
 import { API_PREFIX } from '@/app-specs'
 import { useResources } from '@/app/components/taskStream/logicHandlers/resStore'
 
@@ -26,6 +26,9 @@ export const useSyncDraft = () => {
   const { getResources } = useResources()
   const appInstanceState = useStore(s => s.instanceState)
 
+  // 添加请求锁，防止并发同步请求
+  const syncLockRef = useRef<Promise<void> | null>(null)
+
   const {
     nodes: templateNodes,
     edges: templateEdges,
@@ -36,7 +39,6 @@ export const useSyncDraft = () => {
     const {
       appId,
       environmentVariables,
-      syncWorkflowDraftHash,
       edgeMode,
     } = workflowState.getState()
 
@@ -79,6 +81,8 @@ export const useSyncDraft = () => {
 
     const { preview_url } = appInstanceState
 
+    const latestHash = workflowState.getState().syncWorkflowDraftHash
+
     return {
       url: `/apps/${appId}/workflows/draft`,
       params: {
@@ -105,7 +109,7 @@ export const useSyncDraft = () => {
           file_upload: features?.file,
         },
         environment_variables: environmentVariables,
-        hash: syncWorkflowDraftHash,
+        hash: latestHash,
       },
     }
   }, [flowStore, featuresState, workflowState, getResources, appInstanceState.preview_url])
@@ -129,26 +133,65 @@ export const useSyncDraft = () => {
     if (getReadOnlyNodes() || !userToken)
       return
 
-    const requestParams = buildRequestParameters()
-    if (!requestParams)
-      return
-
-    const { setSyncWorkflowHash, setDraftUpdatedAt } = workflowState.getState()
-
-    try {
-      const response = await syncWorkflowDraft(requestParams)
-      setSyncWorkflowHash(response.hash)
-      setDraftUpdatedAt(response.updated_at)
-    }
-    catch (error: any) {
-      if (error && !error.bodyUsed && error.json) {
-        error.json().then((err: any) => {
-          if (err.code === 'draft_workflow_not_sync' && !skipRefreshOnError)
-            refreshWorkflowDraft()
-
-          Toast.notify({ type: ToastTypeEnum.Error, message: err.message || '草稿保存失败' })
-        })
+    // 如果已经有同步请求在进行中，等待它完成
+    if (syncLockRef.current) {
+      try {
+        await syncLockRef.current
       }
+      catch (e) {
+        // 忽略等待过程中的错误
+      }
+      return
+    }
+
+    // 创建同步锁
+    const syncPromise = (async () => {
+      const { syncWorkflowDraftHash, setSyncWorkflowHash, setDraftUpdatedAt, initDraftData } = workflowState.getState()
+      if (!syncWorkflowDraftHash)
+        return
+
+      // 如果 initDraftData 还没有设置，说明初始化还没有完成，跳过同步
+      // 这可以避免在初始化过程中因为 hash 变化导致的错误
+      // 注意：只检查 initDraftData 是否存在，不检查是否为空对象，因为空对象也可能是有效状态
+      if (initDraftData === undefined || initDraftData === null)
+        return
+
+      const requestParams = buildRequestParameters()
+      if (!requestParams)
+        return
+
+      // 在发送请求前，再次获取最新的 hash，确保使用最新值
+      const latestHash = workflowState.getState().syncWorkflowDraftHash
+      if (!latestHash)
+        return
+
+      requestParams.params.hash = latestHash
+
+      try {
+        const response = await syncWorkflowDraft(requestParams)
+        setSyncWorkflowHash(response.hash)
+        setDraftUpdatedAt(response.updated_at)
+      }
+      catch (error: any) {
+        if (error && !error.bodyUsed && error.json) {
+          error.json().then((err: any) => {
+            if (err.code === 'draft_workflow_not_sync' && !skipRefreshOnError)
+              refreshWorkflowDraft()
+
+            Toast.notify({ type: ToastTypeEnum.Error, message: err.message || '草稿保存失败' })
+          }).catch(() => {
+            // 忽略解析错误
+          })
+        }
+      }
+    })()
+
+    syncLockRef.current = syncPromise
+    try {
+      await syncPromise
+    }
+    finally {
+      syncLockRef.current = null
     }
   }, [workflowState, buildRequestParameters, getReadOnlyNodes, refreshWorkflowDraft])
 

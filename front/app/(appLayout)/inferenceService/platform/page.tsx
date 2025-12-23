@@ -230,7 +230,7 @@ const InferenceService = () => {
     form.validateFields().then(async (values) => {
       if (!isEdit) {
         const selectedModel = modelList.find((item: any) => item.id === values.model_id)
-        if (selectedModel && selectedModel.need_confirm === false) {
+        if (selectedModel && selectedModel.need_confirm === true) {
           setPendingValues(values)
           setRiskModalOpen(true)
           return
@@ -553,7 +553,7 @@ const InferenceService = () => {
                               ]}
                               style={{ width: '80%', marginBottom: 0 }}
                             >
-                              <Select placeholder="分配显卡数量" options={[{ label: '1', value: 1 }, { label: '2', value: 2 }, { label: '4', value: 4 }, { label: '8', value: 8 }]} />
+                              <Select placeholder="分配显卡数量" style={{ width: '100%' }} options={[{ label: '1', value: 1 }, { label: '2', value: 2 }, { label: '4', value: 4 }, { label: '8', value: 8 }]} />
                             </Form.Item>
                             <Tooltip
                               placement="top"

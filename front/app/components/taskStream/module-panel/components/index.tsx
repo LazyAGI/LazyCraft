@@ -67,7 +67,6 @@ const Components = () => {
       return
     }
     const defaultConfig = generateDefaultConfig(blockItem, store)
-
     e.dataTransfer.setData('module_type', defaultConfig.type) // e.target.getAttribute('data-type')
     e.dataTransfer.setData('module_info', JSON.stringify(defaultConfig))
     e.dataTransfer.effectAllowed = 'move'

@@ -92,6 +92,7 @@ services:
     volumes:
       - ./volumes/app/storage:/app/storage
       - ./volumes/app/upload:/app/upload
+      - ./volumes/app/logs:/app/logs  # 日志目录持久化
       - ./volumes/share_data:/mnt/lustre/share_data  #模型路径
   worker:
     image: ${BACK_IMAGE:-registry.cn-hangzhou.aliyuncs.com/lazyllm/lazycraft-back:latest}
@@ -111,6 +112,7 @@ services:
     volumes:
       - ./volumes/app/storage:/app/storage
       - ./volumes/app/upload:/app/upload
+      - ./volumes/app/logs:/app/logs  # 日志目录持久化
       - ./volumes/share_data:/mnt/lustre/share_data  #模型路径
   beat:
     image: ${BACK_IMAGE:-registry.cn-hangzhou.aliyuncs.com/lazyllm/lazycraft-back:latest}
@@ -130,6 +132,7 @@ services:
     volumes:
       - ./volumes/app/storage:/app/storage
       - ./volumes/app/upload:/app/upload
+      - ./volumes/app/logs:/app/logs  # 日志目录持久化
       - ./volumes/share_data:/mnt/lustre/share_data  #模型路径
   web:
     image: ${FRONT_IMAGE:-registry.cn-hangzhou.aliyuncs.com/lazyllm/lazycraft-front:latest}

@@ -390,18 +390,6 @@ const InputsPanel = memo(({ onRun, isCanRunApp }: Props) => {
     handleExecuteWorkflow,
   ])
 
-  // 打开多轮对话调试
-  const handleOpenMultiTurnDebug = useCallback(() => {
-    saveHistory(inputs)
-    setShowMultiTurnDebug(true)
-
-    const workflowState = workflowStore.getState()
-    workflowStore.setState({
-      ...workflowState,
-      displayDebugAndPreviewPanel: true,
-      showMultiTurnDebugPanel: true,
-    })
-  }, [saveHistory, inputs, workflowStore])
   const historyMenuItems = useMemo(() => {
     return inputHistoryList.map((item) => {
       const inputSummary = getInputSummary(item.data)

@@ -59,6 +59,7 @@ class AllUserListApi(Resource):
         parser.add_argument("search_email", type=str, location="args", required=False)
         args = parser.parse_args()
 
+        self.check_can_read()
         # pagination = TenantService.get_all_members(args, None)  # 改为所有人都可见所有用户
         account = current_user
         if account.is_super:
@@ -136,6 +137,7 @@ class AllTenantListApi(Resource):
         parser.add_argument("search_user", type=str, location="args", required=False)
         args = parser.parse_args()
 
+        self.check_can_read()
         search_user = None
         if args.get("search_user"):
             search_user = Account.query.filter_by(name=args["search_user"]).first()
@@ -177,7 +179,14 @@ class AccountTenantListApi(Resource):
         parser.add_argument("account_id", type=str, required=True, location="args")
         args = parser.parse_args()
 
-        account = Account.default_getone(args["account_id"])
+        self.check_can_read()
+
+        # 普通成员只能查看自己的租户列表，只有超级管理员可以查看其他账号的租户列表。
+        target_account_id = args["account_id"]
+        if not current_user.is_super and target_account_id != current_user.id:
+            raise ForbiddenError()
+
+        account = Account.default_getone(target_account_id)
         tenants = TenantService.get_account_tenants(account)
         tenants = [marshal(m, fields.tenant_fields) for m in tenants]
 
@@ -203,6 +212,7 @@ class CurrentTenantListApi(Resource):
         Returns:
             dict: 当前用户加入的租户列表
         """
+        self.check_can_read()
         tenants = TenantService.get_account_tenants(current_user)
         for item in tenants:
             item.current = item.id == current_user.current_tenant_id
@@ -223,6 +233,7 @@ class CurrentTenantIdApi(Resource):
         Returns:
             dict: 当前租户ID
         """
+        self.check_can_read()
         return {"tenant_id": current_user.current_tenant_id}
 
 
@@ -243,6 +254,7 @@ class SwitchTenantApi(Resource):
         parser.add_argument("tenant_id", type=str, required=True, location="json")
         args = parser.parse_args()
 
+        self.check_can_read()
         TenantService.switch_tenant(current_user, args["tenant_id"])
         return {"result": "success"}
 
@@ -264,6 +276,7 @@ class AddTenantApi(Resource):
         parser.add_argument("name", type=str, required=True, location="json")
         args = parser.parse_args()
 
+        self.check_can_write()
         # 不允许重名
         # if db.session.query(Tenant).filter_by(name=args["name"]).first():
         #     raise ValueError("用户组已存在")
@@ -302,7 +315,7 @@ class DetailTenantApi(Resource):
         args = parser.parse_args()
 
         # self.check_can_admin()  # 错误用法,应该改为下面的调用
-        if not current_user.can_admin_in_tenant(args["tenant_id"]):
+        if not current_user.can_write_in_tenant(args["tenant_id"]):
             raise ForbiddenError()
 
         tenant = TenantService.get_tenant_by_id(args["tenant_id"])
@@ -453,6 +466,7 @@ class TenantUserListApi(Resource):
     @login_required
     def get(self):
         """查询当前租户下全部用户列表"""
+        self.check_can_read()
         accounts = TenantService.get_tenant_accounts(current_user.current_tenant_id)
         # 新造一个Account的官方账号，将官方账添加到accounts的第一个
         llm_account = {"id": Account.get_administrator_id(), "name": "Lazy LLM官方"}
@@ -474,7 +488,13 @@ class MoveAssetsApi(Resource):
         )
         args = parser.parse_args()
 
+        # 只有管理员可以迁移资产
+        self.check_is_super()
         tenant = TenantService.get_tenant_by_id(args["tenant_id"])
+        if not tenant:
+            raise ValueError("租户不存在")
+        if not current_user.can_admin_in_tenant(tenant.id):
+            raise ForbiddenError()
         source_account = Account.query.get(args["source_account_id"])
         target_account = Account.query.get(args["target_account_id"])
         AssetManager(current_user).move_account_tenant_assets(
@@ -533,6 +553,8 @@ class ExitTenantApi(Resource):
             raise ValueError("超管不能退出用户组")
         if current_user.get_role_in_tenant(tenant.id) == RoleTypes.OWNER:
             raise ValueError("创建者不能退出用户组")
+        if current_user.tenant_id != args["tenant_id"]:
+            raise ValueError("您不属于该用户组，无法退出")
 
         # 检查租户下该用户的资产
         AssetManager(current_user).check_tenant_account_assets(tenant, current_user)
@@ -657,6 +679,7 @@ class CoopStatusApi(Resource):
         target_type = args["target_type"]
         target_id = args["target_id"]
 
+        self.check_can_read()
         client = CooperationService(current_user)
         client.check_target(target_type, target_id)  # 检查类型与ID
 
@@ -677,9 +700,11 @@ class CoopOpenApi(Resource):
         target_type = args["target_type"]
         target_id = args["target_id"]
 
+        self.check_can_write()
         client = CooperationService(current_user)
         client.check_target(target_type, target_id)  # 检查类型与ID
 
+        instance = client.get_object(target_type, target_id)
         instance = client.set_object_accounts(target_type, target_id, args["accounts"])
         return marshal(instance, fields.cooperation_fields)
 
@@ -696,9 +721,11 @@ class CoopCloseApi(Resource):
         target_type = args["target_type"]
         target_id = args["target_id"]
 
+        self.check_can_write()
         client = CooperationService(current_user)
         client.check_target(target_type, target_id)  # 检查类型与ID
 
+        instance = client.get_object(target_type, target_id)
         instance = client.close_object(target_type, target_id)
         return marshal(instance, fields.cooperation_fields)
 
@@ -711,6 +738,7 @@ class CoopJoinListApi(Resource):
         parser.add_argument("target_type", type=str, required=True, location="args")
         args = parser.parse_args()
 
+        self.check_can_read()
         client = CooperationService(current_user)
         id_list = client.get_join_list(args["target_type"])
         return {"data": id_list}
@@ -720,6 +748,7 @@ class WorkspacesStorageCheckApi(Resource):
     @login_required
     def get(self):
         """查看当前工作组的存储空间使用情况"""
+        self.check_can_read()
         is_space_available = TenantService.check_tenant_storage(current_user)
         return {"data": is_space_available}
 
@@ -732,6 +761,7 @@ class PersonalSpaceResourceApi(Resource):
         parser.add_argument("account_id", type=str, required=True, location="args")
         args = parser.parse_args()
 
+        self.check_can_read()
         return TenantService.get_personal_space_resources(args.get("account_id"))
 
     @login_required
@@ -743,6 +773,7 @@ class PersonalSpaceResourceApi(Resource):
         parser.add_argument("tenant_id", type=str, required=True, location="json")
         args = parser.parse_args()
 
+        self.check_is_super()
         TenantService.update_personal_space_gpu_quota(
             gpu_quota=args["gpu_quota"],
             storage_quota=args["storage_quota"],
@@ -763,8 +794,7 @@ class QuotaRequestListApi(Resource):
         parser.add_argument("account_name", type=str, location="json", required=False)
         parser.add_argument("status", type=str, location="json", required=False)
         args = parser.parse_args()
-        if not current_user.is_admin:
-            raise ValueError("只有管理员可以审批申请")
+        self.check_is_super()
         # 获取工作空间配额申请列表
         pagination = QuotaService(current_user).get_quota_requests(args)
 
@@ -785,6 +815,14 @@ class QuotaRequestApi(Resource):
         if not all([request_type, amount, reason, tenant_id]):
             raise ValueError("输入的参数有误")
 
+        # 仅允许对当前租户发起配额申请，防止为无关租户提交请求
+        if tenant_id != current_user.current_tenant_id:
+            raise ForbiddenError()
+
+        if not current_user.can_admin_in_tenant(tenant_id):
+            raise ForbiddenError()
+
+        self.check_can_write()
         check_filter = {}
         check_filter["tenant_id"] = tenant_id
         check_filter["request_type"] = request_type
@@ -810,6 +848,7 @@ class QuotaRequestDetailApi(Resource):
         if not all([request_id]):
             raise ValueError("输入的参数不能为空")
 
+        self.check_is_super()
         # 获取申请详情
         quota_request = QuotaService(current_user).get_quota_request_detail(args)
         if not quota_request:
@@ -824,8 +863,7 @@ class QuotaRequestActionApi(Resource):
         # 管理员处理申请
         data = request.get_json()
         action = data.get("action")  # 'approve' or 'reject'
-        if not current_user.is_admin:
-            raise ValueError("只有管理员可以审批申请")
+        self.check_is_super()
         request_id = data.get("request_id")
         if not all([request_id, action]):
             raise ValueError("输入的参数有误")
@@ -882,6 +920,7 @@ class AIToolSetApi(Resource):
         args = parser.parse_args()
         tenant_id = args["tenant_id"]
         data = args["data"]
+        self.check_is_super()
         if isinstance(data, list) and len(data) > 0:
             new_users = [AITools.from_json(j, tenant_id) for j in data]
             try:
@@ -912,11 +951,19 @@ class AIToolListApi(Resource):
 
         """
         parser = reqparse.RequestParser()
-        parser.add_argument("tenant_id", type=str, required=False, location="json")
+        parser.add_argument("tenant_id", type=str, required=False, location="args")
         args = parser.parse_args()
-        tenant_id = args.get("tenant_id", None)
-        if tenant_id is None:
+
+        # 非超级管理员仅能查询自己当前租户的 AI 能力配置；
+        # 超级管理员可以通过 tenant_id 指定任意租户，未指定时默认当前租户。
+        requested_tenant_id = args.get("tenant_id")
+        if current_user.is_super:
+            tenant_id = requested_tenant_id or current_user.current_tenant_id
+        else:
             tenant_id = current_user.current_tenant_id
+            if requested_tenant_id is not None and requested_tenant_id != tenant_id:
+                raise ForbiddenError()
+
         all_AITools = AITools.query.filter_by(tenant_id=tenant_id).all()
         ret = "[]"
         if all_AITools:
@@ -945,6 +992,7 @@ class TenantSetEnableAIApi(Resource):
         args = parser.parse_args()
         enable = args["enable"]
         tenant_id = args["tenant_id"]
+        self.check_is_super()
         tenant = Tenant.query.filter_by(id=tenant_id).first()
         if tenant is None:
             return {

@@ -43,7 +43,7 @@ import LazyLLMDrawPanelButton from './canvasBoardBtn'
 
 import { useStore as useAppStore } from '@/app/components/app/store'
 import { getAppDebuggingEnableStatus, publishWorkflow, restoreAppVersion, startAppDebuggingEnableStatus, stopAppDebuggingEnableStatus } from '@/infrastructure/api/workflow'
-import { useFeatures } from '@/app/components/base/features/hooks'
+import { useFeatures } from '@/app/components/base/features'
 import { useResources } from '@/app/components/taskStream/logicHandlers/resStore'
 import { useApplicationContext } from '@/shared/hooks/app-context'
 import { sleep } from '@/shared/utils'
