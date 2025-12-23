@@ -145,10 +145,12 @@ class FinetuneListPageApi(Resource):
             for idx, task in enumerate(result['data']):
                 if idx < len(pagination.items):
                     task_obj = pagination.items[idx]
+                    train_runtime = task.get('train_runtime', 0)
                     if task_obj.task_job_info_dict and task_obj.task_job_info_dict.get('progress_percent') is not None:
                         progress_percent = task_obj.task_job_info_dict['progress_percent']
-                        train_runtime = task.get('train_runtime', 0)
                         task['train_runtime'] = f"{train_runtime}s(进度约{progress_percent}%)"
+                    else:
+                        task['train_runtime'] = f"{train_runtime}s"
         return result
 
 
