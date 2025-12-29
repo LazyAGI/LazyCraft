@@ -46,11 +46,7 @@ const ResultOutput: FC<ResultOutputProps> = ({ output, varOutput }) => {
     return varOutput.type
   }
   if (!varOutput) {
-    const serializedValue = typeof output === 'object' && output !== null ? JSON.stringify(output, null, 2) : output
-    console.log('=== LazyCodeEditor Direct Call Debug ===')
-    console.log('output:', output)
-    console.log('serializedValue:', serializedValue)
-    console.log('========================================')
+    const serializedValue = (typeof output === 'object' && output !== null) ? JSON.stringify(output, null, 2) : output
     return (
       <LazyCodeEditor
         readOnly
@@ -64,8 +60,8 @@ const ResultOutput: FC<ResultOutputProps> = ({ output, varOutput }) => {
     )
   }
 
-  const serializedValue = typeof output === 'object' && output !== null ? JSON.stringify(output, null, 2) : output
-  
+  const serializedValue = (typeof output === 'object' && output !== null) ? JSON.stringify(output, null, 2) : output
+
   return (
     <Form form={form} layout='vertical'>
       <FieldItem
@@ -129,12 +125,23 @@ const ResultOutputs: FC<ResultOutputsProps> = ({
     })
   }
 
-  const renderSingleOutput = () => (
-    <ResultOutput
-      output={outputs}
-      varOutput={{ ...varOutputs[0] }}
-    />
-  )
+  const renderSingleOutput = () => {
+    // 兼容处理：如果 outputs 是数组且只有一个元素，提取第一个元素
+    // 这样可以兼容接口返回 [value] 格式的情况
+    let actualOutput = outputs
+    if (Array.isArray(outputs) && outputs.length === 1) {
+      // 如果数组只有一个元素，提取该元素
+      actualOutput = outputs[0]
+    }
+    // 如果数组为空或多个元素，保持原样
+
+    return (
+      <ResultOutput
+        output={actualOutput}
+        varOutput={varOutputs[0] ? { ...varOutputs[0] } : undefined}
+      />
+    )
+  }
 
   return (
     <div>
