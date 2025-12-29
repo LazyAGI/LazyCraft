@@ -231,6 +231,8 @@ const PageDrawer = (props: any) => {
           onFinish: async (payload: any) => {
             if (payload && payload.flow_type === 'mcp') {
               message.success('同步成功')
+              setCanProceed(true)
+              setSyncStatus('success')
               try {
                 const finishData = (payload && typeof payload.data === 'string')
                   ? payload.data
