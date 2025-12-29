@@ -2,7 +2,7 @@ import React, { useCallback } from 'react'
 import { Col, Input, Row, Spin } from 'antd'
 import { useRequest } from 'ahooks'
 import Image from 'next/image'
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import { MenuOutlined } from '@ant-design/icons'
 import {
   useParams,

@@ -250,7 +250,7 @@ const ModelWarehouse = () => {
       </div>
       <Spin spinning={loading}>
         <div className={styles.content}>
-          {list && list.length > 0
+          {(list && list.length > 0)
             ? (
               <Row gutter={[16, 16]}>
                 {list.map((item: any) => (
@@ -259,7 +259,14 @@ const ModelWarehouse = () => {
                       <div className={styles.cardItem} onClick={() => router.push(`/modelWarehouse/modelManage/${item.id}?qtype=${item?.user_id === '00000000-0000-0000-0000-000000000000' ? 'builtin' : 'mine'}`)}>
                         <div className={styles.header}>
                           <div className={styles.imgWrap}>
-                            <img src={item.model_icon.replace('app', 'static')} alt="icon" />
+                            <img
+                              src={
+                                (process.env.FRONTEND_APP_API)
+                                  ? `${process.env.FRONTEND_APP_API.replace('/api', '')}${item.model_icon.replace('app', 'static')}`
+                                  : item.model_icon.replace('app', 'static')
+                              }
+                              alt="icon"
+                            />
                           </div>
                           <div className={styles.infoWrap}>
                             <div className={styles.info}>
@@ -318,7 +325,7 @@ const ModelWarehouse = () => {
                                 title="提示"
                                 description="是否确认删除"
                                 onConfirm={e => handleDelete(item, e)}
-                                onCancel={e => e.stopPropagation()}
+                                onCancel={e => e?.stopPropagation()}
                                 okText="是"
                                 cancelText="否"
                               >

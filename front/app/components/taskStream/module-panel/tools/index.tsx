@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react'
 import { Col, Input, Row } from 'antd'
 import { useRequest } from 'ahooks'
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import Image from 'next/image'
 import { MenuOutlined } from '@ant-design/icons'
 import {

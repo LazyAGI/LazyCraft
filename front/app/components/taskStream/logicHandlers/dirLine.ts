@@ -1,7 +1,7 @@
 import {
   useCallback,
 } from 'react'
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import type { ExecutionNode } from '../types'
 import {
   useWorkflowStore,
@@ -21,8 +21,8 @@ export const useLazyLLMHelpline = () => {
    * @returns 返回水平和垂直辅助线节点信息
    */
   const processHelplineSetup = useCallback((nodeItem: ExecutionNode) => {
-    const { getNodes } = flowStore.getState()
-    const nodeList = getNodes()
+    const { nodes } = flowStore.getState()
+    const nodeList = nodes
     const { setHorizontalHelpline, setVerticalHelpline } = workflowStore.getState()
 
     // 如果节点在迭代中，不显示辅助线

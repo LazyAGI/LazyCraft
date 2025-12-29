@@ -8,7 +8,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
 import { Form } from 'antd'
-import Captcha from '@/app/register/captcha'
+import Captcha from '@/app/(auth)/register/captcha'
 
 // 创建测试包装器组件（Captcha必须在Form中使用）
 const TestWrapper = ({

@@ -1,6 +1,6 @@
 import {
   useStoreApi,
-} from 'reactflow'
+} from '@xyflow/react'
 import produceFun from 'immer'
 import { useCallback } from 'react'
 import {
@@ -95,8 +95,7 @@ export const useLazyLLMNodeDataUpdate = () => {
    * @param payload 节点数据更新载荷
    */
   const handleNodeDataUpdate = useCallback(({ id, data }: NodeDataUpdatePayloadType) => {
-    const { getNodes, setNodes, edges } = storeState.getState()
-    const nodes = getNodes()
+    const { nodes, setNodes, edges } = storeState.getState()
 
     // 查找并更新目标节点
     const payloadNode: any = nodes.find((item) => {

@@ -1,6 +1,6 @@
 import type { FC, ReactElement } from 'react'
 import React, { memo, useCallback, useRef } from 'react'
-import type { NodeProps } from 'reactflow'
+import type { NodeProps } from '@xyflow/react'
 import { useContext } from 'use-context-selector'
 
 import { useCarrierControl } from './hook-carrier'

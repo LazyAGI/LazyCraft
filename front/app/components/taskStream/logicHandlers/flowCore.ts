@@ -13,10 +13,10 @@ import {
   getOutgoers,
   useReactFlow,
   useStoreApi,
-} from 'reactflow'
+} from '@xyflow/react'
 import type {
   Connection,
-} from 'reactflow'
+} from '@xyflow/react'
 import {
   getLayoutByDagre,
 } from '../utils'
@@ -81,9 +81,8 @@ export const useWorkflow = () => {
   const validateConnection = useCallback(({ source, target }: Connection) => {
     const {
       edges,
-      getNodes,
+      nodes: nodeList,
     } = flowStore.getState()
-    const nodeList = getNodes()
     const sourceNode = nodeList.find(node => node.id === source)
     const targetNode = nodeList.find(node => node.id === target)
 
@@ -98,16 +97,18 @@ export const useWorkflow = () => {
       return false
 
     // 检查节点类型兼容性
-    const sourceNodeAvailableNextNodes = nodesExtraData[sourceNode.data.type]?.availableNextNodes
-    const targetNodeAvailablePrevNodes = nodesExtraData[targetNode.data.type]?.availablePrevNodes
+    const sourceNodeType = sourceNode.data.type as ExecutionBlockEnum
+    const targetNodeType = targetNode.data.type as ExecutionBlockEnum
+    const sourceNodeAvailableNextNodes = nodesExtraData[sourceNodeType]?.availableNextNodes
+    const targetNodeAvailablePrevNodes = nodesExtraData[targetNodeType]?.availablePrevNodes
 
     if (!sourceNodeAvailableNextNodes || !targetNodeAvailablePrevNodes)
       return false
 
-    if (!sourceNodeAvailableNextNodes.includes(targetNode.data.type))
+    if (!sourceNodeAvailableNextNodes.includes(targetNodeType))
       return false
 
-    if (![...targetNodeAvailablePrevNodes, ExecutionBlockEnum.EntryNode].includes(sourceNode.data.type))
+    if (![...targetNodeAvailablePrevNodes, ExecutionBlockEnum.EntryNode].includes(sourceNodeType))
       return false
 
     // 如果是绑定创建的聚合器节点（id包含_link），需要回溯上游的节点, 上游的节点必须是与自己绑定创建的节点相连的节点
@@ -134,12 +135,12 @@ export const useWorkflow = () => {
             return true
 
           // 检查当前节点的所有上游节点
-          const incomers = getIncomers(currentNodeData, nodeList, edges)
+          const incomers = getIncomers(currentNodeData, nodeList, edges) as ExecutionNode[]
           return incomers.some(incomer => isDownstreamOfLinkedSource(incomer, visited))
         }
 
         // 如果源节点不在绑定源节点的下游路径中，则不允许连接
-        if (!isDownstreamOfLinkedSource(sourceNode))
+        if (!isDownstreamOfLinkedSource(sourceNode as ExecutionNode))
           return false
       }
     }
@@ -151,7 +152,7 @@ export const useWorkflow = () => {
 
       visited.add(node.id)
 
-      for (const outgoer of getOutgoers(node, nodeList, edges)) {
+      for (const outgoer of getOutgoers(node, nodeList, edges) as ExecutionNode[]) {
         if (outgoer.id === source)
           return true
         if (hasCycle(outgoer, visited))
@@ -159,22 +160,22 @@ export const useWorkflow = () => {
       }
     }
 
-    return !hasCycle(targetNode)
+    return !hasCycle(targetNode as ExecutionNode)
   }, [flowStore, nodesExtraData])
 
   const fetchNode = useCallback((nodeId?: string) => {
-    const { getNodes } = flowStore.getState()
-    const nodeList = getNodes()
+    const { nodes } = flowStore.getState()
+    const nodeList = nodes
 
     return nodeList.find(node => node.id === nodeId) || nodeList.find(node => node.data.type === ExecutionBlockEnum.EntryNode)
   }, [flowStore])
 
   const fetchTreeLeafNodes = useCallback((nodeId: string) => {
     const {
-      getNodes,
+      nodes,
       edges,
     } = flowStore.getState()
-    const nodeList = getNodes()
+    const nodeList = nodes
     let EntryNode = nodeList.find(node => node.data.type === ExecutionBlockEnum.EntryNode)
     const currentNodeData = nodeList.find(node => node.id === nodeId)
 
@@ -188,7 +189,7 @@ export const useWorkflow = () => {
     const preOrder = (root: ExecutionNode, callback: (node: ExecutionNode) => void) => {
       if (root.id === nodeId)
         return
-      const outgoers = getOutgoers(root, nodeList, edges)
+      const outgoers = getOutgoers(root, nodeList, edges) as ExecutionNode[]
 
       if (outgoers.length) {
         outgoers.forEach((outgoer) => {
@@ -200,11 +201,11 @@ export const useWorkflow = () => {
           callback(root)
       }
     }
-    preOrder(EntryNode, (node) => {
+    preOrder(EntryNode as ExecutionNode, (node) => {
       list.push(node)
     })
 
-    const incomers = getIncomers({ id: nodeId } as ExecutionNode, nodeList, edges)
+    const incomers = getIncomers({ id: nodeId } as ExecutionNode, nodeList, edges) as ExecutionNode[]
 
     list.push(...incomers)
 
@@ -215,19 +216,19 @@ export const useWorkflow = () => {
 
   const fetchAfterNodesInSameBranch = useCallback((nodeId: string) => {
     const {
-      getNodes,
+      nodes,
       edges,
     } = flowStore.getState()
-    const nodeList = getNodes()
+    const nodeList = nodes
     const currentNodeData = nodeList.find(node => node.id === nodeId)!
 
     if (!currentNodeData)
       return []
-    const list: ExecutionNode[] = [currentNodeData]
+    const list: ExecutionNode[] = [currentNodeData as ExecutionNode]
 
     const traverse = (root: ExecutionNode, callback: (node: ExecutionNode) => void) => {
       if (root) {
-        const outgoers = getOutgoers(root, nodeList, edges)
+        const outgoers = getOutgoers(root, nodeList, edges) as ExecutionNode[]
 
         if (outgoers.length) {
           outgoers.forEach((node) => {
@@ -237,7 +238,7 @@ export const useWorkflow = () => {
         }
       }
     }
-    traverse(currentNodeData, (node) => {
+    traverse(currentNodeData as ExecutionNode, (node) => {
       list.push(node)
     })
 
@@ -246,10 +247,10 @@ export const useWorkflow = () => {
 
   const fetchBeforeNodesInSameBranch = useCallback((nodeId: string, newNodes?: ExecutionNode[], newEdges?: ExecutionEdge[]) => {
     const {
-      getNodes,
+      nodes,
       edges,
     } = flowStore.getState()
-    const nodeList = newNodes || getNodes()
+    const nodeList = newNodes || nodes
     const currentNodeData = nodeList.find(node => node.id === nodeId)
 
     const list: ExecutionNode[] = []
@@ -268,7 +269,7 @@ export const useWorkflow = () => {
 
     const traverse = (root: ExecutionNode, callback: (node: ExecutionNode) => void) => {
       if (root) {
-        const incomers = getIncomers(root, nodeList, newEdges || edges)
+        const incomers = getIncomers(root, nodeList, newEdges || edges) as ExecutionNode[]
 
         if (incomers.length) {
           incomers.forEach((node) => {
@@ -280,7 +281,7 @@ export const useWorkflow = () => {
         }
       }
     }
-    traverse(currentNodeData, (node) => {
+    traverse(currentNodeData as ExecutionNode, (node) => {
       list.push(node)
     })
 
@@ -297,20 +298,19 @@ export const useWorkflow = () => {
   const fetchBeforeNodesInSameBranchIncludeParent = useCallback((nodeId: string, newNodes?: ExecutionNode[], newEdges?: ExecutionEdge[]) => {
     const nodeList = fetchBeforeNodesInSameBranch(nodeId, newNodes, newEdges)
     const {
-      getNodes,
+      nodes: allNodeList,
     } = flowStore.getState()
-    const allNodeList = getNodes()
     const node = allNodeList.find(n => n.id === nodeId)
     const parentNode = allNodeList.find(n => n.id === node?.parentId)
     if (parentNode)
-      nodeList.push(parentNode)
+      nodeList.push(parentNode as ExecutionNode)
 
     return nodeList
   }, [fetchBeforeNodesInSameBranch, flowStore])
 
   const fetchBeforeNodeById = useCallback((nodeId: string) => {
-    const { getNodes, edges } = flowStore.getState()
-    const nodeList = getNodes()
+    const { nodes, edges } = flowStore.getState()
+    const nodeList = nodes
     const node = nodeList.find(node => node.id === nodeId)!
 
     return getIncomers(node, nodeList, edges)
@@ -318,9 +318,8 @@ export const useWorkflow = () => {
 
   const fetchIterationNodeChildren = useCallback((nodeId: string) => {
     const {
-      getNodes,
+      nodes: nodeList,
     } = flowStore.getState()
-    const nodeList = getNodes()
 
     return nodeList.filter(node => node.parentId === nodeId)
   }, [flowStore])
@@ -340,15 +339,15 @@ export const useWorkflow = () => {
   }, [isVariableUsedInNodes])
 
   const handleOutputVariableRename = useCallback((nodeId: string, oldValeSelector: ValueRetriever, newVarSelector: ValueRetriever) => {
-    const { getNodes, setNodes } = flowStore.getState()
+    const { nodes, setNodes } = flowStore.getState()
     const afterNodes = fetchAfterNodesInSameBranch(nodeId)
     const effectNodes = findUsedVarNodes(oldValeSelector, afterNodes)
     if (effectNodes.length > 0) {
-      const newNodes = getNodes().map((nodeData) => {
+      const newNodes = nodes.map((nodeData) => {
         if (effectNodes.find(n => n.id === nodeData.id))
-          return updateNodeVars(nodeData, oldValeSelector, newVarSelector)
+          return updateNodeVars(nodeData as ExecutionNode, oldValeSelector, newVarSelector) as ExecutionNode
 
-        return nodeData
+        return nodeData as ExecutionNode
       })
       setNodes(newNodes)
     }
@@ -357,13 +356,13 @@ export const useWorkflow = () => {
   }, [flowStore])
 
   const removeUsedVariableInNodes = useCallback((varSelectors: ValueRetriever) => {
-    const { getNodes, setNodes } = flowStore.getState()
+    const { nodes, setNodes } = flowStore.getState()
     const afterNodes = fetchAfterNodesInSameBranch(varSelectors[0])
     const effectNodes = findUsedVarNodes(varSelectors, afterNodes)
     if (effectNodes.length > 0) {
-      const newNodes = getNodes().map((nodeData) => {
+      const newNodes = nodes.map((nodeData) => {
         if (effectNodes.find(n => n.id === nodeData.id))
-          return updateNodeVars(nodeData, varSelectors, [])
+          return updateNodeVars(nodeData as ExecutionNode, varSelectors, []) as ExecutionNode
 
         return nodeData
       })
@@ -389,13 +388,13 @@ export const useWorkflow = () => {
   const organizeLayout = useCallback(async () => {
     workflowContext.setState({ nodeAnimation: true })
     const {
-      getNodes,
+      nodes,
       edges,
       setNodes,
     } = flowStore.getState()
     const { setViewport } = reactflow
-    const nodeList = getNodes()
-    const dagreLayout = getLayoutByDagre(nodeList, edges)
+    const nodeList = nodes as ExecutionNode[]
+    const dagreLayout = getLayoutByDagre(nodeList, edges as ExecutionEdge[])
     const rankMaps = {} as Record<string, ExecutionNode>
 
     nodeList.forEach((node) => {

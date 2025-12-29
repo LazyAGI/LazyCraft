@@ -75,8 +75,8 @@ const ConfigShape: FC<Partial<FieldItemProps>> = ({
   // ...others
 }) => {
   // const store = useStoreApi()
-  // const { edges, getNodes } = store.getState()
-  // const nodes = getNodes()
+  // const { edges, nodes } = store.getState()
+  // const nodes = nodes
   const self = useRef({ defaultConfigList: [] })
   const { fileResources } = useFileResources()
   const [openModal, setOpenModal] = React.useState(false)

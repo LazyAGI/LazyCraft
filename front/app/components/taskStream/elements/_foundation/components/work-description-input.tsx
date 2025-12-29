@@ -4,7 +4,7 @@ import {
   useState,
 } from 'react'
 import Textarea from 'rc-textarea'
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import cn from '@/shared/utils/classnames'
 import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
 
@@ -30,7 +30,7 @@ export const TitleInput = memo(({
 }: WorkflowNodeTitleInputProps) => {
   const [currentValue, setCurrentValue] = useState(value)
   const store = useStoreApi()
-  const { getNodes } = store.getState()
+  const { nodes } = store.getState()
 
   const validateTitle = (title: string) => {
     const trimmedTitle = title.trim()
@@ -41,7 +41,7 @@ export const TitleInput = memo(({
       return false
     }
 
-    const nodes = getNodes() || []
+    const nodes = nodes || []
     if (trimmedTitle !== value && nodes.find(node => node.data.title === trimmedTitle)) {
       setCurrentValue(value)
       onBlur(value)

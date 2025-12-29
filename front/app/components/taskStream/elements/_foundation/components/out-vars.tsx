@@ -2,7 +2,7 @@ import {
   memo,
 } from 'react'
 import type { CSSProperties } from 'react'
-import { Handle, Position } from 'reactflow'
+import { Handle, Position } from '@xyflow/react'
 
 import { ExecutionBlockEnum } from '../../../types'
 import type { ExecutionNode } from '../../../types'

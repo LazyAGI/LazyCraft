@@ -122,7 +122,7 @@ const Logs = () => {
     {
       title: '用户名',
       dataIndex: 'username',
-      filters: userSpecified?.id === '00000000-0000-0000-0000-000000000001' || userSpecified?.id === '00000000-0000-0000-0000-000000000000' ? allFilterOptions.username : undefined,
+      filters: (userSpecified?.id === '00000000-0000-0000-0000-000000000001' || userSpecified?.id === '00000000-0000-0000-0000-000000000000') ? allFilterOptions.username : undefined,
       filterSearch: userSpecified?.id === '00000000-0000-0000-0000-000000000001' || userSpecified?.id === '00000000-0000-0000-0000-000000000000',
       filterOnClose: false,
       filterMultiple: false,

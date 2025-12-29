@@ -1,4 +1,4 @@
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import produce from 'immer'
 import { v4 as uuid4 } from 'uuid'
 import { generateCheckPorts } from './checkList'
@@ -6,8 +6,7 @@ import { updateNodeInternalsAsync } from './itemDataUpdate'
 
 // 聚合器同步函数
 export const syncDownstreamAggregators = (nodeId: string, store: any) => {
-  const { getNodes, setNodes, edges, updateNodeDimensions } = store.getState()
-  const nodes = getNodes()
+  const { nodes, setNodes, edges, updateNodeDimensions } = store.getState()
 
   // 找到连接到当前节点的聚合器节点（包含普通边与 dash-edge）
   const downstreamEdges = edges.filter((edge: any) => edge.source === nodeId)

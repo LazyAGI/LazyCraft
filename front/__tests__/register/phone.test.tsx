@@ -7,7 +7,7 @@ import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
-import Register_phone from '@/app/register/phone'
+import Register_phone from '@/app/(auth)/register/phone'
 import * as commonApi from '@/infrastructure/api/common'
 import * as ecdh from '@/infrastructure/security/ecdh'
 
@@ -38,7 +38,7 @@ jest.mock('@/infrastructure/security/ecdh', () => ({
 }))
 
 // Mock Captcha 组件
-jest.mock('@/app/register/captcha', () => {
+jest.mock('@/app/(auth)/register/captcha', () => {
   const { Form, Input, Button } = require('antd')
   return function MockCaptcha({ name, getFakeCaptcha, onChange, ...props }: any) {
     return (

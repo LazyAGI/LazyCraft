@@ -2,7 +2,7 @@
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CloseOutlined } from '@ant-design/icons'
 import produce from 'immer'
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import VarReferencePopup from './flow-node-var-ref-pop'
 import ConstantField from './fixed-field'
 import { getNodeInfoById, isENV, isSystemVar } from './utils'
@@ -91,7 +91,7 @@ const WorkflowNodeVariableReferencePicker: FC<WorkflowNodeVariableReferencePicke
 }) => {
   // 获取ReactFlow存储API
   const store = useStoreApi()
-  const { getNodes } = store.getState()
+  const { nodes } = store.getState()
 
   // 获取工作流相关hooks
   const isChatMode = useIsChatMode()
@@ -112,9 +112,9 @@ const WorkflowNodeVariableReferencePicker: FC<WorkflowNodeVariableReferencePicke
   })
 
   // 获取当前节点信息
-  const node = getNodes().find(n => n.id === nodeId)
+  const node = nodes.find(n => n.id === nodeId)
   const isInIteration = !!node?.data.isInIteration
-  const iterationNode = isInIteration ? getNodes().find(n => n.id === node.parentId) : null
+  const iterationNode = isInIteration ? nodes.find(n => n.id === node.parentId) : null
 
   // 触发器引用和宽度管理
   const triggerRef = useRef<HTMLDivElement>(null)

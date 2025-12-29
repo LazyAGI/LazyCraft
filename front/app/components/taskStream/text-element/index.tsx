@@ -5,7 +5,7 @@ import {
   useRef,
 } from 'react'
 import { useClickAway } from 'ahooks'
-import type { NodeProps } from 'reactflow'
+import type { NodeProps } from '@xyflow/react'
 import WorkflowNodeResizer from '../elements/_foundation/components/workflow-node-resizer'
 import {
   useLazyLLMNodeDataUpdate,

@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useReactFlow, useStoreApi } from 'reactflow'
+import { useReactFlow, useStoreApi } from '@xyflow/react'
 import produceFun from 'immer'
 import { usePathname } from 'next/navigation'
 import { useStore, useWorkflowStore } from '../store'
@@ -35,13 +35,13 @@ export const useWorkflowRun = () => {
 
   // 创建草稿备份
   const createDraftBackup = useCallback(() => {
-    const { getNodes, edges } = store.getState()
-    const { getviewport } = reactflow
+    const { nodes, edges } = store.getState()
+    const { getViewport } = reactflow
     const { backupDraft, setBackupDraft, environmentVariables } = workflowStore.getState()
     const { features } = featuresStore!.getState()
 
     if (!backupDraft) {
-      setBackupDraft({ edges, viewport: getviewport(), features, environmentVariables, nodes: getNodes() })
+      setBackupDraft({ edges, viewport: getviewport(), features, environmentVariables, nodes: nodes })
       syncWorkflowDraft()
     }
   }, [reactflow, workflowStore, store, featuresStore, syncWorkflowDraft])
@@ -65,12 +65,12 @@ export const useWorkflowRun = () => {
     callback?: IOtherOptions,
   ) => {
     const {
-      getNodes,
+      nodes,
       setNodes,
     } = store.getState()
 
     // 重置节点状态
-    const resetNodes = produceFun(getNodes(), (draft) => {
+    const resetNodes = produceFun(nodes, (draft) => {
       draft.forEach((node) => {
         node.data.selected = false
         node.data._executionStatus = undefined
@@ -232,12 +232,12 @@ export const useWorkflowRun = () => {
       return
 
     const appId = useAppStore.getState().appDetail?.id
-    const { getNodes, setNodes } = store.getState()
+    const { nodes, setNodes } = store.getState()
     const { setWorkflowRunningData } = workflowStore.getState()
 
     stopWorkflowRun(`/apps/${appId}/workflow-runs/tasks/${taskId}/stop`).finally(() => {
       // 重置所有节点执行状态
-      const resetExecutionNodes = produceFun(getNodes(), (draft) => {
+      const resetExecutionNodes = produceFun(nodes, (draft) => {
         draft.forEach((node) => {
           node.data._executionStatus = undefined
           node.data._iterationIndex = undefined

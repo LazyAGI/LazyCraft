@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import produce from 'immer'
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import { ExecutionBlockEnum } from '../../types'
 import type {
   ExecutionNode,
@@ -29,11 +29,11 @@ export const useNodeIterationInteractions = () => {
 
   const controlNodeIterationRerender = useCallback((nodeId: string) => {
     const {
-      getNodes,
+      nodes,
       setNodes,
     } = store.getState()
 
-    const nodelist = getNodes()
+    const nodelist = nodes
     const activeNode = nodelist.find(n => n.id === nodeId)!
     const childNodes = nodelist.filter(n => n.parentId === nodeId)
     let rightmostNode: ExecutionNode
@@ -80,8 +80,8 @@ export const useNodeIterationInteractions = () => {
   }, [store])
 
   const processNodeIterationChildDrag = useCallback((node: ExecutionNode) => {
-    const { getNodes } = store.getState()
-    const nodelist = getNodes()
+    const { nodes } = store.getState()
+    const nodelist = nodes
 
     const restrictLocation: { x?: number; y?: number } = { x: undefined, y: undefined }
 
@@ -106,8 +106,8 @@ export const useNodeIterationInteractions = () => {
   }, [store])
 
   const governNodeIterationChildSizeChange = useCallback((nodeId: string) => {
-    const { getNodes } = store.getState()
-    const nodelist = getNodes()
+    const { nodes } = store.getState()
+    const nodelist = nodes
     const activeNode = nodelist.find(n => n.id === nodeId)!
     const parentId = activeNode.parentId
 
@@ -116,8 +116,8 @@ export const useNodeIterationInteractions = () => {
   }, [store, controlNodeIterationRerender])
 
   const controlNodeIterationChildrenCopy = useCallback((nodeId: string, newNodeId: string) => {
-    const { getNodes } = store.getState()
-    const nodelist = getNodes()
+    const { nodes } = store.getState()
+    const nodelist = nodes
     const childNodes = nodelist.filter(n => n.parentId === nodeId)
 
     return childNodes.map((child, index) => {

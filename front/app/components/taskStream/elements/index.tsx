@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useMemo } from 'react'
-import type { NodeProps } from 'reactflow'
+import type { NodeProps } from '@xyflow/react'
 import type { ExecutionNode } from '../types'
 import { CUSTOM_NODE_TYPE } from '../fixed-values'
 import { useCustomNodes } from '../use-custom-nodes'

@@ -1,10 +1,10 @@
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 
 const useNodeInformation = (nodeId: string) => {
   const store = useStoreApi()
-  const { getNodes } = store.getState()
+  const { nodes } = store.getState()
 
-  const allNodes = getNodes()
+  const allNodes = nodes
   const currentNode = allNodes.find(n => n.id === nodeId)
   const isInIteration = !!currentNode?.data.isInIteration
   const parentNodeId = currentNode?.parentId

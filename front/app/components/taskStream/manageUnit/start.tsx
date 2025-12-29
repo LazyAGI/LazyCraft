@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { MiniMap } from 'reactflow'
+import { MiniMap } from '@xyflow/react'
 import UndoRedo from '../topBar/backwardForward'
 import ZoomController from './size-tweak'
 import OperatorControl from './adjuster'

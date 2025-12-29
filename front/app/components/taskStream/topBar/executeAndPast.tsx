@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { LoadingOutlined } from '@ant-design/icons'
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import { Tooltip, message } from 'antd'
 import PropTypes from 'prop-types'
 import { useStore } from '../store'
@@ -18,7 +18,7 @@ import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
 const LazyLLMRunMode = memo((props: any) => {
   const { canRun } = props
   const store = useStoreApi()
-  const { getNodes } = store.getState()
+  const { nodes } = store.getState()
   const { getUnusedResources } = useResources()
   const { handleWorkflowStartRunInWorkflow } = useWorkflowStartRun()
   const { handleTerminateWorkflowExecution } = useWorkflowRun()
@@ -31,7 +31,7 @@ const LazyLLMRunMode = memo((props: any) => {
       return
     }
 
-    const allNodes = getNodes()
+    const allNodes = nodes
     if (!isRunning) {
       const unusedResources = getUnusedResources(allNodes)
       if (unusedResources.length > 0) {

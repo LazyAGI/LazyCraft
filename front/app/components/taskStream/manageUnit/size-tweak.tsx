@@ -10,7 +10,7 @@ import { useKeyPress } from 'ahooks'
 import {
   useReactFlow,
   useViewport,
-} from 'reactflow'
+} from '@xyflow/react'
 import {
   useWorkflowReadOnly as useLazyllmReadOnly,
   useSyncDraft,

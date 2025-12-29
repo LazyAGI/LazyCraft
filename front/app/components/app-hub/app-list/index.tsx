@@ -1,18 +1,17 @@
 'use client'
 
 import {
-  Button, Col, Divider, Dropdown, Empty, Form, Image,
-  Input, Modal, Popconfirm, Row, Select, Space,
-  Spin, Switch, Tag, Tooltip, Typography, Upload,
+  Button, Dropdown, Empty, Form, Image,
+  Input, Modal, Select, Space,
+  Spin, Upload,
   message,
 } from 'antd'
-import { DownOutlined, DownloadOutlined, InboxOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons'
+import { DownOutlined, InboxOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons'
 import React, { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMount, useToggle, useUpdateEffect } from 'ahooks'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import { debounce, isEmpty } from 'lodash'
-import NextImage from 'next/image'
 import copy from 'copy-to-clipboard'
 
 import {
@@ -20,7 +19,6 @@ import {
   urlPrefix,
 } from './utils'
 import style from './style.module.scss'
-import DefaultLogo from './app-default-logo.png'
 import AppTemplate from './app-template'
 import ApiKeyModel from './apiKeyModel'
 import type { AppItem } from '@/core/data/common'
@@ -31,20 +29,25 @@ import TagSelect from '@/app/components/tagSelect'
 import useTimestamp from '@/shared/hooks/use-timestamp'
 import IconModal from '@/app/components/iconModal'
 import ReferenceResultModal from '@/app/components/referenceResultModal'
+import AppCard from '@/app/components/app-hub/AppCard'
 
 import { appAddToTemplateApp, createApp, createTemplateApp, deleteApp, downloadAppJson, enableApi, importApp, updateAppInfo } from '@/infrastructure/api//apps'
-import Iconfont from '@/app/components/base/iconFont'
 import PermitCheck from '@/app/components/app/permit-check'
 import { useApplicationContext } from '@/shared/hooks/app-context'
 import { noOnlySpacesRule, pageCache } from '@/shared/utils'
 
-const { Paragraph } = Typography
 const { Dragger } = Upload
 
 const Apps = () => {
   const { push } = useRouter()
-  const { formatTime } = useTimestamp()
+  const { formatTime: formatTimeOriginal } = useTimestamp()
   const authRadio = useAuthPermissions()
+
+  // 包装 formatTime 以处理字符串类型的时间
+  const formatTime = (time: number | string, format?: string) => {
+    const timestamp = typeof time === 'string' ? parseInt(time, 10) : time
+    return formatTimeOriginal(timestamp, format)
+  }
   const defaultAppMode = pageCache.getTab({ name: pageCache.category.appList })
   const [createAppModalVisible, { toggle }] = useToggle(false)
   const [importDSLModalVisible, { toggle: toggleDSLModal }] = useToggle(false)
@@ -755,170 +758,30 @@ const Apps = () => {
                 className={style.middle}
               >
                 {
-                  appData.data.map((item: any) => <div onClick={() => navigateToCanvasPage(item)} key={item.id} className={style.prpItem}>
-                    <Row gutter={14} wrap={false}>
-                      <Col flex="56px">
-                        {
-                          item.icon
-                            ? <div className={style.avataWrap}><img src={urlPrefix + item.icon.replace('app', 'static')} alt="icon" className='rounded-lg' /> </div>
-                            : <div className={style.avataWrap}><NextImage src={DefaultLogo} alt="icon" className='rounded-lg' /></div>
-                        }
-                      </Col>
-                      <Col flex="auto">
-                        <Row gutter={7}>
-                          <Col span={18}>
-                            <Paragraph style={{ lineHeight: '42px', marginBottom: 0 }} ellipsis title={item.name}>
-                              {item.name}
-                            </Paragraph>
-                          </Col>
-                          <Col span={6} className='text-right' onClick={e => e.stopPropagation()}>
-                            {
-                              getAuthCode(item.created_by_account.id)
-                              && <Tooltip title={`${item.enable_api ? '关闭' : '启动'}服务`}>
-                                <Switch className='mr-4' onChange={debounce(e => onEnableApi(e, item), 500)} checked={item.enable_api} />
-                              </Tooltip>
-                            }
-                          </Col>
-                        </Row>
-                      </Col>
-                    </Row>
-                    <div className='text-[#5E6472] text-sm'>
-                      <div className='mt-4 flex justify-between'>
-                        <Paragraph ellipsis={{ rows: 1, tooltip: item.created_by_account.name }} style={{ marginBottom: 8 }}>
-                          <span className='text-[#5E6472]'>
-                            创建人：{item.created_by_account.name}
-                          </span>
-                          {getAuthCode(item.created_by_account.id) && (
-                            <Button
-                              type="link"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                e.preventDefault()
-                                debounce(it => handleEditApp(it, undefined), 500)(item)
-                              }}
-                            >
-                              编辑
-                            </Button>
-                          )}
-                          {
-                            item?.ref_status && (
-                              <Button
-                                type="link"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setRefId(item.id)
-                                  setRefVisible(true)
-                                }}
-                              >
-                                引用中
-                              </Button>
-                            )
-                          }
-                        </Paragraph>
-                        {item?.engine_status === '服务异常' && <span className='text-[red] text-[12px]'>{item?.engine_status}</span>}
-                      </div>
-                      <Paragraph ellipsis={{ rows: 2, tooltip: item.description }} style={{ marginBottom: 8 }} className='h-[44px]'>
-                        <span className='text-[#5E6472] text-sm'>
-                          {item.description}
-                        </span>
-                      </Paragraph>
-                    </div>
-                    <div className={style.tagWrap}>
-                      {
-                        item.tags?.map((el: any) => <Tag key={el}>{el}</Tag>)
-                      }
-                    </div>
-
-                    <div className={style.lastLine}>
-                      <div className='text-[#5E6472] text-sm, text-[0.7292vw]'>
-                        {
-                          item.status === 'draft'
-                            ? '未发布'
-                            : <span>
-                              <Iconfont type="icon-fabu" style={{ color: '#0E5DD8' }} />
-                              <span className='text-[#0E5DD8] ml-1'>已发布</span>
-                              <Divider type="vertical" />
-                              更新于
-                              {formatTime(item.workflow_updated_at, 'YYYY-MM-DD HH:mm' as string)}
-                            </span>
-                        }
-
-                      </div>
-                      <div className='flex'>
-                        {item.enable_api && <div
-                          className={`${style.iconWrap} mr-2`}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            copyAppLink(item)
-                          }}
-                        >
-                          <Tooltip title="复制应用链接">
-                            <Iconfont type="icon-fuzhilianjie" />
-                          </Tooltip>
-                        </div>}
-                        {item.enable_api && <div
-                          className={`${style.iconWrap} mr-2`}
-                          style={{
-                            color: item.enable_api_call === '1' ? '#2ea121' : '',
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleApiPublish(item)
-                          }}
-                        >
-                          <Tooltip title="API发布">
-                            <Iconfont type="icon-api" />
-                          </Tooltip>
-                        </div>}
-                        {
-                          getAuthCode(item.created_by_account.id) && <>
-                            <div
-                              className={`${style.iconWrap} mr-2`}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                downloadApp(item)
-                              }}
-                            >
-                              <Tooltip title="导出应用">
-                                <DownloadOutlined />
-                              </Tooltip>
-                            </div>
-                            <div
-                              className={`${style.iconWrap} mr-2`}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                toTemplate(item)
-                              }}
-                            >
-                              <Tooltip title="添加为应用模版">
-                                <PlusOutlined />
-                              </Tooltip>
-                            </div>
-                          </>
-                        }
-                        {
-                          canDelete(item.created_by_account.id) && <div onClick={e => e.stopPropagation()}>
-                            <Popconfirm
-                              title="删除"
-                              description="删除不可逆，请确认"
-                              onConfirm={(e) => {
-                                e?.stopPropagation()
-                                handleDelete(item?.id)
-                              }}
-                              // 点击取消的时候阻止冒泡
-                              onCancel={e => e?.stopPropagation()}
-                              okText="确认"
-                              cancelText="取消"
-                            >
-                              <div className={style.iconWrap} onClick={e => e.stopPropagation()}>
-                                <Iconfont type='icon-shanchu1' />
-                              </div>
-                            </Popconfirm>
-                          </div>
-                        }
-                      </div>
-                    </div>
-                  </div>)
+                  appData.data.map((item: any) => (
+                    <AppCard
+                      key={item.id}
+                      item={item}
+                      urlPrefix={urlPrefix}
+                      onClick={navigateToCanvasPage}
+                      onEdit={handleEditApp}
+                      onDelete={handleDelete}
+                      onEnableApi={onEnableApi}
+                      onCopyLink={copyAppLink}
+                      onApiPublish={handleApiPublish}
+                      onToTemplate={toTemplate}
+                      onDownload={downloadApp}
+                      onRefClick={(id) => {
+                        setRefId(id)
+                        setRefVisible(true)
+                      }}
+                      canEdit={getAuthCode}
+                      canDelete={canDelete}
+                      formatTime={formatTime}
+                      showRefButton={true}
+                      className={style.prpItem}
+                    />
+                  ))
                 }
               </InfiniteScroll>
             </div>)

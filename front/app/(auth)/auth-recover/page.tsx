@@ -3,7 +3,7 @@ import React, { Suspense } from 'react'
 import classNames from 'classnames'
 import Header from '../signin/_header'
 import style from './page.module.scss'
-import ResetPasswordForm from '@/app/auth-recover/ResetPasswordForm'
+import ResetPasswordForm from './ResetPasswordForm'
 
 const ForgotPasswordContent = () => {
   return (

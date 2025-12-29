@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useMemo, useState } from 'react'
 import { CloseOutlined } from '@ant-design/icons'
 import { useShallow } from 'zustand/react/shallow'
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import { useReadonlyNodes, useWorkflowLog } from '../logicHandlers'
 import TipPopup from '../manageUnit/tip-panel'
 import type { WorkflowExecutionState } from '../workflow-execution-manager'

@@ -2,7 +2,7 @@ import type {
   Viewport,
   Edge as WorkFlowEdge,
   Node as WorkFlowNode,
-} from 'reactflow'
+} from '@xyflow/react'
 import type { RefObject } from 'react'
 import type { BuiltInResourceEnum, CustomResourceEnum, ToolResourceEnum } from './resource-type-selector/constants'
 import type { Resolution } from '@/shared/types/app'

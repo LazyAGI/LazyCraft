@@ -8,7 +8,7 @@ import {
 } from 'react'
 import { Button, Dropdown, Modal, Space } from 'antd'
 import { ClockCircleOutlined, DownOutlined, HistoryOutlined } from '@ant-design/icons'
-import { type Node, useNodes, useStoreApi } from 'reactflow'
+import { type Node, useNodes, useStoreApi } from '@xyflow/react'
 import {
   ExecutionBlockEnum,
   ExecutionNodeStatus,
@@ -242,7 +242,7 @@ const InputsPanel = memo(({ onRun, isCanRunApp }: Props) => {
   const store = useStoreApi()
   const nodes = useNodes<EntryNodeCategory>()
   const inputs = useStore(s => s.inputs)
-  const { getNodes } = store.getState()
+  const { nodes: storeNodes } = store.getState()
   const workflowLiveData = useStore(s => s.workflowLiveData)
   const { handleExecuteWorkflow } = useWorkflowRun()
   const { resources: resourceList } = useResources()
@@ -337,7 +337,7 @@ const InputsPanel = memo(({ onRun, isCanRunApp }: Props) => {
     saveHistory(inputs, workflowLiveData?.result?.sequence_number)
 
     // 验证表单
-    const allNodes = getNodes()
+    const allNodes = storeNodes
     const invalidNodes = allNodes.filter((item: any) =>
       item?.data?.payload__kind && !item?.data?._valid_form_success,
     )
@@ -385,7 +385,7 @@ const InputsPanel = memo(({ onRun, isCanRunApp }: Props) => {
     workflowLiveData?.result?.sequence_number,
     clearHistorySelection,
     saveHistory,
-    getNodes,
+    storeNodes,
     onRun,
     handleExecuteWorkflow,
   ])

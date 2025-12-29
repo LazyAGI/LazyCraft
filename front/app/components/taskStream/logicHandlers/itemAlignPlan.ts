@@ -1,12 +1,13 @@
 import { useCallback, useRef } from 'react'
 import produceMethod from 'immer'
-import { useStoreApi as useStoreApiFun } from 'reactflow'
+import { useStoreApi as useStoreApiFun } from '@xyflow/react'
 import { useParams } from 'next/navigation'
 import {
   useStore,
   useWorkflowStore,
 } from '../store'
 import { ExecutionBlockEnum } from '../types'
+import type { ExecutionEdge, ExecutionNode } from '../types'
 import { useReadonlyNodes } from './flowCore'
 import { useWorkflowTemplate, useWorkflowUpdate } from '.'
 import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
@@ -34,7 +35,7 @@ export const useSyncDraft = () => {
     edges: templateEdges,
   } = useWorkflowTemplate()
   const buildRequestParameters = useCallback(() => {
-    const { getNodes, edges, transform } = flowStore.getState()
+    const { nodes, edges, transform } = flowStore.getState()
     const [viewportX, viewportY, viewportZoom] = transform
     const {
       appId,
@@ -45,7 +46,6 @@ export const useSyncDraft = () => {
     if (!appId)
       return
 
-    const nodes = getNodes()
     const resources = getResources()
     const EntryNode = nodes.find(node => node.data.type === ExecutionBlockEnum.EntryNode)
 
@@ -55,18 +55,24 @@ export const useSyncDraft = () => {
     const features = featuresState!.getState().features
     const sanitizedNodes = produceMethod(nodes, (drafts) => {
       drafts.forEach((item) => {
-        Object.keys(item.data).forEach((key) => {
-          if (key.startsWith('_'))
-            delete item.data[key]
-        })
+        if (item.data) {
+          const data = item.data
+          Object.keys(data).forEach((key) => {
+            if (key.startsWith('_'))
+              delete data[key]
+          })
+        }
       })
     })
     const sanitizedEdges = produceMethod(edges, (drafts) => {
       drafts.forEach((item) => {
-        Object.keys(item.data).forEach((key) => {
-          if (key.startsWith('_'))
-            delete item.data[key]
-        })
+        if (item.data) {
+          const data = item.data
+          Object.keys(data).forEach((key) => {
+            if (key.startsWith('_'))
+              delete data[key]
+          })
+        }
       })
     })
     const sanitizedResources = produceMethod(resources, (drafts) => {
@@ -87,8 +93,8 @@ export const useSyncDraft = () => {
       url: `/apps/${appId}/workflows/draft`,
       params: {
         graph: {
-          nodes: sanitizedNodes,
-          edges: sanitizedEdges,
+          nodes: sanitizedNodes as ExecutionNode[],
+          edges: sanitizedEdges as ExecutionEdge[],
           resources: sanitizedResources,
           edgeMode,
           preview_url,

@@ -3,8 +3,8 @@ import { useState } from 'react'
 import { Button, Form, Input, message } from 'antd'
 import { useRouter, useSearchParams } from 'next/navigation'
 import cn from 'classnames'
-import IconFont from '../components/base/iconFont'
 import style from './page.module.scss'
+import IconFont from '@/app/components/base/iconFont'
 import { changePasswordWithToken } from '@/infrastructure/api/common'
 
 const ResetPasswordForm = () => {

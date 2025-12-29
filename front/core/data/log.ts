@@ -1,4 +1,4 @@
-import type { Viewport } from 'reactflow'
+import type { Viewport } from '@xyflow/react'
 import type { ExecutionEdge as Edge, ExecutionNode as Node } from '@/app/components/taskStream/types'
 
 export type Reference = {

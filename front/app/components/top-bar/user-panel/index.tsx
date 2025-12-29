@@ -167,7 +167,7 @@ export default function AccountSelector({ isMobileView }: AccountSelectorProps) 
         <div
           className='flex items-center justify-between h-9 px-3 rounded-lg cursor-pointer group hover:bg-gray-50'
         >
-          <div className='font-normal text-[14px] text-gray-700'>{'登出'}</div>
+          <div className='font-normal text-[14px] text-gray-700'>登出</div>
         </div>
       </div>
     </Menu.Item>

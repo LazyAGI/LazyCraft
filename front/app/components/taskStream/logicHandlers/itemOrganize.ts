@@ -2,7 +2,7 @@ import {
   useCallback,
 } from 'react'
 import ELK from 'elkjs/lib/elk.bundled.js'
-import { useReactFlow, useStoreApi } from 'reactflow'
+import { useReactFlow, useStoreApi } from '@xyflow/react'
 import { cloneDeep } from 'lodash-es'
 import type { ExecutionEdge, ExecutionNode } from '../types'
 import { useWorkflowStore } from '../store'
@@ -62,10 +62,10 @@ export const useNodesLayout = () => {
   const executeAutoLayout = useCallback(async () => {
     workflowState.setState({ nodeAnimation: true })
 
-    const { getNodes, edges, setNodes } = flowStore.getState()
+    const { nodes, edges, setNodes } = flowStore.getState()
     const { setViewport } = flowInstance
 
-    const { positionedNodes } = await calculateNodePositions(getNodes(), edges)
+    const { positionedNodes } = await calculateNodePositions(nodes, edges)
 
     setNodes(positionedNodes)
     setViewport({ x: 0, y: 0, zoom: 0.7 })

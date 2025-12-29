@@ -6,7 +6,7 @@ import {
 } from 'react'
 import { CloseOutlined } from '@ant-design/icons'
 import { useRequest } from 'ahooks'
-import { useNodes } from 'reactflow'
+import { useNodes } from '@xyflow/react'
 
 import ResultPanel from '../driveFlow/result-panel'
 import TracingPanel from '../driveFlow/trace-panel'

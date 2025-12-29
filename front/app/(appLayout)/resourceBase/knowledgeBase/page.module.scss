@@ -61,6 +61,10 @@
     font-size: 1.6667vw;
     background: linear-gradient(150deg, #26adf0 0%, #69d17b 100%);
     color: #fff;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .cardContent {

@@ -7,7 +7,7 @@ import dayjs from 'dayjs'
 import { DownOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { Button as AntdButton, Modal, message } from 'antd'
 import { useToggle } from 'ahooks'
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
 
@@ -114,8 +114,8 @@ const AppCirculator = ({
   const validateWorkflowBeforeAction = useCallback(async () => {
     try {
       // 获取当前画布的所有节点
-      const { getNodes } = flowStore.getState()
-      const allNodes = getNodes()
+      const { nodes } = flowStore.getState()
+      const allNodes = nodes
 
       // 获取包含所有子画布的节点列表
       const allNodesIncludingSubflows = getAllNodesIncludingSubflows(allNodes)

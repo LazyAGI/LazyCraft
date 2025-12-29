@@ -1,13 +1,13 @@
 import { useCallback } from 'react'
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import { BranchNodeTypes } from '../fixed-values'
 
 export const useWorkflowConnection = () => {
   const flowStore = useStoreApi()
 
   const retrieveConnectedNodePairs = useCallback(() => {
-    const { getNodes } = flowStore.getState()
-    const allNodes = getNodes()
+    const { nodes } = flowStore.getState()
+    const allNodes = nodes
 
     // 识别所有分支节点及其对应的聚合器节点
     const connectedNodePairs = allNodes.reduce((accumulatedPairs: any[], currentNode) => {

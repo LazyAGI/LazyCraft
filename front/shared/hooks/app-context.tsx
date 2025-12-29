@@ -18,6 +18,7 @@ type AppContextValue = {
   tempFile: any
   updateTempConfigured: any
   userSpecified: UserProfileResult
+  email: string
 }
 
 const RootStateContext = createContext<AppContextValue>({
@@ -30,6 +31,7 @@ const RootStateContext = createContext<AppContextValue>({
     id: '',
     name: '',
   },
+  email: '',
 })
 
 type AppContextProviderProps = {
@@ -70,6 +72,7 @@ export const RootStateHubProvider: FC<AppContextProviderProps> = ({ children }) 
       tempFile,
       updateTempConfigured,
       userSpecified,
+      email: userSpecified?.email || '',
     }}>
       <div className='flex flex-col h-full overflow-y-auto'>
         <div className='grow relative flex flex-col overflow-y-auto overflow-x-hidden'>

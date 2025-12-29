@@ -2,7 +2,7 @@
 import type { FC } from 'react'
 import React, { useEffect } from 'react'
 import classNames from 'classnames'
-import { useNodes } from 'reactflow'
+import { useNodes } from '@xyflow/react'
 import type { FieldItemProps } from '../types'
 import { Select } from '@/app/components/taskStream/elements/_foundation/components/form/base'
 

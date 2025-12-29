@@ -38,7 +38,7 @@ const ToolsNav = ({
   return (
     <Link href="/tools" className={buildLinkClassName()}>
       {renderIcon()}
-      {'工具'}
+      工具
     </Link>
   )
 }
