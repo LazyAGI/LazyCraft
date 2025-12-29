@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import produce from 'immer'
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import { v4 as uuid4 } from 'uuid'
 import type { ExecutionEdge, ExecutionNode } from '../types'
 import { useStore } from '../store'
@@ -1169,8 +1169,8 @@ export const usePrePublishChecklist = () => {
   const storeState = useStoreApi()
 
   const handleCheckBeforePublish = useCallback(() => {
-    const { getNodes, edges } = storeState.getState()
-    const nodeArr = getNodes().filter(node => node.type === CUSTOM_NODE_TYPE)
+    const { nodes, edges } = storeState.getState()
+    const nodeArr = nodes.filter(node => node.type === CUSTOM_NODE_TYPE)
 
     const {
       validNodes,

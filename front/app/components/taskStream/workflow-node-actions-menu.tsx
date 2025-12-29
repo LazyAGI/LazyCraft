@@ -4,7 +4,7 @@ import {
   useRef,
 } from 'react'
 import { useClickAway } from 'ahooks'
-import { useNodes } from 'reactflow'
+import { useNodes } from '@xyflow/react'
 import LazyLLMOperatorPopup from './elements/_foundation/components/panel-operator/control-panel-pop'
 import type { ExecutionNode } from './types'
 import { useStore } from './store'

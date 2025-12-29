@@ -7,16 +7,17 @@ import produce from 'immer'
 import type {
   Edge,
   Node,
-  NodeDragHandler,
   NodeMouseHandler,
   OnConnect,
   OnConnectEnd,
   OnConnectStart,
+  OnNodeDrag,
   ResizeParamsWithDirection as ResizeParamsWithDirectionType,
-} from 'reactflow'
-import { getConnectedEdges, useReactFlow, useStoreApi } from 'reactflow'
+} from '@xyflow/react'
+import { getConnectedEdges, useReactFlow, useStoreApi } from '@xyflow/react'
 import { v4 as uuid4 } from 'uuid'
 
+import type { ExecutionEdge, ExecutionNode } from '../types'
 import { ExecutionBlockEnum } from '../types'
 import { useStore, useWorkflowStore } from '../store'
 import {
@@ -59,7 +60,7 @@ export const useNodesHandlers = () => {
 
   const { recordStateToHistory, undo, redo } = useWorkflowLog()
 
-  const processNodeDragStart = useCallback<NodeDragHandler>((_, node) => {
+  const processNodeDragStart = useCallback<OnNodeDrag>((_, node) => {
     workflowStore.setState({ nodeAnimation: false })
 
     if (getOnlyReadNodes())
@@ -88,24 +89,24 @@ export const useNodesHandlers = () => {
     }
   }, [])
 
-  const processNodeDrag = useCallback<NodeDragHandler>((e, node: Node) => {
+  const processNodeDrag = useCallback<OnNodeDrag>((e, node: Node) => {
     if (getOnlyReadNodes())
       return
 
     if (node.data.isIterationStart)
       return
 
-    const { getNodes, setNodes } = flowStore.getState()
+    const { nodes, setNodes } = flowStore.getState()
     e.stopPropagation()
 
-    const nodeList = getNodes()
+    const nodeList = nodes
 
-    const { restrictLocation } = processNodeIterationChildDrag(node)
+    const { restrictLocation } = processNodeIterationChildDrag(node as ExecutionNode)
 
     const {
       showHorizontalHelpLineNodes: showHorizontalHelpLineNodesList,
       showVerticalGuideLineNodes,
-    } = handleSetGuideLine(node)
+    } = handleSetGuideLine(node as ExecutionNode)
     const showHorizontalHelpLineNodesLength = showHorizontalHelpLineNodesList.length
     const showVerticalGuideLineNodesLength = showVerticalGuideLineNodes.length
 
@@ -131,7 +132,7 @@ export const useNodesHandlers = () => {
     rafSetNodes(setNodes, updatedNodes)
   }, [flowStore, getOnlyReadNodes, handleSetGuideLine, processNodeIterationChildDrag, rafSetNodes])
 
-  const processNodeDragStop = useCallback<NodeDragHandler>((_, node) => {
+  const processNodeDragStop = useCallback<OnNodeDrag>((_, node) => {
     const { setHorizontalHelpline, setVerticalHelpline } = workflowStore.getState()
     if (getOnlyReadNodes())
       return
@@ -158,12 +159,12 @@ export const useNodesHandlers = () => {
       return
 
     const {
-      getNodes,
+      nodes,
       setNodes: _setNodes,
       edges,
       setEdges,
     } = flowStore.getState()
-    const nodeList = getNodes()
+    const nodeList = nodes
     const {
       nodeConnectingPayload,
       updateEnteringNodePayload,
@@ -187,7 +188,7 @@ export const useNodesHandlers = () => {
 
       connectedEdgeList.forEach((edge) => {
         const currentEdge = drafts.find(e => e.id === edge.id)
-        if (currentEdge)
+        if (currentEdge && currentEdge.data)
           currentEdge.data._relatedNodeIsHovering = true
       })
     })
@@ -208,8 +209,8 @@ export const useNodesHandlers = () => {
       updateEnteringNodePayload,
     } = workflowStore.getState()
     updateEnteringNodePayload(undefined)
-    const { getNodes, setNodes, edges, setEdges } = flowStore.getState()
-    const updatedNodes = produce(getNodes(), (drafts) => {
+    const { nodes, setNodes, edges, setEdges } = flowStore.getState()
+    const updatedNodes = produce(nodes, (drafts) => {
       drafts.forEach((node) => {
         node.data._isEntering = false
       })
@@ -217,16 +218,17 @@ export const useNodesHandlers = () => {
     setNodes(updatedNodes)
     const updatedEdges = produce(edges, (drafts) => {
       drafts.forEach((edge) => {
-        edge.data._relatedNodeIsHovering = false
+        if (edge.data)
+          edge.data._relatedNodeIsHovering = false
       })
     })
     setEdges(updatedEdges)
   }, [flowStore, workflowStore, getOnlyReadNodes, instanceState, setInstanceState])
 
   const processNodeSelect = useCallback((nodeId: string, clearSelection?: boolean) => {
-    const { getNodes, setNodes, edges, setEdges } = flowStore.getState()
+    const { nodes, setNodes, edges, setEdges } = flowStore.getState()
 
-    const nodeList = getNodes()
+    const nodeList = nodes
     const selectedNode = nodeList.find(node => node.data.selected)
 
     if (!clearSelection && selectedNode?.id === nodeId)
@@ -279,8 +281,8 @@ export const useNodesHandlers = () => {
     if (getOnlyReadNodes())
       return
 
-    const { getNodes, setNodes, edges, setEdges } = flowStore.getState()
-    const nodeList = getNodes()
+    const { nodes, setNodes, edges, setEdges } = flowStore.getState()
+    const nodeList = nodes
     const targetNode = nodeList.find(node => node.id === target)
     const sourceNode = nodeList.find(node => node.id === source)
 
@@ -344,7 +346,7 @@ export const useNodesHandlers = () => {
       edge: newEdgeData,
     })
 
-    const nodesConnectedSourceOrTargetHandleIdsMap = getNodesMap(edgesConnectedSourceOrTargetNodesChanges, nodeList)
+    const nodesConnectedSourceOrTargetHandleIdsMap = getNodesMap(edgesConnectedSourceOrTargetNodesChanges, nodeList as ExecutionNode[])
 
     const updatedNodes = produce(nodeList, (drafts) => {
       Object.keys(nodesConnectedSourceOrTargetHandleIdsMap).forEach((nodeId) => {
@@ -355,22 +357,24 @@ export const useNodesHandlers = () => {
       })
       const targetInfo = drafts.find(node => node.id === target)
       if (targetInfo) {
-        const sourceIdList = targetInfo.data.config__input_ports?.map((portItem) => {
-          // 比对${端口id},${节点id}，包含即将添加的连接
-          const isNewConnection = portItem.id === targetHandle && targetInfo.id === target
-          if (isNewConnection)
-            return { label: undefined, source, portId: portItem.id }
+        const sourceIdList = Array.isArray(targetInfo.data.config__input_ports)
+          ? targetInfo.data.config__input_ports.map((portItem) => {
+            // 比对${端口id},${节点id}，包含即将添加的连接
+            const isNewConnection = portItem.id === targetHandle && targetInfo.id === target
+            if (isNewConnection)
+              return { label: undefined, source, portId: portItem.id }
 
-          // 对于已有连接，从现有边中查找
-          const existingEdge = edges.find(val =>
-            !needDeleteEdgesIds.includes(val.id)
-            && `${portItem.id},${targetInfo.id}` === `${val.targetHandle},${val.target}`,
-          )
-          return existingEdge
-            ? { label: existingEdge.label, source: existingEdge.source, portId: portItem.id }
-            : null
-        }).filter(Boolean)
-        if (sourceIdList && sourceIdList.length > 0) {
+            // 对于已有连接，从现有边中查找
+            const existingEdge = edges.find(val =>
+              !needDeleteEdgesIds.includes(val.id)
+              && `${portItem.id},${targetInfo.id}` === `${val.targetHandle},${val.target}`,
+            )
+            return existingEdge
+              ? { label: existingEdge.label, source: existingEdge.source, portId: portItem.id }
+              : null
+          }).filter(Boolean)
+          : []
+        if (sourceIdList.length > 0) {
           const sourceInfo = drafts.find(node => node.id === source)
           const validationPayload = {
             targetInfo,
@@ -383,7 +387,8 @@ export const useNodesHandlers = () => {
             // 使用generateCheckPorts验证参数
             const checkResultPorts = generateCheckPorts(validationPayload)
             if (targetInfo && checkResultPorts) {
-              targetInfo.data.config__input_ports = checkResultPorts.concat(targetInfo.data.config__input_ports.slice(checkResultPorts.length))
+              const existingPorts = Array.isArray(targetInfo.data.config__input_ports) ? targetInfo.data.config__input_ports : []
+              targetInfo.data.config__input_ports = checkResultPorts.concat(existingPorts.slice(checkResultPorts.length))
               const hasValidationError = checkResultPorts.some(port => port.param_check_success === false)
               targetInfo.data._valid_check_success = !hasValidationError
               if (target) {
@@ -407,12 +412,11 @@ export const useNodesHandlers = () => {
 
     // 检查是否需要同步聚合器 - 在连接建立时触发
     setTimeout(() => {
-      const { getNodes: getCurrentNodes, edges: currentEdges } = flowStore.getState()
-      const currentNodes = getCurrentNodes()
+      const { nodes: currentNodes, edges: currentEdges } = flowStore.getState()
       const currentSourceNode = currentNodes.find(node => node.id === source)
       if (currentSourceNode) {
-        const isBranchNode = (currentSourceNode.type && ['if-else', 'switch-case'].includes(currentSourceNode.type))
-          || ['Ifs', 'Switch'].includes(currentSourceNode.data?.payload__kind)
+        const isBranchNode = (currentSourceNode.type && ['if-else', 'switch-case'].includes(currentSourceNode.type as string))
+          || ['Ifs', 'Switch'].includes(currentSourceNode.data?.payload__kind as string)
 
         if (isBranchNode && source) {
           // 直接调用同步函数
@@ -426,8 +430,8 @@ export const useNodesHandlers = () => {
         for (const edge of allIncomingEdges) {
           const sourceNodeData = currentNodes.find(node => node.id === edge.source)
           if (sourceNodeData) {
-            const isBranchNode = (sourceNodeData.type && ['if-else', 'switch-case'].includes(sourceNodeData.type))
-              || ['Ifs', 'Switch'].includes(sourceNodeData.data?.payload__kind)
+            const isBranchNode = (sourceNodeData.type && ['if-else', 'switch-case'].includes(sourceNodeData.type as string))
+              || ['Ifs', 'Switch'].includes(sourceNodeData.data?.payload__kind as string)
 
             if (isBranchNode && edge.source) {
               // 直接调用同步函数
@@ -459,14 +463,14 @@ export const useNodesHandlers = () => {
 
     if (nodeId && handleType) {
       const { setNodeLinkingPayload } = workflowStore.getState()
-      const { getNodes } = flowStore.getState()
-      const nodeData = getNodes().find(n => n.id === nodeId)!
+      const { nodes } = flowStore.getState()
+      const nodeData = nodes.find(n => n.id === nodeId)!
 
       if (nodeData.type === NOTE_NODE_CUSTOM)
         return
 
       if (!nodeData.data.isIterationStart)
-        setNodeLinkingPayload({ nodeId, nodeType: nodeData.data.type, handleType, handleId })
+        setNodeLinkingPayload({ nodeId, nodeType: nodeData.data.type as string, handleType, handleId })
     }
   }, [flowStore, workflowStore, getOnlyReadNodes])
 
@@ -482,18 +486,20 @@ export const useNodesHandlers = () => {
     } = workflowStore.getState()
     if (nodeConnectingPayload && inProgressNodePayload) {
       const {
-        getNodes,
+        nodes,
         edges,
       } = flowStore.getState()
-      const nodeList = getNodes()
+      const nodeList = nodes
       const fromNode = nodeList.find(n => n.id === nodeConnectingPayload.nodeId)!
       const toNode = nodeList.find(n => n.id === inProgressNodePayload.nodeId)!
 
-      const sourceIdList = toNode.data?.config__input_ports?.map((portItem) => {
-        // 比对${端口id},${节点id}
-        const { label, source } = edges.find(val => `${portItem?.id},${toNode.id}` === `${val.targetHandle},${val.target}`) || {}
-        return { label, source, portId: portItem?.id }
-      })
+      const sourceIdList = Array.isArray(toNode.data?.config__input_ports)
+        ? toNode.data.config__input_ports.map((portItem) => {
+          // 比对${端口id},${节点id}
+          const { label, source } = edges.find(val => `${portItem?.id},${toNode.id}` === `${val.targetHandle},${val.target}`) || {}
+          return { label, source, portId: portItem?.id }
+        })
+        : []
 
       handleCheckNodeShape({ targetInfo: toNode, sourceIdList, nodes: nodeList, isCheckBranch: true })
 
@@ -509,13 +515,13 @@ export const useNodesHandlers = () => {
       return
 
     const {
-      getNodes,
+      nodes,
       setNodes,
       edges,
       setEdges,
     } = flowStore.getState()
 
-    const nodeList = getNodes()
+    const nodeList = nodes
     const currentNodeIndex = nodeList.findIndex(node => node.id === nodeId)
     const currentNode = nodeList[currentNodeIndex]
 
@@ -525,7 +531,7 @@ export const useNodesHandlers = () => {
     if (currentNode.data.type === ExecutionBlockEnum.EntryNode || currentNode.data.type === ExecutionBlockEnum.FinalNode)
       return
     let linkedNodeToDelete: Node | undefined
-    if (BranchNodeTypes.includes(currentNode.data?.payload__kind)) {
+    if (BranchNodeTypes.includes(currentNode.data?.payload__kind as string)) {
       linkedNodeToDelete = nodeList.find(node =>
         node.data?.payload__kind === 'aggregator'
         && node.id === currentNode.data?.linkNodeId,
@@ -533,7 +539,7 @@ export const useNodesHandlers = () => {
     }
     else if (currentNode.data?.payload__kind === 'aggregator' && currentNode.data?.createWithIntention) {
       linkedNodeToDelete = nodeList.find(node =>
-        BranchNodeTypes.includes(node.data?.payload__kind)
+        BranchNodeTypes.includes(node.data?.payload__kind as string)
         && node.data?.linkNodeId === currentNode.id,
       )
     }
@@ -558,8 +564,8 @@ export const useNodesHandlers = () => {
     }
 
     const nodesConnectedSourceOrTargetHandleIdsMap = getNodesMap(
-      connectedEdgeList.map(edge => ({ type: 'disconnect' as const, edge })),
-      nodeList,
+      connectedEdgeList.map(edge => ({ type: 'disconnect' as const, edge: edge as ExecutionEdge })),
+      nodeList as ExecutionNode[],
     )
 
     const updatedNodes = produce(nodeList, (drafts: Node[]) => {
@@ -572,7 +578,8 @@ export const useNodesHandlers = () => {
         }
 
         if (node.id === currentNode.parentId) {
-          node.data._children = node.data._children?.filter(child => child !== nodeId)
+          if (Array.isArray(node.data._children))
+            node.data._children = node.data._children.filter(child => child !== nodeId)
 
           if (currentNode.id === (node as Node<RepetitionNodeType>).data.start_node_id) {
             (node as Node<RepetitionNodeType>).data.start_node_id = '';
@@ -600,16 +607,16 @@ export const useNodesHandlers = () => {
     if (currentNode.type === 'custom-note')
       recordStateToHistory(WorkflowHistoryBind.NoteDelete)
     else
-      recordStateToHistory(WorkflowHistoryBind.NodeRemove, currentNode?.data?.title)
+      recordStateToHistory(WorkflowHistoryBind.NodeRemove, currentNode?.data?.title as string | undefined)
   }, [getOnlyReadNodes, flowStore, handleDraftWorkflowSyncHook, recordStateToHistory])
 
   const processNodeCancelexecutionStatus = useCallback(() => {
     const {
-      getNodes,
+      nodes,
       setNodes,
     } = flowStore.getState()
 
-    const nodeList = getNodes()
+    const nodeList = nodes
     const updatedNodes = produce(nodeList, (drafts) => {
       drafts.forEach((node) => {
         node.data._executionStatus = undefined
@@ -620,11 +627,11 @@ export const useNodesHandlers = () => {
 
   const processNodesCancelSelected = useCallback(() => {
     const {
-      getNodes,
+      nodes,
       setNodes,
     } = flowStore.getState()
 
-    const nodeList = getNodes()
+    const nodeList = nodes
     const updatedNodes = produce(nodeList, (drafts) => {
       drafts.forEach((node) => {
         node.data.selected = false
@@ -662,21 +669,21 @@ export const useNodesHandlers = () => {
     } = workflowStore.getState()
 
     const {
-      getNodes,
+      nodes,
     } = flowStore.getState()
 
-    const nodeList = getNodes()
+    const nodeList = nodes
     if (nodeIdToCopy) {
       const targetNode = nodeList.find(node => node.id === nodeIdToCopy && node.data.type !== ExecutionBlockEnum.EntryNode && node.data.type !== ExecutionBlockEnum.FinalNode)
       if (targetNode) {
         const clipboardNodes: Node[] = [targetNode]
-        if (BranchNodeTypes.includes(targetNode.data?.payload__kind) && targetNode.data?.linkNodeId) {
-          const linkedAgg = nodeList.find(n => n.id === targetNode.data.linkNodeId)
+        if (BranchNodeTypes.includes(targetNode.data?.payload__kind as string) && targetNode.data?.linkNodeId) {
+          const linkedAgg = nodeList.find(n => n.id === (targetNode.data.linkNodeId as string))
           if (linkedAgg)
             clipboardNodes.push(linkedAgg)
         }
         else if (targetNode.data?.payload__kind === 'aggregator' && targetNode.data?.createWithIntention) {
-          const linkedBranch = nodeList.find(n => BranchNodeTypes.includes(n.data?.payload__kind) && n.data?.linkNodeId === targetNode.id)
+          const linkedBranch = nodeList.find(n => BranchNodeTypes.includes(n.data?.payload__kind as string) && n.data?.linkNodeId === targetNode.id)
           if (linkedBranch)
             clipboardNodes.push(linkedBranch)
         }
@@ -684,7 +691,7 @@ export const useNodesHandlers = () => {
         // 去重（防止重复加入）
         const uniqueClipboardNodes = Array.from(new Map(clipboardNodes.map(n => [n.id, n])).values())
 
-        setClipboardElements(uniqueClipboardNodes)
+        setClipboardElements(uniqueClipboardNodes as ExecutionNode[])
         workflowStore.setState({ patentState: { ...(workflowStore.getState().patentState || {}), __allowPasteOnce: true } })
         // 确保快捷键可用（部分场景可能被禁用）
         const { setShortcutsDisabled } = workflowStore.getState()
@@ -698,7 +705,7 @@ export const useNodesHandlers = () => {
     const bundledNodes = nodeList.filter(node => node.data._isPacked && node.data.type !== ExecutionBlockEnum.EntryNode && node.data.type !== ExecutionBlockEnum.FinalNode && !node.data.isInIteration)
 
     if (bundledNodes.length) {
-      setClipboardElements(bundledNodes)
+      setClipboardElements(bundledNodes as ExecutionNode[])
       return
     }
 
@@ -706,18 +713,18 @@ export const useNodesHandlers = () => {
 
     if (selectedNode) {
       const clipboardNodes: Node[] = [selectedNode]
-      if (BranchNodeTypes.includes(selectedNode.data?.payload__kind) && selectedNode.data?.linkNodeId) {
-        const linkedAgg = nodeList.find(n => n.id === selectedNode.data.linkNodeId)
+      if (BranchNodeTypes.includes(selectedNode.data?.payload__kind as string) && selectedNode.data?.linkNodeId) {
+        const linkedAgg = nodeList.find(n => n.id === (selectedNode.data.linkNodeId as string))
         if (linkedAgg)
           clipboardNodes.push(linkedAgg)
       }
       else if (selectedNode.data?.payload__kind === 'aggregator' && selectedNode.data?.createWithIntention) {
-        const linkedBranch = nodeList.find(n => BranchNodeTypes.includes(n.data?.payload__kind) && n.data?.linkNodeId === selectedNode.id)
+        const linkedBranch = nodeList.find(n => BranchNodeTypes.includes(n.data?.payload__kind as string) && n.data?.linkNodeId === selectedNode.id)
         if (linkedBranch)
           clipboardNodes.push(linkedBranch)
       }
       const uniqueClipboardNodes = Array.from(new Map(clipboardNodes.map(n => [n.id, n])).values())
-      setClipboardElements(uniqueClipboardNodes)
+      setClipboardElements(uniqueClipboardNodes as ExecutionNode[])
     }
   }, [flowStore, getOnlyReadNodes, workflowStore])
 
@@ -739,14 +746,14 @@ export const useNodesHandlers = () => {
       return
 
     const {
-      getNodes,
+      nodes,
       setNodes,
       edges,
       setEdges,
     } = flowStore.getState()
 
     const nodesToPaste: Node[] = []
-    const nodeList = getNodes()
+    const nodeList = nodes
 
     if (clipboardElements.length) {
       // 消费单次许可
@@ -801,8 +808,8 @@ export const useNodesHandlers = () => {
           nodesToPaste.push(...newChildren)
       })
       nodesToPaste.forEach((n) => {
-        if (BranchNodeTypes.includes(n.data?.payload__kind) && n.data?.linkNodeId && idMap.has(n.data.linkNodeId)) {
-          const newAggId = idMap.get(n.data.linkNodeId)!
+        if (BranchNodeTypes.includes(n.data?.payload__kind as string) && n.data?.linkNodeId && idMap.has(n.data.linkNodeId as string)) {
+          const newAggId = idMap.get(n.data.linkNodeId as string)!
           n.data.linkNodeId = newAggId
         }
       })
@@ -810,8 +817,8 @@ export const useNodesHandlers = () => {
       // 创建 dash-edge（仅当成对节点均被复制）
       const dashEdgesToAdd: any[] = []
       nodesToPaste.forEach((n) => {
-        if (BranchNodeTypes.includes(n.data?.payload__kind) && n.data?.linkNodeId) {
-          const aggExists = nodesToPaste.find(x => x.id === n.data.linkNodeId)
+        if (BranchNodeTypes.includes(n.data?.payload__kind as string) && n.data?.linkNodeId) {
+          const aggExists = nodesToPaste.find(x => x.id === (n.data.linkNodeId as string))
           if (aggExists) {
             dashEdgesToAdd.push({
               id: `${n.id}-${n.data.linkNodeId}-dash`,
@@ -859,11 +866,11 @@ export const useNodesHandlers = () => {
     }
 
     const {
-      getNodes,
+      nodes,
       edges,
     } = flowStore.getState()
 
-    const nodeList = getNodes()
+    const nodeList = nodes
     const bundledNodes = nodeList.filter(node => node.data._isPacked && node.data.type !== ExecutionBlockEnum.EntryNode)
 
     if (bundledNodes.length) {
@@ -887,14 +894,14 @@ export const useNodesHandlers = () => {
       return
 
     const {
-      getNodes,
+      nodes,
       setNodes,
     } = flowStore.getState()
     const { x, y, width, height } = params
 
-    const nodeList = getNodes()
+    const nodeList = nodes
     const currentNode = nodeList.find(n => n.id === nodeId)!
-    const childrenNodes = nodeList.filter(n => currentNode.data._children?.includes(n.id))
+    const childrenNodes = nodeList.filter(n => Array.isArray(currentNode.data._children) && currentNode.data._children.includes(n.id))
     let rightNode: Node
     let bottomNode: Node
 

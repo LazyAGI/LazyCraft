@@ -32,8 +32,7 @@ const sortConfigParameters = (config__parameters = []) => {
   })
 }
 export const generateDefaultConfig = (blockItem: any = {}, store: any) => {
-  const { getNodes } = store.getState()
-  const nodes = getNodes() || []
+  const { nodes } = store.getState()
   const initialData = NODES_INITIAL_DATA[blockItem.type] || {}
   const _config = cloneDeep({
     ...initialData,

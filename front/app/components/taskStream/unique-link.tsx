@@ -5,7 +5,7 @@ import {
   useMemo,
   useState,
 } from 'react'
-import type { EdgeProps } from 'reactflow'
+import type { EdgeProps } from '@xyflow/react'
 import produce from 'immer'
 import {
   BaseEdge,
@@ -14,7 +14,7 @@ import {
   getBezierPath,
   getSmoothStepPath,
   useStoreApi,
-} from 'reactflow'
+} from '@xyflow/react'
 import { Checkbox, Col, Input, Modal, Row, Select } from 'antd'
 import { FormOutlined } from '@ant-design/icons'
 
@@ -82,16 +82,16 @@ const CustomEdge = ({
 }: EdgeProps) => {
   const { nodesReadOnly } = useReadonlyNodes()
   const store = useStoreApi()
-  const { edges, getNodes, setEdges } = store.getState()
-  const nodes = getNodes()
+  const { edges, nodes, setEdges } = store.getState()
   const { handleCheckNodeShape } = useCheckNodeShape()
-  const sourceData = nodes.find(node => node.id === source)?.data || {}
   const targetData = nodes.find(node => node.id === target)?.data || {}
   const edgeMode = useStore(s => s.edgeMode)
   const getPath = edgeMode === 'step' ? getSmoothStepPath : getBezierPath
 
   // 检查目标节点的输入端口是否有错误
-  const targetPort = targetData?.config__input_ports?.find(port => port.id === targetHandleId)
+  const targetPort = Array.isArray(targetData?.config__input_ports)
+    ? targetData.config__input_ports.find(port => port.id === targetHandleId)
+    : undefined
   const hasValidationError = targetPort?.param_check_success === false
 
   const [
@@ -120,7 +120,8 @@ const CustomEdge = ({
 
   // 从上游节点的出参中获取变量数据
   const sourceParams = useMemo(() => {
-    const outputPorts = sourceData?.config__output_shape || []
+    const sourceData = nodes.find(node => node.id === source)?.data || {}
+    const outputPorts = Array.isArray(sourceData?.config__output_shape) ? sourceData.config__output_shape : []
 
     if (!outputPorts || outputPorts.length === 0)
       return []
@@ -139,7 +140,7 @@ const CustomEdge = ({
         parent: port.parent_id,
       }
     })
-  }, [sourceData])
+  }, [nodes, source])
 
   // 获取输出数据类型
   const outputDataType = useMemo(() => {
@@ -483,16 +484,18 @@ const CustomEdge = ({
         if (!targetNode)
           return
 
-        const sourceIdList = targetNode?.data?.config__input_ports?.map((item) => {
-          const { id: edgeId, label: edgeLabel, source } = edges.find(val =>
-            `${item?.id},${targetNode.id}` === `${val.targetHandle},${val.target}`,
-          ) || {}
-          return {
-            label: edgeId === id ? finalEdgeRule : edgeLabel,
-            source,
-            portId: item?.id,
-          }
-        }) || []
+        const sourceIdList = Array.isArray(targetNode?.data?.config__input_ports)
+          ? targetNode.data.config__input_ports.map((item) => {
+            const { id: edgeId, label: edgeLabel, source } = edges.find(val =>
+              `${item?.id},${targetNode.id}` === `${val.targetHandle},${val.target}`,
+            ) || {}
+            return {
+              label: edgeId === id ? finalEdgeRule : edgeLabel,
+              source,
+              portId: item?.id,
+            }
+          })
+          : []
 
         if (sourceIdList.length > 0) {
           handleCheckNodeShape({

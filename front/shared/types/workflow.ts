@@ -1,4 +1,4 @@
-import type { Viewport } from 'reactflow'
+import type { Viewport } from '@xyflow/react'
 import type {
   EnvVar,
   ExecutionBlockEnum,

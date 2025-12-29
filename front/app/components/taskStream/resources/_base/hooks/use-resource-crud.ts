@@ -1,6 +1,6 @@
 import produce from 'immer'
 import { useCallback } from 'react'
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import { Modal } from 'antd'
 import { useResources } from '@/app/components/taskStream/logicHandlers/resStore'
 import {
@@ -21,7 +21,7 @@ const useResourceCrud = (id: string, data: any) => {
     getReferenceNodesByResourceId,
     getReferenceResourcesByResourceId,
   } = useResources()
-  const { getNodes, setNodes } = store.getState()
+  const { nodes, setNodes } = store.getState()
   const { recordStateToHistory } = useWorkflowLog()
   const { generateCheckParameters } = useCheckNodeShape()
 
@@ -52,7 +52,7 @@ const useResourceCrud = (id: string, data: any) => {
   const handleDeleteResource = useCallback((params: { hasConfirm?: boolean }) => {
     const { hasConfirm = false } = params || {}
     const resourceList = getResources()
-    const allNodes = getNodes() as any[]
+    const allNodes = nodes as any[]
     const currentResource = resourceList.find((item) => {
       return item.id === id
     })
@@ -71,7 +71,7 @@ const useResourceCrud = (id: string, data: any) => {
           ...(referencedResources?.map((item: any) => `${item?.data?.title}资源`) || []),
         ]?.join('、')}控件正在使用该资源，确认删除？`,
         onOk() {
-          const nodes = getNodes() as any[]
+          const nodes = nodes as any[]
           // 清空画布中引用该资源的控件节点的资源选择器所选值
           const newNodes = produce(nodes, (nodeDraft: any[]) => {
             nodeDraft.forEach((nodeItem: any) => {
@@ -176,7 +176,7 @@ const useResourceCrud = (id: string, data: any) => {
     getResources,
     setResources,
     recordStateToHistory,
-    getNodes,
+    nodes,
     setNodes,
     handleDraftWorkflowSync,
     getReferenceNodesByResourceId,

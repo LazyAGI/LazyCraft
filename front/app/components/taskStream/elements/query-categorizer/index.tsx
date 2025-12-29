@@ -1,6 +1,6 @@
 import type { FC } from 'react'
 import React from 'react'
-import type { NodeProps } from 'reactflow'
+import type { NodeProps } from '@xyflow/react'
 import { NodeSourceHandle } from '../_foundation/components/out-vars'
 import InfoPanel from '../_foundation/components/detail-box'
 import type { QuestionClassifierNodeType } from './types'

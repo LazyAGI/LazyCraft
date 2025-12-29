@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useRef, useState } from 'react'
-import { Button, Col, Empty, Form, Input, Modal, Popconfirm, Row, Spin, Tag, message } from 'antd'
+import { Button, Col, Empty, Form, Input, Modal, Row, Spin, message } from 'antd'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import { useUpdateEffect } from 'ahooks'
 import Image from 'next/image'
@@ -8,7 +8,6 @@ import p1 from './assets/promptModel.png'
 import style from './page.module.scss'
 import Iconfont from '@/app/components/base/iconFont'
 import useRadioAuth from '@/shared/hooks/use-radio-auth'
-import TagSelect from '@/app/components/tagSelect'
 import { bindTags } from '@/infrastructure/api/tagManage'
 import TagMode from '@/app/components/tagSelect/TagMode'
 import CreatorSelect from '@/app/components/tagSelect/creatorSelect'
@@ -17,6 +16,8 @@ import { createPrompt, deletePrompt, getAdjustList, getPromptDetail } from '@/in
 import { pageCache } from '@/shared/utils'
 import AIPromptModal from '@/app/components/AIPromptModal'
 import { usePermitContext } from '@/shared/hooks/permit-context'
+import AppCard from '@/app/components/app-hub/AppCard'
+import TagSelect from '@/app/components/tagSelect'
 const Prompt = () => {
   const [form] = Form.useForm()
   const authRadio = useRadioAuth()
@@ -204,8 +205,7 @@ const Prompt = () => {
       setIsModalOpen(true)
     }
   }
-  const handleDelete = async (e, id: any) => {
-    e.stopPropagation()
+  const handleDelete = async (id: string) => {
     const url = isPrompt ? `/prompt/delete/${id}` : `/prompt-template/delete/${id}`
     const res: any = await deletePrompt({ url, body: {} })
     if (res.status === 0) {
@@ -354,46 +354,29 @@ const Prompt = () => {
               className={style.middle}
             >
               {
-                list.map((item: any) => <div key={item.id} onClick={() => viewDetail(item)} className={style.prpItem}>
-                  <div className={style.first}>
-                    <div className={style.left}>
-                      <Image src={icon} alt="" />
-                    </div>
-                    <div className={style.right} >{item?.name}</div>
-                  </div>
-                  <div className={style.account}>创建人：{item?.user_name}</div>
-                  <div className={style.second} >{item?.describe || '暂无描述'}</div>
-                  <div className={style.tagWrap} onClick={e => e.stopPropagation()}>
-                    {item?.tags?.map(item => <Tag key={item}>{item}</Tag>)}
-                  </div>
-                  <div className={style.third}>
-                    <div className={`${style.iconWrap} ${style.actionsIcon}`} onClick={e => handleCopy(e, item)}>
-                      <Iconfont type='icon-fuzhi' />
-                    </div>
-                    {canEdit(item?.user_id) && <div className={`${style.iconWrap} ${style.actionsIcon}`} onClick={e => handleUpdate(e, item)}>
-                      <Iconfont type='icon-bianji1' />
-                    </div>}
-                    {canAddDelete(item?.user_id)
-                      && <div onClick={e => e.stopPropagation()}>
-                        <Popconfirm
-                          title="删除"
-                          description="删除不可逆，请确认"
-                          onConfirm={e => handleDelete(e, item?.id)}
-                          onCancel={e => e?.stopPropagation()}
-                          okText="确认"
-                          cancelText="取消"
-                          overlayStyle={{ zIndex: 1000 }}
-                        >
-                          <div onClick={(e) => {
-                            e.stopPropagation()
-                          }} className={`${style.iconWrap} ${style.actionsIcon}`}>
-                            <Iconfont type='icon-shanchu1' />
-                          </div>
-                        </Popconfirm>
-                      </div>
-                    }
-                  </div>
-                </div>)
+                list.map((item: any) => (
+                  <AppCard
+                    key={item.id}
+                    item={{
+                      ...item,
+                      description: item?.describe || '暂无描述',
+                    }}
+                    customIcon={<Image src={icon} alt="" width={42} height={42} />}
+                    iconClassName={style.left}
+                    onClick={viewDetail}
+                    onEdit={handleUpdate}
+                    onDelete={handleDelete}
+                    onCopy={handleCopy}
+                    canEdit={canEdit}
+                    canDelete={canAddDelete}
+                    showRefButton={false}
+                    showPublishStatus={false}
+                    showApiActions={false}
+                    showBottomActions={true}
+                    creatorField="user_name"
+                    className={style.prpItem}
+                  />
+                ))
               }
             </InfiniteScroll>
           </div>

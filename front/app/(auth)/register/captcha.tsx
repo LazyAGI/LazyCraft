@@ -1,18 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Col, Form, Input, Row, Select } from 'antd'
+import { Button, Col, Form, Input, Row } from 'antd'
 import { SafetyCertificateOutlined } from '@ant-design/icons'
 import type { FormItemProps } from 'antd/es/form/FormItem'
 import styles from './phone.module.scss'
-// import './index.less';
 
-const { Option } = Select
 type IProps = {
   name?: string
   label?: string
   rules?: any[]
   style?: React.CSSProperties
   placeholder?: string
-  // buttonText?: React.ReactNode;
   countDown?: number
   getCaptchaButtonText: string
   getCaptchaSecondText: string
@@ -42,7 +39,6 @@ const Captcha = (props: IProps) => {
     getCaptchaSecondText,
     getFakeCaptcha,
     countDown,
-    btnType,
     validateStatus,
     help,
     required = false,

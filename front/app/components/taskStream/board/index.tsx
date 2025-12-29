@@ -1,6 +1,6 @@
 import type { FC } from 'react'
 import { memo, useMemo } from 'react'
-import { useNodes } from 'reactflow'
+import { useNodes } from '@xyflow/react'
 import { useShallow } from 'zustand/react/shallow'
 import type { ExecutionNode } from '../types'
 import { Panel as NodePanel } from '../elements'

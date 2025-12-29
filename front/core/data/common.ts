@@ -5,6 +5,7 @@ export type BaseResponse = any
 export type UserProfileResult = {
   id: string
   name: string
+  email?: string
   tenant?: any
 }
 export type ITenant = {

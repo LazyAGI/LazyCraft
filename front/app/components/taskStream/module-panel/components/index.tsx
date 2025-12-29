@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react'
 import { Col, Divider, Input, Row } from 'antd'
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import { groupBy } from 'lodash-es'
 import { MenuOutlined } from '@ant-design/icons'
 import { useStore } from '../../store'

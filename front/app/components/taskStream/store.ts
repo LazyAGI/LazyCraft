@@ -4,7 +4,7 @@ import {
 } from 'zustand'
 import { createStore } from 'zustand/vanilla'
 import { debounce } from 'lodash-es'
-import type { Viewport } from 'reactflow'
+import type { Viewport } from '@xyflow/react'
 import type {
   HorizontalHelpLinePosition,
   VerticalHelpLinePosition,

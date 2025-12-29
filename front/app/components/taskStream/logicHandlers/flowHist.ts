@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import { debounce } from 'lodash-es'
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import { useWorkflowExecutionStore } from '../workflow-execution-manager'
 import { useStore } from '@/app/components/taskStream/store'
 import { useStore as useAppStore } from '@/app/components/app/store'
@@ -84,7 +84,7 @@ export const useWorkflowLog = () => {
     debounce((event: IWorkflowHistoryEvent) => {
       historyStateStore.setState({
         workflowEventLog: event,
-        nodes: flowStore.getState().getNodes(),
+        nodes: flowStore.getState().nodes,
         edges: flowStore.getState().edges,
       })
     }, 500),

@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useStoreApi } from 'reactflow'
+import { useStoreApi } from '@xyflow/react'
 import { useWorkflowStore } from '../store'
 import {
   ExecutionBlockEnum,
@@ -20,8 +20,8 @@ export const useWorkflowStartRun = () => {
   const { cancelDebugAndPreviewPanel } = useWorkflowInteractions()
   const { handleExecuteWorkflow } = useWorkflowRun()
   const { doDraftSync } = useSyncDraft()
-  const { edges, getNodes } = flowStore.getState()
-  const flowNodes = getNodes()
+  const { edges, nodes } = flowStore.getState()
+  const flowNodes = nodes
   const problematicNodes = useChecklist(flowNodes, edges)
 
   // 从localStorage恢复测试历史记录
@@ -95,7 +95,7 @@ export const useWorkflowStartRun = () => {
       workflowLiveData,
     } = workflowState.getState()
 
-    const currentNodes = getNodes()
+    const currentNodes = nodes
     const EntryNode = currentNodes.find(node => node.data.type === ExecutionBlockEnum.EntryNode)
 
     if (workflowLiveData?.result.status === ExecutionexecutionStatus.Running)
@@ -150,7 +150,7 @@ export const useWorkflowStartRun = () => {
       setDebugPreviewPanelVisible(true)
       setInputsPanelVisible(true)
     }
-  }, [workflowState, cancelDebugAndPreviewPanel, handleExecuteWorkflow, doDraftSync, problematicNodes, retrieveTestHistory, fetchHistoryList, isViewingHistoricalRecord, getNodes, displayErrorDialog])
+  }, [workflowState, cancelDebugAndPreviewPanel, handleExecuteWorkflow, doDraftSync, problematicNodes, retrieveTestHistory, fetchHistoryList, isViewingHistoricalRecord, flowNodes, displayErrorDialog])
   const executeChatflowMode = useCallback(async () => {
     const {
       displayDebugAndPreviewPanel,

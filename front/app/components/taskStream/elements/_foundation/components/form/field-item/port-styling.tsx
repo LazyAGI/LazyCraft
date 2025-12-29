@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react'
 import { v4 as uuid4 } from 'uuid'
 import {
   useStoreApi,
-} from 'reactflow'
+  useUpdateNodeInternals,
+} from '@xyflow/react'
 import produce from 'immer'
 import { Button } from 'antd'
 import type { FieldItemProps } from '../types'
@@ -35,6 +36,7 @@ const ConfigPorts: FC<Partial<FieldItemProps>> = ({
   const filedTitle = label || ((name === 'config__input_ports') ? '输入端点' : '输出端点')
   const { handleEdgeDeleteByDeleteBranch } = useLazyLLMEdgesInteractions()
   const store = useStoreApi()
+  const updateNodeInternals = useUpdateNodeInternals()
   const [willDeleteId, setWillDeleteId] = useState('')
 
   const handleAddPort = () => {
@@ -58,11 +60,8 @@ const ConfigPorts: FC<Partial<FieldItemProps>> = ({
   }
 
   useEffect(() => {
-    const {
-      updateNodeDimensions,
-    } = store.getState()
-    updateNodeInternalsAsync(nodeId, document.body, updateNodeDimensions)
-  }, [nodeId, value?.length])
+    updateNodeInternals(nodeId)
+  }, [nodeId, value?.length, updateNodeInternals])
 
   const shapeName = name === 'config__input_ports' ? 'config__input_shape' : 'config__output_shape'
   const shapeData = nodeData[shapeName]

@@ -93,7 +93,7 @@ const ApplicationModal: React.FC<ApplicationModalProps> = ({
             {
               validator: (_, value) => {
                 if (value && /\s/.test(value))
-                  return Promise.reject('申请理由不能包含空格')
+                  return Promise.reject(new Error('申请理由不能包含空格'))
 
                 return Promise.resolve()
               },

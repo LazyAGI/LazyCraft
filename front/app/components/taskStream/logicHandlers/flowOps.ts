@@ -2,7 +2,7 @@ import {
   useCallback,
   useState,
 } from 'react'
-import { useReactFlow } from 'reactflow'
+import { useReactFlow } from '@xyflow/react'
 import { useWorkflowStore } from '../store'
 import type { ExecutionDataUpdator } from '../types'
 import {

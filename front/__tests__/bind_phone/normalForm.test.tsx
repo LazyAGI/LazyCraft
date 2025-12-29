@@ -7,7 +7,7 @@ import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
-import NormalForm from '@/app/bind_phone/normalForm'
+import NormalForm from '@/app/(auth)/bind-phone/normalForm'
 import * as commonApi from '@/infrastructure/api/common'
 
 // Mock Next.js navigation
@@ -35,7 +35,7 @@ jest.mock('@/infrastructure/api/common', () => ({
 }))
 
 // Mock Captcha 组件
-jest.mock('@/app/register/captcha', () => {
+jest.mock('@/app/(auth)/register/captcha', () => {
   const { Form, Input, Button } = require('antd')
   return function MockCaptcha({ name, getFakeCaptcha, onChange, ...props }: any) {
     return (

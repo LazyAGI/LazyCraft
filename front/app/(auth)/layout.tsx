@@ -2,7 +2,7 @@ import React from 'react'
 import type { ReactNode } from 'react'
 import { EntryCheckContextProvider } from '@/shared/hooks/permit-context'
 
-const SignInLayout = ({ children }: { children: ReactNode }) => {
+const AuthLayout = ({ children }: { children: ReactNode }) => {
   return (
     <EntryCheckContextProvider>
       {children}
@@ -14,4 +14,4 @@ export const metadata = {
   title: 'LazyLLM',
 }
 
-export default SignInLayout
+export default AuthLayout

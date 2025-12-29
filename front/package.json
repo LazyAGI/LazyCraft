@@ -45,7 +45,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@remixicon/react": "^4.6.0",
     "@tailwindcss/line-clamp": "^0.4.4",
-    "@tisoap/react-flow-smart-edge": "^3.0.0",
+    "@tisoap/react-flow-smart-edge": "^4.0.1",
     "@toast-ui/editor": "^3.2.2",
     "@toast-ui/editor-plugin-chart": "^3.0.1",
     "@toast-ui/editor-plugin-code-syntax-highlight": "^3.1.0",
@@ -105,7 +105,7 @@
     "react-tooltip": "5.8.3",
     "react-window": "^1.8.9",
     "react-window-infinite-loader": "^1.0.9",
-    "reactflow": "^11.11.3",
+    "@xyflow/react": "^12.10.0",
     "recharts": "^2.15.3",
     "recordrtc": "^5.6.2",
     "rehype-katex": "^6.0.2",
@@ -163,7 +163,7 @@
     "sass": "^1.61.0",
     "tailwindcss": "^3.4.4",
     "ts-node": "^10.9.2",
-    "typescript": "4.9.5"
+    "typescript": "^5.9.3"
   },
   "overrides": {
     "cytoscape": "3.28.1"

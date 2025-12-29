@@ -11,8 +11,8 @@ const withMDX = require('@next/mdx')({
 const nextConfig = {
   swcMinify: true,
   webpack: (config, { dev, isServer }) => {
-    // 只在需要时才加载 code-inspector-plugin
-    if (process.env.ENABLE_CODE_INSPECTOR === 'true')
+    // 在开发环境加载 code-inspector-plugin
+    if (dev && !isServer)
       config.plugins.push(codeInspectorPlugin({ bundler: 'webpack' }))
 
     // 开发环境优化（只在非 Turbopack 模式下应用）

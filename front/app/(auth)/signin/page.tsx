@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import NormalForm from './normalForm'
+import SignInForm from './components/SignInForm'
 import SignInHeader from './_header'
 import style from './page.module.scss'
 import cn from '@/shared/utils/classnames'
@@ -14,7 +14,7 @@ const SignInPage = () => {
       'items-center',
     )}>
       <SignInHeader />
-      <NormalForm />
+      <SignInForm />
     </div>
   )
 }

@@ -1,5 +1,5 @@
 // 专用工作流工具模块 - 提供独特的工作流处理功能
-import { Position, getConnectedEdges, getOutgoers } from 'reactflow'
+import { Position, getConnectedEdges, getOutgoers } from '@xyflow/react'
 import dagre from '@dagrejs/dagre'
 import { cloneDeep, uniqBy } from 'lodash-es'
 import type {

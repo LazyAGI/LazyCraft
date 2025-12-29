@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { useNodes } from 'reactflow'
+import { useNodes } from '@xyflow/react'
 import { setValidVariables } from '@/app/components/base/signal-editor/plugins/var-data-component/utils'
 import type { Variable } from '@/app/components/taskStream/types'
 

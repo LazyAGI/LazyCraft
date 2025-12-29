@@ -9,7 +9,7 @@ const ApplicationNavigation = () => {
     text: '应用商店',
     activeSegment: ['apps', 'app'],
     link: '/apps',
-    curNav: currentAppDetail,
+    curNav: !!currentAppDetail,
   }
 
   return (

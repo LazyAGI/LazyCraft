@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
-import type { EdgeMouseHandler, OnEdgesChange } from 'reactflow'
-import { useStoreApi } from 'reactflow'
+import type { EdgeMouseHandler, OnEdgesChange } from '@xyflow/react'
+import { useStoreApi } from '@xyflow/react'
 import produce from 'immer'
 import type { ExecutionNode } from '../types'
 import { getNodesConnectedSourceOrTargetHandleIdsMap as getNodesMaps } from '../utils'
@@ -59,7 +59,7 @@ export const useLazyLLMEdgesInteractions = () => {
     if (getOnlyReadNode())
       return
 
-    const { getNodes, setNodes, edges, setEdges } = flowStore.getState()
+    const { nodes, setNodes, edges, setEdges } = flowStore.getState()
 
     // 查找与指定分支相关的边
     const edgeIndex = edges.findIndex(edge =>
@@ -73,7 +73,7 @@ export const useLazyLLMEdgesInteractions = () => {
     const targetEdge = edges[edgeIndex]
 
     // 更新节点的连接句柄信息
-    const updatedNodes = produce(getNodes(), (drafts: ExecutionNode[]) => {
+    const updatedNodes = produce(nodes, (drafts: ExecutionNode[]) => {
       const sourceNode = drafts.find(node => node.id === targetEdge.source)
       const targetNode = drafts.find(node => node.id === targetEdge.target)
 
@@ -109,14 +109,14 @@ export const useLazyLLMEdgesInteractions = () => {
     if (getOnlyReadNode())
       return
 
-    const { getNodes, setNodes, edges, setEdges } = flowStore.getState()
+    const { nodes, setNodes, edges, setEdges } = flowStore.getState()
     const selectedEdgeIndex = edges.findIndex(edge => edge.selected)
 
     if (selectedEdgeIndex < 0)
       return
 
     const selectedEdge = edges[selectedEdgeIndex]
-    const nodeList = getNodes()
+    const nodeList = nodes
 
     // 获取节点连接句柄映射
     const edgeHandleMapping = getNodesMaps(

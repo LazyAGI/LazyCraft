@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import produce from 'immer'
-import { useReactFlow, useStoreApi, useViewport } from 'reactflow'
+import { useReactFlow, useStoreApi, useViewport } from '@xyflow/react'
 import { useEventListener } from 'ahooks'
 import {
   useStore,
@@ -51,8 +51,8 @@ const OptionNode = () => {
 
   // 执行聚合器同步逻辑
   const executeAggregatorSyncLogic = (node: any, store: any) => {
-    const { getNodes, edges } = store.getState()
-    const allNodes = getNodes()
+    const { nodes, edges } = store.getState()
+    const allNodes = nodes
 
     // 检查分支节点同步
     if (BRANCH_NODE_TYPES.includes(node.data.type))
@@ -72,9 +72,9 @@ const OptionNode = () => {
 
     event.preventDefault()
 
-    const { getNodes, setNodes } = storeApi.getState()
+    const { nodes, setNodes } = storeApi.getState()
     const { screenToFlowPosition } = reactFlowInstance
-    const existingNodes = getNodes()
+    const existingNodes = nodes
     const { x, y } = screenToFlowPosition({
       x: mousePosition.pageX,
       y: mousePosition.pageY,

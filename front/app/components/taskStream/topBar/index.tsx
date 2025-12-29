@@ -8,7 +8,8 @@ import {
 } from 'react'
 import { Affix, Button, Modal, message } from 'antd'
 import { CloseCircleOutlined, LoadingOutlined } from '@ant-design/icons'
-import { useNodes, useStoreApi } from 'reactflow'
+import { useNodes } from '@xyflow/react'
+import type { Node } from '@xyflow/react'
 import { useContext } from 'use-context-selector'
 import { useRequest } from 'ahooks'
 import { debounce } from 'lodash'
@@ -45,7 +46,6 @@ import { useStore as useAppStore } from '@/app/components/app/store'
 import { getAppDebuggingEnableStatus, publishWorkflow, restoreAppVersion, startAppDebuggingEnableStatus, stopAppDebuggingEnableStatus } from '@/infrastructure/api/workflow'
 import { useFeatures } from '@/app/components/base/features'
 import { useResources } from '@/app/components/taskStream/logicHandlers/resStore'
-import { useApplicationContext } from '@/shared/hooks/app-context'
 import { sleep } from '@/shared/utils'
 import { validateDocumentNodeGroups } from '@/app/components/taskStream/elements/_foundation/components/form/field-item/fileRecord/nodeCluster'
 
@@ -305,28 +305,20 @@ const validateWorkflow = (params: {
 const LazyLLMHeader: FC = () => {
   // Store hooks
   const workflowStore = useWorkflowStore()
-  const { initDraftData } = workflowStore.getState()
   const appDetail = useAppStore(s => s.appDetail)
   const patentState = useStore(s => s.patentState)
   const publicationDate = useStore(s => s.publicationDate)
   const draftUpdatedAt = useStore(s => s.draftUpdatedAt)
   const toolPublished = useStore(s => s.toolPublished)
-  const workflowStatus = useStore(state => state.workflowStatus)
-  const webUrl = useStore(state => state.webUrl)
-  const serverUrl = useStore(state => state.serverUrl)
   const setInstanceState = useStore(s => s.setInstanceState)
   const instanceState = useStore(s => s.instanceState)
   const setIsHistoryPreviewed = useStore(s => s.setIsHistoryPreviewed)
   const setDebugStatus = useStore(s => s.setDebugStatus)
   const debugStatus = useStore(s => s.debugStatus)
 
-  // Other hooks
-  const { userSpecified } = useApplicationContext()
-  const nodes = useNodes<EntryNodeCategory>()
+  const nodes = useNodes<Node<EntryNodeCategory>>()
   const fileSettings = useFeatures(s => s.features?.file)
   const { getUnusedResources, getResources } = useResources()
-  const store = useStoreApi()
-  const { getNodes } = store.getState()
   const { getNodesReadOnly } = useReadonlyNodes()
   const { handleNodesCancelSelected } = useNodesHandlers()
   const { handleFetchWebOrServerUrl } = useFetchWebOrServerUrl()
@@ -338,7 +330,7 @@ const LazyLLMHeader: FC = () => {
   } = useWorkflowRun()
   const { handleCheckBeforePublish } = usePrePublishChecklist()
   const { handleDraftWorkflowSync } = useSyncDraft()
-  const { standard, recovery, historicalPreview } = useWorkflowState()
+  const { standard, recovery } = useWorkflowState()
 
   // Local state
   const [loadingSwitchDebuggingStatus, setLoadingSwitchDebuggingStatus] = useState<boolean>(false)
@@ -391,12 +383,12 @@ const LazyLLMHeader: FC = () => {
   // Callback functions
   const validateWorkflowBeforeAction = useCallback(async (actionLabel = '发布'): Promise<boolean> => {
     return validateWorkflow({
-      allNodes: getNodes(),
+      allNodes: nodes,
       getUnusedResources,
       getResources,
       actionLabel,
     })
-  }, [getNodes, getUnusedResources, getResources])
+  }, [nodes, getUnusedResources, getResources])
 
   const onPublish = useCallback(async (values: { version: string; description: string }) => {
     const isValid = await validateWorkflowBeforeAction('发布')

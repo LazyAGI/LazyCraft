@@ -4,10 +4,10 @@ import { Button, Checkbox, Form, Input, Modal, Tabs, message as antdMessage } fr
 import type { CheckboxChangeEvent } from 'antd/es/checkbox'
 import { LockOutlined, UserOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
-import Captcha from '../register/captcha'
-import IconFont from '../components/base/iconFont'
-import { AgreementButton, GitHubLoginButton, UserAgreementContent } from './components'
-import style from './page.module.scss'
+import Captcha from '../../register/captcha'
+import style from '../page.module.scss'
+import { AgreementButton, GitHubLoginButton, UserAgreementContent } from './index'
+import IconFont from '@/app/components/base/iconFont'
 import { userEmailValidationRegex } from '@/app-specs'
 import { checkExist, login, sendForgotPasswordEmail } from '@/infrastructure/api/common'
 import { encryptPayloadWithECDH } from '@/infrastructure/security/ecdh'
@@ -23,7 +23,7 @@ const commonStyles = {
   buttonHeight: { height: 35 },
 }
 
-const NormalForm = () => {
+const SignInForm = () => {
   const router = useRouter()
   const [form] = Form.useForm()
   const [emailForm] = Form.useForm()
@@ -393,4 +393,4 @@ const NormalForm = () => {
   )
 }
 
-export default NormalForm
+export default SignInForm

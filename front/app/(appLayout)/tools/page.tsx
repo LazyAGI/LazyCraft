@@ -11,7 +11,7 @@ import PageDrawer from './pageDrawer'
 import TagMode from '@/app/components/tagSelect/TagMode'
 import ClassifyMode from '@/app/components/tagSelect/ClassifyMode'
 import CreatorSelect from '@/app/components/tagSelect/creatorSelect'
-import Toast from '@/app/components/base/flash-notice'
+import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
 import { useApplicationContext } from '@/shared/hooks/app-context'
 import Iconfont from '@/app/components/base/iconFont'
 import { deleteTools, downloadTool, enableTools, getToolsList } from '@/infrastructure/api/tool'
@@ -61,7 +61,7 @@ const Tools = () => {
   }, [])
 
   const getCardList = useCallback(async () => {
-    const res: any = await getToolsList({ url: '/tool/list', body: { page: 1, page_size: 9999, search_tags: selectTags.map(item => item.name), search_name: sName, user_id: creator, tool_mode: selectLabels.map(item => item?.id), published: selectStatus.map(item => item?.id) } })
+    const res: any = await getToolsList({ url: '/tool/list', body: { page: 1, page_size: 9999, search_tags: selectTags.map((item: any) => item.name), search_name: sName, user_id: creator, tool_mode: selectLabels.map((item: any) => item?.id), published: selectStatus.map((item: any) => item?.id) } })
     setList(res.data)
   }, [type, sName, selectLabels, selectTags, selectStatus, creator])
 
@@ -80,14 +80,14 @@ const Tools = () => {
         content: '该资源正在被其他应用引用，关闭后引用该资源的应用将出现发布失败或引用异常，是否确定关闭启动？',
         width: 400,
         centered: true,
-        maskdismissible: false,
+        maskClosable: false,
         autoFocusButton: 'cancel',
         bodyStyle: {
           padding: '20px 24px',
         },
         onOk() {
           enableTools({ url: '/tool/enable_tool', body: { id: data.id, enable: checked } }).then(() => {
-            Toast.notify({ type: 'success', message: '操作成功' })
+            Toast.notify({ type: ToastTypeEnum.Success, message: '操作成功' })
             getCardList()
           })
         },
@@ -97,7 +97,7 @@ const Tools = () => {
     }
     else {
       enableTools({ url: '/tool/enable_tool', body: { id: data.id, enable: checked } }).then(() => {
-        Toast.notify({ type: 'success', message: '操作成功' })
+        Toast.notify({ type: ToastTypeEnum.Success, message: '操作成功' })
         getCardList()
       })
     }
@@ -105,7 +105,7 @@ const Tools = () => {
 
   const onSwitchShareChange = (checked: boolean, data: any) => {
     enableTools({ url: '/tool/auth_share', body: { tool_id: data.id, share_status: checked } }).then(() => {
-      Toast.notify({ type: 'success', message: '操作成功' })
+      Toast.notify({ type: ToastTypeEnum.Success, message: '操作成功' })
       getCardList()
     })
   }
@@ -122,7 +122,7 @@ const Tools = () => {
   const handleCopy = async (item: any, e) => {
     e.stopPropagation()
     await deleteTools({ url: '/tool/copy_tool', body: { id: item.id } })
-    Toast.notify({ type: 'success', message: '复制成功' })
+    Toast.notify({ type: ToastTypeEnum.Success, message: '复制成功' })
     getCardList()
   }
 
@@ -136,14 +136,14 @@ const Tools = () => {
   const cancelVerify = async (item: any, e) => {
     e.stopPropagation()
     await deleteTools({ url: '/tool/delete_auth_by_user', body: { tool_id: item.id } })
-    Toast.notify({ type: 'success', message: '操作成功' })
+    Toast.notify({ type: ToastTypeEnum.Success, message: '操作成功' })
     getCardList()
   }
 
   const handleDelete = async (item: any, e) => {
     e.stopPropagation()
     await deleteTools({ url: '/tool/delete_tool', body: { id: item.id } })
-    Toast.notify({ type: 'success', message: '删除成功' })
+    Toast.notify({ type: ToastTypeEnum.Success, message: '删除成功' })
     selectToolRef.current?.getList?.()
     getCardList()
   }
@@ -206,7 +206,7 @@ const Tools = () => {
 
   const handleClick = (item) => {
     if (!canEdit(item?.user_id)) {
-      Toast.notify({ type: 'error', message: '无权操作' })
+      Toast.notify({ type: ToastTypeEnum.Error, message: '无权操作' })
       return
     }
     setItem(item)
@@ -218,7 +218,7 @@ const Tools = () => {
 
   // 插件mcp
   const getmcpList = async () => {
-    const res: McpListResponse = await getMcpList({ body: { page: 1, page_size: 9999, search_tags: tagList.map(item => item.name), search_name: sNamemap, user_id: otherOptions, tool_mode: selectLabels.map(item => item?.id), published: selectStatus.map(item => item?.id) } })
+    const res: McpListResponse = await getMcpList({ body: { page: 1, page_size: 9999, search_tags: tagList.map((item: any) => item.name), search_name: sNamemap, user_id: otherOptions, tool_mode: selectLabels.map((item: any) => item?.id), published: selectStatus.map((item: any) => item?.id) } })
     setMcpList(res.data)
   }
   const onSearchAppMcp = (e) => {
@@ -231,14 +231,14 @@ const Tools = () => {
         content: '该资源正在被其他应用引用，关闭后引用该资源的应用将出现发布失败或引用异常，是否确定关闭启动？',
         width: 400,
         centered: true,
-        maskdismissible: false,
+        maskClosable: false,
         autoFocusButton: 'cancel',
         bodyStyle: {
           padding: '20px 24px',
         },
         onOk() {
           enableMcp({ body: { id: data.id, enable: checked } }).then(() => {
-            Toast.notify({ type: 'success', message: '操作成功' })
+            Toast.notify({ type: ToastTypeEnum.Success, message: '操作成功' })
             getmcpList()
           })
         },
@@ -248,7 +248,7 @@ const Tools = () => {
     }
     else {
       enableMcp({ body: { id: data.id, enable: checked } }).then(() => {
-        Toast.notify({ type: 'success', message: '操作成功' })
+        Toast.notify({ type: ToastTypeEnum.Success, message: '操作成功' })
         getmcpList()
       })
     }
@@ -258,17 +258,17 @@ const Tools = () => {
     const deleteParams: DeleteMcpParams = { id: item.id }
     const deleteResult: DeleteMcpResponse = await deleteMcp({ body: deleteParams })
     if (deleteResult.code === 200) {
-      Toast.notify({ type: 'success', message: '删除成功' })
+      Toast.notify({ type: ToastTypeEnum.Success, message: '删除成功' })
       getmcpList()
       await refreshMcpTags()
     }
     else {
-      Toast.notify({ type: 'error', message: '删除失败' })
+      Toast.notify({ type: ToastTypeEnum.Error, message: '删除失败' })
     }
   }
   const handleEditMcp = (item: McpItem) => {
     if (!canEdit(item?.user_id)) {
-      Toast.notify({ type: 'error', message: '无权操作' })
+      Toast.notify({ type: ToastTypeEnum.Error, message: '无权操作' })
       return
     }
     setItemMap(item)

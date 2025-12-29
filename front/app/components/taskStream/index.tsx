@@ -22,11 +22,12 @@ import {
   useOnViewportChange,
   useReactFlow,
   useStoreApi,
-} from 'reactflow'
+} from '@xyflow/react'
 import type {
+  NodeTypes,
   Viewport,
-} from 'reactflow'
-import 'reactflow/dist/style.css'
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
 import './style.css'
 import dynamic from 'next/dynamic'
 import {
@@ -92,7 +93,7 @@ import { useEmitterContext } from '@/shared/hooks/event-emitter'
 
 // 动态导入ReactFlow组件
 const DynamicReactFlow = dynamic(
-  () => import('reactflow').then(mod => mod.ReactFlow),
+  () => import('@xyflow/react').then(mod => mod.ReactFlow),
   {
     ssr: false,
     loading: () => <div className="flex items-center justify-center h-full">正在加载工作流编辑器...</div>,
@@ -237,30 +238,25 @@ const WorkflowComponent: FC<WorkflowComponentProps> = memo(({
 
   useEventListener('mousemove', (e: any) => {
     // 检查是否在表单输入区域，如果是则跳过鼠标位置更新
-    if (isEventTargetInputArea(e.target as HTMLElement)) {
+    if (isEventTargetInputArea(e.target as HTMLElement))
       return
-    }
 
     // 检查是否在模态框或弹窗中，如果是则跳过更新
     const target = e.target as HTMLElement
-    if (target.closest('.ant-modal') || target.closest('.ant-drawer') || target.closest('.ant-popover')) {
+    if (target.closest('.ant-modal') || target.closest('.ant-drawer') || target.closest('.ant-popover'))
       return
-    }
 
     // 清除之前的定时器
-    if (mouseMoveTimeoutRef.current) {
+    if (mouseMoveTimeoutRef.current)
       clearTimeout(mouseMoveTimeoutRef.current)
-    }
 
     // 检查鼠标位置是否真的发生了变化
     const currentPosition = { pageX: e.clientX, pageY: e.clientY }
     const lastPosition = lastMousePositionRef.current
-    
-    if (lastPosition && 
-        Math.abs(currentPosition.pageX - lastPosition.pageX) < 1 && 
-        Math.abs(currentPosition.pageY - lastPosition.pageY) < 1) {
+    if (lastPosition &&
+      Math.abs(currentPosition.pageX - lastPosition.pageX) < 1 &&
+      Math.abs(currentPosition.pageY - lastPosition.pageY) < 1)
       return // 位置变化太小，跳过更新
-    }
 
     // 防抖处理，避免频繁更新
     mouseMoveTimeoutRef.current = setTimeout(() => {
@@ -276,11 +272,9 @@ const WorkflowComponent: FC<WorkflowComponentProps> = memo(({
         // 检查位置是否真的发生了变化
         const currentState = workflowStoreInstance.getState()
         const currentMousePos = currentState.mousePosition
-        
-        if (!currentMousePos || 
-            Math.abs(newMousePosition.pageX - currentMousePos.pageX) >= 1 || 
+        if (!currentMousePos ||
+            Math.abs(newMousePosition.pageX - currentMousePos.pageX) >= 1 ||
             Math.abs(newMousePosition.pageY - currentMousePos.pageY) >= 1) {
-          
           lastMousePositionRef.current = currentPosition
           workflowStoreInstance.setState({
             mousePosition: newMousePosition,
@@ -375,14 +369,12 @@ const WorkflowComponent: FC<WorkflowComponentProps> = memo(({
     e.preventDefault()
     const moduleInfo = sessionStorage.getItem('drag_module_info') || e.dataTransfer.getData('module_info')
     const moduleDefaultData = moduleInfo ? JSON.parse(moduleInfo) : {}
-    console.log('Dropped module info:', moduleDefaultData)
     if (sessionStorage.getItem('drag_module_info')) {
       setTimeout(() => {
         sessionStorage.removeItem('drag_module_info')
       }, 1000)
     }
-    const { getNodes, setNodes, setEdges, edges } = storeInstance.getState()
-    const nodes = getNodes()
+    const { nodes, setNodes, setEdges, edges } = storeInstance.getState()
 
     const newNode = newNodeGenerate({
       data: {
@@ -470,14 +462,14 @@ const WorkflowComponent: FC<WorkflowComponentProps> = memo(({
           syncDownstreamAggregators(newNode.id, storeInstance)
 
         if (newNode.data.payload__kind === 'aggregator') {
-          const { getNodes, edges } = storeInstance.getState()
-          const currentNodes = getNodes()
+          const { nodes, edges } = storeInstance.getState()
+          const currentNodes = nodes
 
           const upstreamEdges = edges.filter((edge: any) => edge.target === newNode.id)
 
           upstreamEdges.forEach((edge: any) => {
             const sourceNode = currentNodes.find((node: any) => node.id === edge.source)
-            if (sourceNode && branchNodeTypes.includes(sourceNode.data.type))
+            if (sourceNode && branchNodeTypes.includes(sourceNode.data.type as string))
               syncDownstreamAggregators(sourceNode.id, storeInstance)
           })
         }
@@ -532,7 +524,7 @@ const WorkflowComponent: FC<WorkflowComponentProps> = memo(({
       <WorkflowNodeActionsMenu />
       <AlignmentIndicatorContainer />
       <DynamicReactFlow
-        nodeTypes={nodeTypeMapping}
+        nodeTypes={nodeTypeMapping as NodeTypes}
         edgeTypes={edgeTypeMapping}
         nodes={nodes}
         edges={edges}
@@ -554,8 +546,8 @@ const WorkflowComponent: FC<WorkflowComponentProps> = memo(({
         onEdgesChange={handleEdgesChange}
         onSelectionStart={handleSelectionStart}
         onSelectionChange={handleSelectionChange}
-        onSelectionDrag={handleSelectionDrag}
-        onPaneContextMenu={handlePaneContextMenu}
+        onSelectionDrag={handleSelectionDrag as any}
+        onPaneContextMenu={handlePaneContextMenu as any}
         connectionLineComponent={CustomConnectionLine}
         connectionLineContainerStyle={{ zIndex: Z_INDEX_OF_ITERATION_CHILDREN }}
         defaultViewport={viewport}
@@ -569,7 +561,7 @@ const WorkflowComponent: FC<WorkflowComponentProps> = memo(({
         zoomOnPinch={!workflowReadOnly}
         zoomOnScroll={!workflowReadOnly}
         zoomOnDoubleClick={!workflowReadOnly}
-        isValidConnection={isValidConnection}
+        isValidConnection={isValidConnection as any}
         selectionKeyCode={null}
         selectionMode={SelectionMode.Partial}
         selectionOnDrag={controlMode === 'pointer' && !workflowReadOnly}

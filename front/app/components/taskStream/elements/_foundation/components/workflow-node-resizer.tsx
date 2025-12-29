@@ -2,8 +2,8 @@ import {
   memo,
   useCallback,
 } from 'react'
-import type { OnResize } from 'reactflow'
-import { NodeResizeControl } from 'reactflow'
+import type { OnResize } from '@xyflow/react'
+import { NodeResizeControl } from '@xyflow/react'
 import { useNodesHandlers } from '../../../logicHandlers'
 import type { CommonExecutionNodeType } from '../../../types'
 import cn from '@/shared/utils/classnames'

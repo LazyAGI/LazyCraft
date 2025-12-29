@@ -3,8 +3,8 @@ import type {
 } from 'react'
 import { useCallback } from 'react'
 import produceFun from 'immer'
-import type { OnSelectionChangeFunc } from 'reactflow'
-import { useStoreApi as useReactFlowStoreApi } from 'reactflow'
+import type { OnSelectionChangeFunc } from '@xyflow/react'
+import { useStoreApi as useReactFlowStoreApi } from '@xyflow/react'
 import { useWorkflowStore } from '../store'
 import type { ExecutionNode } from '../types'
 
@@ -72,10 +72,10 @@ export const useSelectionInteractions = () => {
   // 选择开始事件处理器
   const onSelectionInitiate = useCallback(() => {
     const storeState = reactFlowStore.getState()
-    const { getNodes, setNodes, edges, setEdges, userSelectionRect } = storeState
+    const { nodes, setNodes, edges, setEdges, userSelectionRect } = storeState
 
     if (!SelectionAreaValidator.hasValidArea(userSelectionRect)) {
-      const currentNodes = getNodes()
+      const currentNodes = nodes
       const updatedNodes = BundleStateManager.clearBundledState(currentNodes)
       setNodes(updatedNodes)
 
@@ -87,12 +87,12 @@ export const useSelectionInteractions = () => {
   // 选择变化事件处理器
   const handleSelectionChange = useCallback<OnSelectionChangeFunc>(({ nodes: selectedNodes, edges: selectedEdges }) => {
     const storeState = reactFlowStore.getState()
-    const { getNodes, setNodes, edges, setEdges, userSelectionRect } = storeState
+    const { nodes, setNodes, edges, setEdges, userSelectionRect } = storeState
 
     if (!SelectionAreaValidator.hasValidArea(userSelectionRect))
       return
 
-    const currentNodes = getNodes()
+    const currentNodes = nodes
     const nodesWithBundleState = BundleStateManager.updateBundledState(currentNodes, selectedNodes)
     setNodes(nodesWithBundleState)
 
@@ -103,11 +103,11 @@ export const useSelectionInteractions = () => {
   // 选择拖拽事件处理器
   const onSelectionMove = useCallback((_: MouseEvent, movedNodes: ExecutionNode[]) => {
     const storeState = reactFlowStore.getState()
-    const { getNodes, setNodes } = storeState
+    const { nodes, setNodes } = storeState
 
     WorkflowStateOperator.disableNodeAnimation(workflowStateStore)
 
-    const currentNodes = getNodes()
+    const currentNodes = nodes
     const synchronizedNodes = BundleStateManager.syncDragPositions(currentNodes, movedNodes)
     setNodes(synchronizedNodes)
   }, [reactFlowStore, workflowStateStore])
@@ -115,11 +115,11 @@ export const useSelectionInteractions = () => {
   // 选择取消事件处理器
   const onSelectionTerminate = useCallback(() => {
     const storeState = reactFlowStore.getState()
-    const { getNodes, setNodes, edges, setEdges } = storeState
+    const { nodes, setNodes, edges, setEdges } = storeState
 
     WorkflowStateOperator.resetSelectionArea(reactFlowStore)
 
-    const currentNodes = getNodes()
+    const currentNodes = nodes
     const clearedNodes = BundleStateManager.clearBundledState(currentNodes)
     setNodes(clearedNodes)
 

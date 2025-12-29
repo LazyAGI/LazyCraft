@@ -4,9 +4,8 @@ import { Button, Popconfirm, Space, Table } from 'antd'
 import { useAntdTable } from 'ahooks'
 import { useRouter } from 'next/navigation'
 import styles from './page.module.scss'
-import Toast from '@/app/components/base/flash-notice'
+import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
 import { deleteDoc, getDocList, publishDoc } from '@/infrastructure/api/docManage'
-
 type Result = {
   total: number
   list: any
@@ -32,14 +31,14 @@ const Articles = () => {
     const fetchUrl = record?.status === 'unpublish' ? 'doc/manage/publish' : 'doc/manage/unpublish'
     const res = await publishDoc({ url: fetchUrl, options: { params: { id: record?.id } } })
     if (res) {
-      Toast.notify({ type: 'success', message: '操作成功' })
+      Toast.notify({ type: ToastTypeEnum.Success, message: '操作成功' })
       search.submit()
     }
   }
   const handleDelete = async (record) => {
     const res = await deleteDoc({ url: `/doc/manage?id=${record?.id}`, options: { params: { id: record?.id } } })
     if (res) {
-      Toast.notify({ type: 'success', message: '删除成功' })
+      Toast.notify({ type: ToastTypeEnum.Success, message: '删除成功' })
       search.submit()
     }
   }

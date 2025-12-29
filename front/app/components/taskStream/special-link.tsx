@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
-import type { ConnectionLineComponentProps } from 'reactflow'
-import { Position, getBezierPath } from 'reactflow'
+import type { ConnectionLineComponentProps } from '@xyflow/react'
+import { Position, getBezierPath } from '@xyflow/react'
 
 // 样式常量配置
 const VISUAL_CONFIG = {
