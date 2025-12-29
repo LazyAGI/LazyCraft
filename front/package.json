@@ -20,7 +20,7 @@
     "uglify-embed": "node ./bin/uglify-embed",
     "remote": "evf2e-deploy setup:docker --config=./docker/deploy && evf2e-deploy build:docker-cloud && evf2e-deploy remote:docker-compose",
     "remote:arm": "evf2e-deploy setup:docker --config=./docker/deploy_arm && evf2e-deploy build:docker-cloud && evf2e-deploy remote:docker",
-    "prepare": "node -e \"if (process.env.NODE_ENV !== 'production'){process.exit(1)} \" || (test -d ../.git && husky install ../.git || true)",
+    "prepare": "node -e \"try { require('fs').accessSync('../.git'); require('husky').install('../.git'); } catch (e) {}\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
