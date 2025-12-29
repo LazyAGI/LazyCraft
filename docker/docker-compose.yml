@@ -153,6 +153,14 @@ services:
     security_opt:
       - seccomp:unconfined
     privileged: true
+    command:
+      - --name=pd
+      - --data-dir=/pd
+      - --client-urls=http://0.0.0.0:2379
+      - --peer-urls=http://0.0.0.0:2380
+      - --advertise-client-urls=http://pd:2379
+      - --advertise-peer-urls=http://pd:2380
+      - --initial-cluster=pd=http://pd:2380
     environment:
       - PD_SERVER_NAME=pd
       - INITIAL_CLUSTER=pd=http://pd:2380
@@ -179,6 +187,11 @@ services:
     security_opt:
       - seccomp:unconfined
     privileged: true
+    command:
+      - --addr=0.0.0.0:20160
+      - --advertise-addr=tikv:20160
+      - --data-dir=/tikv
+      - --pd-endpoints=pd:2379
     environment:
       - PD_ADDR=pd:2379
       - TZ=Asia/Shanghai
@@ -199,6 +212,8 @@ services:
     security_opt:
       - seccomp:unconfined
     privileged: true
+    command:
+      - host=0.0.0.0
     environment:
       - PATH="bin:$PATH"
       - MYSQL_HOST=0.0.0.0
