@@ -12,7 +12,7 @@ const useToolConfig = (nodeId: string, nodePayload: ToolNodeType) => {
 
   const {
     showSingleRun,
-    hideSingleExecution,
+    concealSingleRun,
     toShapeInputs,
     toShapeOutputs,
     executionStatus,
@@ -46,8 +46,8 @@ const useToolConfig = (nodeId: string, nodePayload: ToolNodeType) => {
   const hideSingleExecutionAndReset = useCallback(() => {
     setInputVariableValues({})
     sessionStorage.removeItem('executionInputData')
-    hideSingleExecution()
-  }, [setInputVariableValues, hideSingleExecution])
+    concealSingleRun()
+  }, [setInputVariableValues, concealSingleRun])
 
   return {
     readOnly: isReadOnly,

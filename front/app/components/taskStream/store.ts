@@ -204,7 +204,7 @@ export const createWorkflowStore = () => {
     setIsRestoring: isRestoring => set(() => ({ isRestoring })),
     debouncedSyncWorkflowDraft: debounce((syncWorkflowDraft) => {
       syncWorkflowDraft()
-    }, 5000),
+    }, 8000),
     buildInTools: [],
     setBuildInTools: buildInTools => set(() => ({ buildInTools })),
     customTools: [],
