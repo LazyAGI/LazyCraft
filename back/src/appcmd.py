@@ -581,6 +581,16 @@ def init_datasets():
     )
     zip_path = os.path.join(base_dir, "common_datasets", "common_datasets.zip")
 
+    if not os.path.exists(zip_path):
+        click.echo(
+            click.style(
+                f"Built-in common datasets zip file not found: {zip_path}, skipping dataset initialization.",
+                fg="yellow",
+            )
+        )
+        logging.info(f"Built-in common datasets zip file not found: {zip_path}, skipping dataset initialization.")
+        return
+
     with tempfile.TemporaryDirectory() as tmpdir:
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
             zip_ref.extractall(tmpdir)

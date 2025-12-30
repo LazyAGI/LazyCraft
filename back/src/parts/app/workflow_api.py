@@ -126,6 +126,13 @@ class DraftWorkflowApi(Resource):
         workflow = WorkflowService().get_draft_workflow(app_id)
 
         if workflow and workflow.unique_hash != args.get("hash"):
+            # 记录 hash 不匹配的情况，便于排查问题
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                f"工作流 hash 不匹配: app_id={app_id}, user_id={current_user.id}, "
+                f"期望={workflow.unique_hash}, 实际={args.get('hash')}"
+            )
             raise DraftWorkflowNotSync()
 
         app_model = AppService().get_app(app_id, raise_error=False)
@@ -297,6 +304,14 @@ class NodeRunStreamApi(Resource):
             self.check_can_write_object(app_model)
         
         workflow = WorkflowService().get_draft_workflow(app_id)
+        if not workflow:
+            raise ValueError("工作流不存在，请刷新页面后重试")
+
+        workflow_dict = workflow.nested_graph_dict
+        all_nodes = workflow_dict.get("nodes", [])
+        node_exists = any(node.get("id") == node_id for node in all_nodes)
+        if not node_exists:
+            raise ValueError(f"节点不存在或已被清除，请刷新页面以同步最新数据")
 
         # 创建调试会话管理器，获取下一个交互轮次turn_number
         session_manager = DebugSessionManager(app_id, current_user.id, mode="node")

@@ -442,8 +442,30 @@ class LazyConverter:
 
     def single_virtual_node_graph(self, node_id) -> dict:
         """准备虚拟单节点图"""
+        if node_id not in self.id_map_basenode:
+            available_nodes = list(self.id_map_basenode.keys())[:10]
+            raise ValueError(
+                f"节点 {node_id} 不存在于工作流中。"
+                f"可用节点: {available_nodes}。"
+                "建议：请刷新页面以同步最新数据。"
+            )
+        
         node = self.id_map_basenode[node_id]
-        doc_node = node.to_dict()
+        
+        from .node_base import EmptyNode
+        if isinstance(node, EmptyNode):
+            raise ValueError(
+                f"节点构建失败，无法用于单节点运行。"
+                "建议：请检查节点配置是否正确。"
+            )
+        
+        try:
+            doc_node = node.to_dict()
+        except Exception as e:
+            raise ValueError(
+                f"节点数据转换失败: {str(e)}。"
+                "建议：请检查节点配置是否正确。"
+            )
 
         resources = self.get_default_resources() + node.get_used_resources()
         resources.append(doc_node)
