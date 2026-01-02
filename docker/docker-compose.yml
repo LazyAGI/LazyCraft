@@ -74,8 +74,14 @@ x-share-env: &lazy-env
 
 services:
   api:
+  # 直接构建back镜像。
+    build:
+        context: ../back  # 指向你的后端代码文件夹
+        dockerfile: Dockerfile
+        network: host
     image: ${BACK_IMAGE:-registry.cn-hangzhou.aliyuncs.com/lazyllm/lazycraft-back:latest}
     # lazyllm/lazycraft-back:latest
+    container_name: api
     restart: always
     security_opt:
       - seccomp:unconfined
@@ -95,7 +101,10 @@ services:
       - ./volumes/app/logs:/app/logs  # 日志目录持久化
       - ./volumes/share_data:/mnt/lustre/share_data  #模型路径
   worker:
+    build:          # 加上这个
+        context: ../back
     image: ${BACK_IMAGE:-registry.cn-hangzhou.aliyuncs.com/lazyllm/lazycraft-back:latest}
+    container_name: worker
     # lazyllm/lazycraft-back:latest
     restart: always
     security_opt:
@@ -104,6 +113,7 @@ services:
       !!merge <<: *lazy-env
       MODE: worker
       LAZYLLM_CUDA_VISIBLE: "True"
+
     depends_on:
       - db
       - redis
@@ -115,7 +125,10 @@ services:
       - ./volumes/app/logs:/app/logs  # 日志目录持久化
       - ./volumes/share_data:/mnt/lustre/share_data  #模型路径
   beat:
+    build:          # 加上这个
+        context: ../back
     image: ${BACK_IMAGE:-registry.cn-hangzhou.aliyuncs.com/lazyllm/lazycraft-back:latest}
+    container_name: beat
     # lazyllm/lazycraft-back:latest
     restart: always
     security_opt:
@@ -135,10 +148,17 @@ services:
       - ./volumes/app/logs:/app/logs  # 日志目录持久化
       - ./volumes/share_data:/mnt/lustre/share_data  #模型路径
   web:
+    build:
+        context: ../front # 指向你的前端代码文件夹
+        dockerfile: Dockerfile  
+        network: host
     image: ${FRONT_IMAGE:-registry.cn-hangzhou.aliyuncs.com/lazyllm/lazycraft-front:latest}
+    container_name: web
     # lazyllm/lazycraft-front:latest
     restart: always
     environment:
+      HOSTNAME: 0.0.0.0
+      PORT: 8088
       CONSOLE_API_URL: ''
       APP_API_URL: ''
       SENTRY_DSN: ''
@@ -146,6 +166,7 @@ services:
       - lazycraft-network
   pd:
     image: registry.cn-hangzhou.aliyuncs.com/lazyllm/pd:v8.5.0
+    container_name: pd
     # pingcap/pd:v8.5.0
     restart: always
     cap_add:
@@ -153,14 +174,6 @@ services:
     security_opt:
       - seccomp:unconfined
     privileged: true
-    command:
-      - --name=pd
-      - --data-dir=/pd
-      - --client-urls=http://0.0.0.0:2379
-      - --peer-urls=http://0.0.0.0:2380
-      - --advertise-client-urls=http://pd:2379
-      - --advertise-peer-urls=http://pd:2380
-      - --initial-cluster=pd=http://pd:2380
     environment:
       - PD_SERVER_NAME=pd
       - INITIAL_CLUSTER=pd=http://pd:2380
@@ -175,11 +188,12 @@ services:
       retries: 20
     networks:
       - lazycraft-network
-    # ports:
-    #   - "2379:2379"
-    #   - "2380:2380"
+    ports:
+      - "2379:2379"
+      - "2380:2380"
   tikv:
     image: registry.cn-hangzhou.aliyuncs.com/lazyllm/tikv:v8.5.0
+    container_name: tikv
     # pingcap/tikv:v8.5.0
     restart: always
     cap_add:
@@ -187,11 +201,6 @@ services:
     security_opt:
       - seccomp:unconfined
     privileged: true
-    command:
-      - --addr=0.0.0.0:20160
-      - --advertise-addr=tikv:20160
-      - --data-dir=/tikv
-      - --pd-endpoints=pd:2379
     environment:
       - PD_ADDR=pd:2379
       - TZ=Asia/Shanghai
@@ -201,10 +210,11 @@ services:
       - ./volumes/tikv-data:/tikv
     networks:
       - lazycraft-network
-    # ports:
-    #   - "20160:20160"
+    ports:
+      - "20160:20160"
   db:
     image: registry.cn-hangzhou.aliyuncs.com/lazyllm/tidb:v8.5.0
+    container_name: db
     # pingcap/tidb:v8.5.0
     restart: always
     cap_add:
@@ -212,8 +222,6 @@ services:
     security_opt:
       - seccomp:unconfined
     privileged: true
-    command:
-      - host=0.0.0.0
     environment:
       - PATH="bin:$PATH"
       - MYSQL_HOST=0.0.0.0
@@ -229,10 +237,11 @@ services:
       - ./volumes/tidb-data:/tmp/tidb
     networks:
       - lazycraft-network
-    # ports:
-    #   - "4000:4000"
+    ports:
+      - "4000:4000"
   redis:
     image: registry.cn-hangzhou.aliyuncs.com/lazyllm/redis:6-alpine
+    container_name: redis
     # redis:6-alpine
     restart: always
     volumes:
@@ -242,10 +251,11 @@ services:
       test: ["CMD", "redis-cli", "ping"]
     networks:
       - lazycraft-network
-      # ports:
-      #   - "6379:6379"
+    ports:
+      - "6379:6379"
   mcp-echarts-sse:
     image: registry.cn-hangzhou.aliyuncs.com/lazyllm/mcp-echarts-mcp-echarts-sse:latest
+    container_name: mcp-echarts-sse
     # lazyllm/mcp-echarts-mcp-echarts-sse:latest
     restart: always
     command: ["node", "build/index.js", "--transport", "sse", "--port", "3033"]
@@ -255,6 +265,7 @@ services:
       - lazycraft-network
   web-search-sse: # 提供网络搜索的sse服务
     image: registry.cn-hangzhou.aliyuncs.com/lazyllm/open-web-search:v1.1.5.1
+    container_name: web-search-sse
     # ghcr.io/aas-ee/open-web-search:v1.1.5.1
     working_dir: /app
     restart: always
@@ -267,6 +278,7 @@ services:
       - lazycraft-network
   minio:
     image: registry.cn-hangzhou.aliyuncs.com/lazyllm/minio:RELEASE.2025-07-23T15-54-02Z
+    container_name: minio
     # minio/minio:RELEASE.2025-07-23T15-54-02Z
     restart: always
     command: server /data --console-address ":9001"
@@ -286,6 +298,7 @@ services:
       - lazycraft-network
   init-minio:
     image: registry.cn-hangzhou.aliyuncs.com/lazyllm/mc:RELEASE.2025-07-21T05-28-08Z
+    container_name: init-minio
     # minio/mc:RELEASE.2025-07-21T05-28-08Z
     depends_on:
       minio:
@@ -304,6 +317,7 @@ services:
       - lazycraft-network
   nginx:
     image: registry.cn-hangzhou.aliyuncs.com/lazyllm/nginx:latest
+    container_name: nginx
     # nginx:latest
     restart: always
     volumes:
@@ -311,7 +325,7 @@ services:
       - ./nginx/proxy.conf:/etc/nginx/proxy.conf
       - ./nginx/conf.d:/etc/nginx/conf.d
       # 如果使用HTTPS，取消下面这行的注释
-      # - ./nginx/ssl:/etc/nginx/ssl  # SSL证书目录
+      - ./nginx/ssl:/etc/nginx/ssl  # SSL证书目录
       - ./volumes/app/upload:/app/upload # 静态文件目录，部署脚本一定要放在数据盘，和后端共享
     depends_on:
       - api

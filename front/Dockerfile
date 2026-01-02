@@ -1,4 +1,5 @@
-FROM node:20-alpine AS base
+# FROM node:20-alpine AS base
+FROM registry.cn-hangzhou.aliyuncs.com/lazyllm/node:20-alpine AS base
 
 ARG COMMIT_SHA
 ENV COMMIT_SHA=${COMMIT_SHA}

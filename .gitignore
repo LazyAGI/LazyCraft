@@ -1,2 +1,20 @@
 back/src/parts/data/common_datasets/common_datasets.zip
 docker/volumes/
+.history/
+.idea/*
+# 忽略数据库数据
+volumes/
+
+# 忽略前端依赖
+node_modules/
+.next/
+dist/
+
+# 忽略后端缓存和环境
+__pycache__/
+*.pyc
+# .env
+back/LazyLLM/LazyLLM-Env/
+
+# 忽略后端自带的大型数据集
+back/src/parts/data/common_datasets/
