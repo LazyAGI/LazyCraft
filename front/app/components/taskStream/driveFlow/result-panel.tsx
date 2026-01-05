@@ -74,7 +74,7 @@ const ExecutionResult: FC<ExecutionResultProps> = ({
   const containsInputFiles = input_files && input_files.length > 0
   const containsProcessData = process_record && process_record.length > 0
   const containsOutputs = outputs && status !== 'running'
-  const displayRunningOutput = !outputs && status === 'running'
+  const isRunning = status === 'running'
 
   return (
     <div className='bg-white py-2'>
@@ -121,17 +121,30 @@ const ExecutionResult: FC<ExecutionResultProps> = ({
           />
         )}
 
-        {displayRunningOutput && (
-          <LazyCodeEditor
-            readOnly
-            className='lazyllm-run__code-editor-wrapper'
-            title={<div>{'输出'.toLocaleUpperCase()}</div>}
-            language={currentLanguage.json}
-            value={outputs}
-            beautifyJSON
-          />
+        {/* 运行中时显示流式输出 */}
+        {isRunning && (
+          <>
+            {(outputs && varOutputs && varOutputs.length > 0)
+              ? (
+                <ResultOutputs
+                  outputs={outputs}
+                  varOutputs={varOutputs}
+                />
+              )
+              : (
+                <LazyCodeEditor
+                  readOnly
+                  className='lazyllm-run__code-editor-wrapper'
+                  title={<div>{'输出'.toLocaleUpperCase()}</div>}
+                  language={currentLanguage.json}
+                  value={outputs || ''}
+                  beautifyJSON
+                />
+              )}
+          </>
         )}
 
+        {/* 完成时显示最终输出 */}
         {containsOutputs && (
           <ResultOutputs
             outputs={outputs}

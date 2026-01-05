@@ -712,17 +712,47 @@ export const useWorkflowInit = () => {
 
   function formatRespondedResources(data: any[]) {
     return data?.map((resource) => {
-      return ({
+      // 确定资源的分类
+      let categorization = resource.mixed
+        ? ResourceClassificationEnum.Custom
+        : (resource?.categorization || resource?.data?.categorization)
+      // 如果没有 categorization，根据 type 推断
+      if (!categorization) {
+        const resourceType = resource?.type || resource?.data?.type || resource?.payload__kind
+        // 内置资源类型
+        const builtInTypes = ['document', 'server', 'web', 'sql_manager', 'Document', 'Server', 'Web', 'SqlManager']
+        if (builtInTypes.includes(resourceType))
+          categorization = ResourceClassificationEnum.Internal
+        // 工具资源类型
+        else if (resourceType === 'tool' || resourceType === 'mcp' || resourceType === 'Tool' || resourceType === 'MCP')
+          categorization = ResourceClassificationEnum.Tool
+        // 默认为自定义资源
+        else
+          categorization = ResourceClassificationEnum.Custom
+      }
+
+      // 确定资源类型
+      const resourceType = resource.mixed ? CustomResourceEnum.Custom : (resource.type || resource?.data?.type)
+
+      // 构建资源数据对象
+      const resourceData = resource?.data || {}
+      const resourceId = resource?.id || resourceData?.id
+
+      return {
         ...resource,
-        categorization: resource.mixed ? ResourceClassificationEnum.Custom : (resource?.categorization || resource?.data?.categorization),
-        type: resource.mixed ? CustomResourceEnum.Custom : resource.type,
+        id: resourceId,
+        categorization,
+        type: resourceType,
         data: {
-          ...resource?.data,
-          categorization: resource.mixed ? ResourceClassificationEnum.Custom : (resource?.categorization || resource?.data?.categorization),
-          id: resource?.id || resource?.data?.id,
+          ...resourceData,
+          ...resource, // 将顶层字段也合并到 data 中
+          categorization,
+          id: resourceId,
           selected: false,
+          title: resourceData?.title || resource?.title,
+          desc: resourceData?.desc || resource?.desc || resourceData?.description || resource?.description,
         },
-      })
+      }
     }) || []
   }
 

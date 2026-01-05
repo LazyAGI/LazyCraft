@@ -12,7 +12,7 @@ import ResultPanel from '@/app/components/taskStream/driveFlow/result-panel'
 import Split from '@/app/components/taskStream/elements/_foundation/components/divider'
 import { fetchApiToolInfo, fetchToolFieldList } from '@/infrastructure/api//workflow'
 import { generateNameReadOnlyShape } from '@/infrastructure/api//universeNodes/universe_default_config'
-
+import { list2Json } from '@/app/components/taskStream/elements/_foundation/components/form/field-item/netOps/kvPair/kvPairEdit/helpers'
 const baseTypeOptionsMap = {
   'boolean': 'bool',
   'array': 'list',
@@ -156,17 +156,17 @@ const Panel: FC<NodePanelProps<ToolNodeType | any>> = ({
               }))
               const newApiHeadersData = {
                 ...(newFormData.payload__headers || {}),
-                ...list2Json(formattedHeaderParams || [], 'key', 'value'),
+                ...list2Json(formattedHeaderParams || [], [{ key: 'key' }, { key: 'value' }]),
               }
               newFormData = {
                 ...newFormData,
-                payload__params: list2Json(formattedQueryParams, 'key', 'value'),
+                payload__params: list2Json(formattedQueryParams, [{ key: 'key' }, { key: 'value' }]),
                 payload__params_data: formattedQueryParams.map((item: any) => ({
                   id: uuid4(),
                   key: item?.key,
                   value: item?.value,
                 })),
-                payload__body: JSON.stringify(list2Json(formattedBodyParams, 'key', 'value'), null, 2),
+                payload__body: JSON.stringify(list2Json(formattedBodyParams, [{ key: 'key' }, { key: 'value' }]), null, 2),
                 payload__headers: { ...newApiHeadersData },
                 payload__headers_data: Object.entries(newApiHeadersData || {}).map(item => ({
                   id: uuid4(),
@@ -227,12 +227,6 @@ const Panel: FC<NodePanelProps<ToolNodeType | any>> = ({
     }
   }, [data, handleFieldChange])
 
-  if (isLoading) {
-    return <div className='flex h-[200px] items-center justify-center'>
-      <Loading />
-    </div>
-  }
-
   // 使用 useMemo 缓存 form 对象，避免 BeforeRunForm 不必要的重新渲染
   const beforeRunFormConfig = useMemo(() => ({
     inputs: varInputs,
@@ -240,6 +234,12 @@ const Panel: FC<NodePanelProps<ToolNodeType | any>> = ({
     values: inputVarValues,
     onChange: setInputVarValues,
   }), [varInputs, varOutputs, inputVarValues, setInputVarValues])
+
+  if (isLoading) {
+    return <div className='flex h-[200px] items-center justify-center'>
+      <Loading />
+    </div>
+  }
 
   return (
     <div className='mt-0.5 pb-4'>
