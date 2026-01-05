@@ -323,7 +323,7 @@ services:
       - "${PORT:-30382}:80"  # HTTP端口（宿主机30382映射到容器80）
       - "${HTTPS_PORT:-30383}:443"  # HTTPS端口（宿主机30383映射到容器443）
   # cloud-service:
-  #   image: registry.cn-hangzhou.aliyuncs.com/lazyllm/lazyllm:0.6.2
+  #   image: registry.cn-hangzhou.aliyuncs.com/lazyllm/lazyllm:0b1a31c
   #   # lazyllm/lazyllm:0.6.2
   #   restart: always
   #   ports:
