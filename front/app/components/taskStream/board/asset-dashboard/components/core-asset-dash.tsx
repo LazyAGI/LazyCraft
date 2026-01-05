@@ -169,9 +169,9 @@ const ResourcePanelBase: FC<ResourcePanelBaseProps> = ({
       <div
         ref={wrapperRef}
         className={`${panelContainerClasses} bg-[#fcfcfd]`}
-        style={{ width: `${currentPanelWidth}px`}}
+        style={{ width: `${currentPanelWidth}px` }}
       >
-        <div className='canvas-panel-head sticky top-0 bg-components-panel-bg border-b-[1px] z-10'>
+        <div className='canvas-panel-head sticky top-0 bg-white border-b-[1px] z-10'>
           <div className='flex items-center px-4 pt-4 pb-0.5'>
             {renderResourceIcon()}
 
