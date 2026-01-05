@@ -1004,7 +1004,7 @@ class DataService:
             )
 
         version_path = FileTools.create_data_storage(
-            data_set_version_instance.user_id, name
+            data_set_version_instance.user_id, name, version
         )
         data_set_version_obj = self.create_data_set_version_by_version(
             data_set_version_instance,
@@ -1045,7 +1045,7 @@ class DataService:
         if data_set_instance.from_type == "return":
             version_path = ""
         else:
-            version_path = data_set_version_instance.version_path + "-published"
+            version_path = os.path.join(data_set_version_instance.version_path + "-published", version)
         data_set_version_obj = self.create_data_set_version_by_version(
             data_set_version_instance,
             data_set_version_instance.name,
@@ -2429,12 +2429,17 @@ class DataService:
             list: 验证后的结果列表。
         """
         if parsed_result is None:
-            if "数据增强" == operation:
-                return [original_item]  # 数据增强为空时，保留原数据
-            return []  # 返回空list，表示这条数据被忽略
+            if "数据增强" == operation or "智能处理" == operation:
+                return [original_item]
+            return []
 
         checked_result = []
         if isinstance(parsed_result, list):
+            if len(parsed_result) == 0:
+                if "数据增强" == operation or "智能处理" == operation:
+                    return [original_item]
+                return []
+            
             for r in parsed_result:
                 if DataService._check_item_format(original_item, r):
                     checked_result.append(r)
@@ -2496,21 +2501,33 @@ class DataService:
         processed_items = 0
 
         def process_one(idx, item):
-            result_list = DataService._process_single_item_with_agent(
-                app_run, item, operation
-            )
-            return idx, result_list
+            try:
+                result_list = DataService._process_single_item_with_agent(
+                    app_run, item, operation
+                )
+                return idx, result_list
+            except Exception as e:
+                logging.error(f"处理任务 {idx} 时发生异常: {e}")
+                return idx, [item]
 
         max_workers = min(16, os.cpu_count() or 4)
         from concurrent.futures import ThreadPoolExecutor, as_completed
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = [
-                executor.submit(process_one, idx, item) for idx, item in enumerate(data)
-            ]
+            futures = {
+                executor.submit(process_one, idx, item): idx
+                for idx, item in enumerate(data)
+            }
             for future in as_completed(futures):
-                idx, res_list = future.result()
-                results[idx] = res_list
+                try:
+                    idx, res_list = future.result()
+                    results[idx] = res_list
+                except Exception as e:
+                    # 如果 future.result() 本身抛出异常，使用 futures 字典获取 idx
+                    idx = futures.get(future)
+                    if idx is not None:
+                        logging.error(f"获取任务 {idx} 结果时发生异常: {e}")
+                        results[idx] = [data[idx]]
                 processed_items += 1
 
                 # 调用进度回调函数
@@ -2523,8 +2540,15 @@ class DataService:
 
         # 保持原顺序，合并所有结果
         processed_list = []
-        for result_list in results:
-            processed_list.extend(result_list)
+        for idx, result_list in enumerate(results):
+            if result_list is None:
+                logging.warning(f"任务 {idx} 未完成，保留原数据")
+                processed_list.append(data[idx])
+            elif len(result_list) == 0:
+                if operation == "智能处理":
+                    processed_list.append(data[idx])
+            else:
+                processed_list.extend(result_list)
 
         return processed_list
 

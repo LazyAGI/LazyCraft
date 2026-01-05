@@ -119,24 +119,42 @@ class FinetuneService:
                     i.created_by_account.name = "Lazy LLM官方"
             else:
                 i.user_name = getattr(db.session.get(Account, i.created_by), "name", "")
-            # 如果i中的train_runtime为空，优先使用 LazyLLM 的 cost 值，否则使用 created_at 计算
-            if i.train_runtime is None or i.train_runtime < 1:
-                # 优先使用 task_job_info 中的 cost 值（来自 LazyLLM）
-                # 注意：cost 可能为 0（任务刚创建），需要显式检查是否为 None
-                if i.task_job_info_dict and i.task_job_info_dict.get('cost') is not None:
-                    i.train_runtime = int(i.task_job_info_dict['cost'])
-                else:
-                    # 如果没有 cost 值，使用 created_at 计算（向后兼容）
-                    try:
+            # 训练时长计算逻辑：始终优先使用 LazyLLM 的 cost 值（如果存在且有效）
+            # 如果 cost 不存在或为 0，则使用时间差计算作为后备方案
+            cost_value = None
+            if i.task_job_info_dict:
+                cost_value = i.task_job_info_dict.get('cost')
+            
+            if cost_value is not None and cost_value > 0:
+                # 优先使用 LazyLLM 返回的 cost 值（最准确）
+                i.train_runtime = int(cost_value)
+            elif i.train_runtime is None or i.train_runtime < 1:
+                # 如果没有有效的 cost 值，使用时间差计算（向后兼容）
+                try:
+                    # 对于终态任务（Cancel、Completed、Failed），使用 updated_at 或 train_end_time 计算，避免每次刷新都增加
+                    # 对于运行中的任务，使用当前时间计算
+                    if i.status in [TaskStatus.CANCEL.value, TaskStatus.COMPLETED.value, TaskStatus.FAILED.value]:
+                        # 终态任务：使用 updated_at 或 train_end_time（如果有）计算，而不是当前时间
+                        end_time = i.train_end_time if i.train_end_time else i.updated_at
+                        if end_time:
+                            end_time_naive = end_time.replace(tzinfo=None) if end_time.tzinfo else end_time
+                            i.train_runtime = int(
+                                (end_time_naive - i.created_at).total_seconds()
+                            )
+                        else:
+                            # 如果没有结束时间，保持为0（避免使用当前时间导致不断增长）
+                            i.train_runtime = 0
+                    else:
+                        # 运行中的任务：使用当前时间计算
                         current_time_naive = TimeTools.get_china_now(output="dt").replace(
                             tzinfo=None
                         )
                         i.train_runtime = int(
                             (current_time_naive - i.created_at).total_seconds()
                         )
-                    except Exception as e:
-                        logging.info(f"get_paginate_tasks error: {e}")
-                        i.train_runtime = 0
+                except Exception as e:
+                    logging.info(f"get_paginate_tasks error: {e}")
+                    i.train_runtime = 0
         return pagination
 
     def delete_task(self, task_id):
@@ -581,25 +599,43 @@ class FinetuneService:
         if task is None:
             raise ValueError("任务不存在")
         
-        # 如果 train_runtime 为空或小于1，优先使用 LazyLLM 的 cost 值，否则使用 created_at 计算
+        # 训练时长计算逻辑：始终优先使用 LazyLLM 的 cost 值（如果存在且有效）
+        # 如果 cost 不存在或为 0，则使用时间差计算作为后备方案
         # 与 get_paginate_tasks 方法保持一致的逻辑
-        if task.train_runtime is None or task.train_runtime < 1:
-            # 优先使用 task_job_info 中的 cost 值（来自 LazyLLM）
-            # 注意：cost 可能为 0（任务刚创建），需要显式检查是否为 None
-            if task.task_job_info_dict and task.task_job_info_dict.get('cost') is not None:
-                task.train_runtime = int(task.task_job_info_dict['cost'])
-            else:
-                # 如果没有 cost 值，使用 created_at 计算（向后兼容）
-                try:
+        cost_value = None
+        if task.task_job_info_dict:
+            cost_value = task.task_job_info_dict.get('cost')
+        
+        if cost_value is not None and cost_value > 0:
+            # 优先使用 LazyLLM 返回的 cost 值（最准确）
+            task.train_runtime = int(cost_value)
+        elif task.train_runtime is None or task.train_runtime < 1:
+            # 如果没有有效的 cost 值，使用时间差计算（向后兼容）
+            try:
+                # 对于终态任务（Cancel、Completed、Failed），使用 updated_at 或 train_end_time 计算，避免每次刷新都增加
+                # 对于运行中的任务，使用当前时间计算
+                if task.status in [TaskStatus.CANCEL.value, TaskStatus.COMPLETED.value, TaskStatus.FAILED.value]:
+                    # 终态任务：使用 updated_at 或 train_end_time（如果有）计算，而不是当前时间
+                    end_time = task.train_end_time if task.train_end_time else task.updated_at
+                    if end_time:
+                        end_time_naive = end_time.replace(tzinfo=None) if end_time.tzinfo else end_time
+                        task.train_runtime = int(
+                            (end_time_naive - task.created_at).total_seconds()
+                        )
+                    else:
+                        # 如果没有结束时间，保持为0（避免使用当前时间导致不断增长）
+                        task.train_runtime = 0
+                else:
+                    # 运行中的任务：使用当前时间计算
                     current_time_naive = TimeTools.get_china_now(output="dt").replace(
                         tzinfo=None
                     )
                     task.train_runtime = int(
                         (current_time_naive - task.created_at).total_seconds()
                     )
-                except Exception as e:
-                    logging.info(f"detail_finetune error calculating train_runtime: {e}")
-                    task.train_runtime = 0
+            except Exception as e:
+                logging.info(f"detail_finetune error calculating train_runtime: {e}")
+                task.train_runtime = 0
         
         t = marshal(task, fields.finetune_detail_fields)
         t["base_model_name"] = task.base_model_key
