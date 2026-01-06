@@ -689,6 +689,19 @@ ams_model_list = [
         "model_brand": "Alibaba"
     },
     {
+        "name": "Qwen2.5-32B-Instruct",
+        "key": "Qwen2.5-32B-Instruct",
+        "model_type": "local",
+        "model_status": 1,
+        "is_finetune_model": False,
+        "can_finetune_model": True,
+        "model_kind": "localLLM",
+        "model_from": "modelscope",
+        "framework": "vllm",
+        "endpoint": "/v1/chat/interactive",
+        "model_brand": "Alibaba"
+    },
+    {
         "name": "Qwen3-32B-AWQ",
         "key": "Qwen3-32B-AWQ",
         "model_type": "local",
