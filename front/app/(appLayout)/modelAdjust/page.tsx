@@ -28,10 +28,13 @@ type Result = {
 const _tags: any = {
   InQueue: { text: '排队中', color: 'warning' },
   Pending: { text: '排队中', color: 'warning' },
+  Submitting: { text: '提交中', color: 'processing' }, // 正在提交到LazyLLM服务
   InProgress: { text: '运行中', color: 'processing' },
+  Running: { text: '运行中', color: 'processing' }, // LazyLLM可能返回Running状态
   Completed: { text: '已完成', color: 'success' },
   Failed: { text: '失败', color: 'error' },
   Cancel: { text: '已取消', color: 'default' },
+  Canceled: { text: '已取消', color: 'default' }, // 统一后的状态名
   Suspended: { text: '已暂停', color: 'default' },
   Download: { text: '下载中', color: 'default' },
 }
@@ -48,6 +51,7 @@ const ModelAdjust = () => {
   const { userSpecified } = useApplicationContext()
   const pollingTimerRef = useRef<NodeJS.Timeout | null>(null)
   const [isPolling, setIsPolling] = useState(false)
+  const [submittingTasks, setSubmittingTasks] = useState<Set<number>>(new Set()) // 记录 Submitting 状态的任务ID
   const canEdit = (val) => {
     if (val === '00000000-0000-0000-0000-000000000000')
       return authRadio.isAdministrator
@@ -67,7 +71,7 @@ const ModelAdjust = () => {
 
   // 检查是否需要轮询
   const checkNeedPolling = (data: any[]) => {
-    return data.some(item => item.status === 'InProgress' || item.status === 'InQueue' || item.status === 'Pending' || item.status === 'Download')
+    return data.some(item => item.status === 'InProgress' || item.status === 'Running' || item.status === 'InQueue' || item.status === 'Pending' || item.status === 'Submitting' || item.status === 'Download')
   }
 
   // 开始轮询 - 声明函数但稍后定义
@@ -81,10 +85,35 @@ const ModelAdjust = () => {
         list: res.data,
       }
 
+      // 更新 Submitting 状态的任务列表
+      const submittingTaskIds = new Set<number>()
+      res.data.forEach((item: any) => {
+        if (item.status === 'Submitting') {
+          submittingTaskIds.add(item.id)
+        }
+      })
+      setSubmittingTasks(submittingTaskIds)
+
       // 检查是否需要轮询
       if (checkNeedPolling(res.data)) {
-        if (!isPolling)
+        if (!isPolling) {
           startPolling()
+        } else {
+          // 如果已经在轮询，但 submittingTasks 变化了，需要重新设置轮询间隔
+          const hasSubmittingTasks = submittingTaskIds.size > 0
+          const currentHasSubmitting = submittingTasks.size > 0
+          
+          // 如果 Submitting 任务状态发生变化，重新设置轮询间隔
+          if (hasSubmittingTasks !== currentHasSubmitting) {
+            if (pollingTimerRef.current) {
+              clearInterval(pollingTimerRef.current)
+              const newInterval = hasSubmittingTasks ? 5000 : 30000
+              pollingTimerRef.current = setInterval(() => {
+                search.submit()
+              }, newInterval)
+            }
+          }
+        }
       }
       else {
         if (isPolling)
@@ -105,9 +134,22 @@ const ModelAdjust = () => {
       clearInterval(pollingTimerRef.current)
 
     setIsPolling(true)
-    pollingTimerRef.current = setInterval(() => {
+    
+    // 动态轮询频率：如果有 Submitting 状态的任务，使用更短的间隔（5秒），否则30秒
+    const getPollingInterval = () => {
+      return submittingTasks.size > 0 ? 5000 : 30000
+    }
+    
+    const poll = () => {
       search.submit()
-    }, 30000) // 30秒轮询
+      // 每次轮询后重新设置间隔（因为 submittingTasks 可能变化）
+      if (pollingTimerRef.current) {
+        clearInterval(pollingTimerRef.current)
+        pollingTimerRef.current = setInterval(poll, getPollingInterval())
+      }
+    }
+    
+    pollingTimerRef.current = setInterval(poll, getPollingInterval())
   }
 
   // 停止轮询
@@ -161,17 +203,43 @@ const ModelAdjust = () => {
     setSValue(e)
   }
   const startTrain = async (record) => {
-    const res = await startModel({ url: `/finetune/resume/${record?.id}` })
-    if (res) {
-      Toast.notify({ type: 'success', message: '开始训练' })
-      search.submit()
+    try {
+      const res = await startModel({ url: `/finetune/resume/${record?.id}` })
+      if (res) {
+        Toast.notify({ type: 'success', message: '开始训练' })
+        search.submit()
+      }
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || '开始训练失败'
+      // 处理404和400错误
+      if (error?.response?.status === 404 || errorMessage?.includes('任务状态已结束')) {
+        Toast.notify({ type: 'error', message: '任务状态已结束，无法开始训练' })
+      } else if (error?.response?.status === 400 || errorMessage?.includes('任务开始失败')) {
+        Toast.notify({ type: 'error', message: '任务开始失败，请联系后台管理员核查' })
+      } else if (errorMessage?.includes('正在初始化中') || errorMessage?.includes('NotReady')) {
+        Toast.notify({ type: 'warning', message: '任务正在初始化中，请稍候再试' })
+      } else {
+        Toast.notify({ type: 'error', message: errorMessage })
+      }
     }
   }
   const stopTrain = async (record) => {
-    const res = await stopModel({ url: `/finetune/pause/${record?.id}` })
-    if (res) {
-      Toast.notify({ type: 'success', message: '停止训练' })
-      search.submit()
+    try {
+      const res = await stopModel({ url: `/finetune/pause/${record?.id}` })
+      if (res) {
+        Toast.notify({ type: 'success', message: '停止训练' })
+        search.submit()
+      }
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || '停止训练失败'
+      // 处理404错误
+      if (error?.response?.status === 404 || errorMessage?.includes('任务状态已结束')) {
+        Toast.notify({ type: 'error', message: '任务状态已结束，无法停止训练' })
+      } else if (errorMessage?.includes('正在初始化中') || errorMessage?.includes('NotReady')) {
+        Toast.notify({ type: 'warning', message: '任务正在初始化中，请稍候再试' })
+      } else {
+        Toast.notify({ type: 'error', message: errorMessage })
+      }
     }
   }
 
@@ -216,8 +284,8 @@ const ModelAdjust = () => {
     {
       title: '训练时长',
       dataIndex: 'train_runtime',
-      width: 100,
-      render: text => <span>{text}s</span>,
+      width: 180,
+      render: text => <span>{text}</span>,
 
     },
     {
@@ -247,10 +315,16 @@ const ModelAdjust = () => {
             (record?.status === 'Suspended') && canEdit(record?.created_by_account?.id) && <Button size='small' type='link' onClick={() => startTrain(record)}>开始训练</Button>
           }
           {
-            record?.status === 'InProgress' && canEdit(record?.created_by_account?.id) && <Button size='small' type='link' onClick={() => stopTrain(record)}>停止训练</Button>
+            (record?.status === 'InProgress' || record?.status === 'Running') && canEdit(record?.created_by_account?.id) && <Button size='small' type='link' onClick={() => stopTrain(record)}>停止训练</Button>
           }
 
-          {(record?.status === 'InQueue' || record?.status === 'Running' || record?.status === 'Pending')
+          {(record?.status === 'InQueue' || record?.status === 'Running' || record?.status === 'Pending' || record?.status === 'InProgress' || (record?.status === 'Submitting' && (() => {
+            // Submitting 状态下，前6秒内禁用取消按钮（任务可能还未加入 active_jobs）
+            const now = Date.now()
+            const createdAt = record?.created_at ? new Date(record.created_at).getTime() : 0
+            const timeSinceCreated = (now - createdAt) / 1000 // 秒
+            return timeSinceCreated >= 6
+          })()))
             && canEdit(record?.created_by_account?.id) && <Popconfirm
             title="提示"
             description="是否取消训练"
@@ -258,7 +332,24 @@ const ModelAdjust = () => {
             okText="是"
             cancelText="否"
           >
-            <Button size='small' type='link'>取消训练</Button>
+            <Button 
+              size='small' 
+              type='link'
+              disabled={record?.status === 'Submitting' && (() => {
+                const now = Date.now()
+                const createdAt = record?.created_at ? new Date(record.created_at).getTime() : 0
+                const timeSinceCreated = (now - createdAt) / 1000
+                return timeSinceCreated < 6
+              })()}
+              title={record?.status === 'Submitting' && (() => {
+                const now = Date.now()
+                const createdAt = record?.created_at ? new Date(record.created_at).getTime() : 0
+                const timeSinceCreated = (now - createdAt) / 1000
+                return timeSinceCreated < 6 ? '任务正在提交中，请稍候...' : ''
+              })()}
+            >
+              取消训练
+            </Button>
           </Popconfirm>
           }
           <Button type='link' size='small' onClick={() => handleJumpDetail(record)}>详情</Button>
@@ -269,7 +360,7 @@ const ModelAdjust = () => {
             okText="是"
             cancelText="否"
           >
-            <Button type='link' size='small' danger disabled={record?.status === 'InProgress'}>删除</Button>
+            <Button type='link' size='small' danger disabled={record?.status === 'InProgress' || record?.status === 'Submitting'}>删除</Button>
           </Popconfirm>}
         </>
       ),

@@ -410,32 +410,38 @@ class DeleteService(Resource):
         Raises:
             ValueError: 当权限不足或服务不存在时抛出异常。
         """
-        # 获取请求中的JSON数据
-        data = request.get_json()
-        # 根据服务ID查询对应的服务记录
-        service = InferModelService.query.get(data.get("service_id"))
-        # 如果服务不存在，返回404错误
-        if not service:
-            return build_response(status=400, message="Service not found")
-        # 检查权限
-        self.check_can_write_object(service)
-        if service.tenant_id != current_user.current_tenant_id:
-            return build_response(status=400, message="当前用户无权限操作")
-        if (
-            service.created_by == Account.get_administrator_id()
-            and current_user.id != Account.get_administrator_id()
-        ):
-            return build_response(status=400, message="当前用户无权限操作")
-        # 如果服务不存在，返回404错误
-        if not service:
-            return build_response(status=400, message="Service not found")
-        delete_infer_model_service_result = (
-            self.infer_service.delete_infer_model_service(data.get("service_id"))
-        )
-        if delete_infer_model_service_result:
-            # 返回操作成功的消息
-            return build_response(message="Service deleted successfully")
-        return build_response(message="Service deleted failed")
+        try:
+            # 获取请求中的JSON数据
+            data = request.get_json()
+            # 根据服务ID查询对应的服务记录
+            service = InferModelService.query.get(data.get("service_id"))
+            # 如果服务不存在，先返回404错误
+            if not service:
+                return build_response(status=400, message="Service not found")
+            
+            # 检查权限
+            self.check_can_write_object(service)
+            if service.tenant_id != current_user.current_tenant_id:
+                return build_response(status=400, message="当前用户无权限操作")
+            if (
+                service.created_by == Account.get_administrator_id()
+                and current_user.id != Account.get_administrator_id()
+            ):
+                return build_response(status=400, message="当前用户无权限操作")
+                
+            delete_infer_model_service_result = (
+                self.infer_service.delete_infer_model_service(data.get("service_id"))
+            )
+            if delete_infer_model_service_result:
+                # 返回操作成功的消息
+                return build_response(message="Service deleted successfully")
+            return build_response(message="Service deleted failed")
+        except ValueError as e:
+            logging.error(f"删除推理服务失败: {str(e)}", exc_info=True)
+            return build_response(status=400, message=f"删除失败：{str(e)}")
+        except Exception as e:
+            logging.error(f"删除推理服务异常: {str(e)}", exc_info=True)
+            return build_response(status=500, message=f"删除服务时发生错误：{str(e)}")
 
 
 class CloseServiceGroup(Resource):

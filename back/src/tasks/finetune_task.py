@@ -14,6 +14,7 @@
 # limitations under the License.
 
 
+import logging
 from celery import shared_task
 from flask import current_app
 
@@ -34,8 +35,15 @@ def add_task(task_id):
     """
     with current_app.app_context():
         task = db.session.query(FinetuneTask).filter(FinetuneTask.id == task_id).first()
-        task.status = TaskStatus.IN_PROGRESS.value
-        db.session.commit()
+        if not task:
+            logging.warning(f"Task {task_id} not found in add_task")
+            return
+        
+        # 检查任务状态，如果已取消则直接返回
+        if task.status == TaskStatus.CANCEL.value:
+            logging.info(f"Task {task_id} has been cancelled, skipping add_task")
+            return
+        
         manage.add_task(task_id)
 
 

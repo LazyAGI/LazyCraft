@@ -89,7 +89,7 @@ def init_app(app: Flask) -> Celery:
     periodic_tasks = {
         "check-status-every-10-seconds": {
             "task": "tasks.finetune_task.check_status",
-            "schedule": timedelta(seconds=60),
+            "schedule": timedelta(seconds=10),
         },
         "cost-audit-daily-stat": {
             "task": "tasks.cost_audit_stat_task.daily_cost_audit_stat",

@@ -707,22 +707,63 @@ class ModelService:
         if not model:
             raise CommonError("模型不存在，无法保存在线模型列表")
 
-        # 2. 检查model_list每条数据是否已存在
+        is_administrator = self.account.id == Account.get_administrator_id()
+
+        # 2. 检查model_list每条数据是否已存在（区分管理员和普通用户）
         existed_keys = []
+        conflict_user_records = []  # 记录需要禁用的普通用户记录
+
         for item in model_list:
             model_key = item.get("model_key")
             if not model_key:
                 continue
-            exists = LazymodelOnlineModels.query.filter_by(
-                model_id=model_id, model_key=model_key, deleted_flag=0
-            ).first()
-            if exists:
-                existed_keys.append(model_key)
+
+            if is_administrator:
+                # 管理员：检查内置模型是否已存在
+                builtin_exists = LazymodelOnlineModels.query.filter_by(
+                    model_id=model_id, model_key=model_key,
+                    builtin_flag=True, deleted_flag=0
+                ).first()
+                if builtin_exists:
+                    existed_keys.append(model_key)
+                else:
+                    # 检查普通用户是否有同名模型，如果有则需要禁用
+                    user_records = LazymodelOnlineModels.query.filter(
+                        LazymodelOnlineModels.model_id == model_id,
+                        LazymodelOnlineModels.model_key == model_key,
+                        LazymodelOnlineModels.builtin_flag == False,
+                        LazymodelOnlineModels.deleted_flag == 0
+                    ).all()
+                    conflict_user_records.extend(user_records)
+            else:
+                # 普通用户：先检查内置模型是否存在
+                builtin_exists = LazymodelOnlineModels.query.filter_by(
+                    model_id=model_id, model_key=model_key,
+                    builtin_flag=True, deleted_flag=0
+                ).first()
+                if builtin_exists:
+                    existed_keys.append(f"{model_key}(内置模型已存在)")
+                    continue
+
+                # 再检查当前用户+租户是否已添加
+                user_exists = LazymodelOnlineModels.query.filter_by(
+                    model_id=model_id, model_key=model_key,
+                    user_id=self.account.id,
+                    tenant_id=self.account.current_tenant_id,
+                    deleted_flag=0
+                ).first()
+                if user_exists:
+                    existed_keys.append(model_key)
 
         if existed_keys:
             raise CommonError(f"以下model_key已存在: {', '.join(existed_keys)}")
 
-        # 3. 批量保存
+        # 3. 如果是管理员添加，禁用冲突的普通用户记录
+        if is_administrator and conflict_user_records:
+            for record in conflict_user_records:
+                record.deleted_flag = 1
+
+        # 4. 批量保存（设置 builtin_flag）
         now = TimeTools.get_china_now()
         new_models = []
         for item in model_list:
@@ -744,6 +785,7 @@ class ModelService:
                 created_at=now,
                 updated_at=now,
                 finetune_task_id=0,
+                builtin_flag=is_administrator,
             )
             new_models.append(new_model)
         if new_models:
@@ -757,6 +799,8 @@ class ModelService:
         """
         删除 LazymodelOnlineModels 表中指定 model_id 和 model_key 的记录（逻辑删除）。
 
+        普通用户不能删除内置模型（builtin_flag=True）。
+
         Args:
             model_id (int): Lazymodel 主表ID。
             model_keys (list): 需要删除的 model_key 列表。
@@ -765,21 +809,27 @@ class ModelService:
             dict: 删除结果，包含 message 和 success 字段。
 
         Raises:
-            CommonError: 如果参数为空或模型不存在。
+            CommonError: 如果参数为空、模型不存在或无权限删除内置模型。
         """
         if not model_id or not model_keys:
             raise CommonError("model_id和model_keys不能为空")
         # 1. 校验model_id是否存在
         model = Lazymodel.query.filter_by(id=model_id, deleted_flag=0).first()
         if not model:
-            raise CommonError("模型不存在，无法保存在线模型列表")
-        # 查询并逻辑删除
+            raise CommonError("模型不存在，无法删除在线模型列表")
+
+        is_administrator = self.account.id == Account.get_administrator_id()
+
+        # 2. 查询并逻辑删除（普通用户不能删除内置模型）
         deleted_count = 0
         for key in model_keys:
             record = LazymodelOnlineModels.query.filter_by(
                 model_id=model_id, model_key=key, deleted_flag=0
             ).first()
             if record:
+                # 普通用户不能删除内置模型
+                if record.builtin_flag and not is_administrator:
+                    raise CommonError(f"内置模型 {key} 无权限删除")
                 record.deleted_flag = 1
                 deleted_count += 1
         if deleted_count > 0:
@@ -1270,15 +1320,50 @@ class ModelService:
                     if base_model_path:
                         target_model_path = os.path.join(base_model_path, model.model_name)
                         if os.path.exists(target_model_path):
-                            final_model_path = target_model_path
-                        else:
+                            # 如果是软链接，需要删除后重新复制
+                            if os.path.islink(target_model_path):
+                                os.unlink(target_model_path)
+                                logging.info(
+                                    "删除旧的软链接: %s", target_model_path
+                                )
+                            else:
+                                # 如果目标路径已存在且是实际目录，直接使用
+                                final_model_path = target_model_path
+                                logging.info(
+                                    "模型目录已存在: %s", target_model_path
+                                )
+                        
+                        # 如果目标路径不存在或已被删除，则复制模型文件
+                        if not os.path.exists(target_model_path):
                             os.makedirs(base_model_path, exist_ok=True)
-                            os.symlink(res, target_model_path)
+                            # 如果 res 是软链接，获取实际路径
+                            source_path = res
+                            if os.path.islink(res):
+                                source_path = os.path.realpath(res)
+                                logging.info(
+                                    "源路径是软链接，使用实际路径: %s -> %s",
+                                    res,
+                                    source_path,
+                                )
+                            
+                            # 验证源路径是否存在且是有效目录
+                            if not os.path.exists(source_path) or not os.path.isdir(source_path):
+                                error_msg = f"源模型路径无效: {source_path}"
+                                logging.error(error_msg)
+                                raise CommonError(error_msg)
+                            
                             logging.info(
-                                "为模型 %s 创建软链接: %s -> %s",
+                                "开始复制模型 %s 从 %s 到 %s",
+                                model.model_name,
+                                source_path,
+                                target_model_path,
+                            )
+                            # 复制模型文件到目标路径
+                            shutil.copytree(source_path, target_model_path)
+                            logging.info(
+                                "模型复制完成: %s -> %s",
                                 model.model_name,
                                 target_model_path,
-                                res,
                             )
                             final_model_path = target_model_path
                     model.model_path = final_model_path

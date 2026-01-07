@@ -65,11 +65,28 @@ def get_service_info(service_id):
             model_info = Lazymodel.query.get(service.model_id)
             if model_info.model_from == "finetune":
                 model_name = model_info.model_key_ams
-                get_service_info_res["model_name"] = model_info.model_key_ams
-            for local_ams_model in ams_local_model_list_ams:
-                if local_ams_model["model_name"] == model_name:
-                    get_service_info_res["framework"] = local_ams_model["framework"]
-                    break
+            get_service_info_res["model_name"] = model_name
+            try:
+                ams_get_url = os.getenv("AMS_ENDPOINT", "NOT_SET_AMS_ENDPOINT!!") + "/v1/inference_services/" + service.gid
+                logging.info(f"Getting deploy_method from LazyLLM for model: {ams_get_url}")
+                response = requests.get(ams_get_url, timeout=10)
+                if response.status_code == 200:
+                    response_data = response.json()
+                    deploy_method = response_data.get("deploy_method")
+                    logging.info(f"Got deploy_method from LazyLLM: {deploy_method}")
+                    if deploy_method:
+                        get_service_info_res["framework"] = deploy_method
+                else:
+                    logging.warning(f"Failed to get deploy_method from LazyLLM: status_code={response.status_code}, response={response.text}")
+            except Exception as e:
+                logging.warning(f"Failed to get deploy_method from LazyLLM for model: {e}")
+            
+            if "framework" not in get_service_info_res:
+                for local_ams_model in ams_local_model_list_ams:
+                    lm_name = (local_ams_model.get("name") or local_ams_model.get("key") or "").lower()
+                    if lm_name and lm_name == (model_name or "").lower():
+                        get_service_info_res["framework"] = local_ams_model.get("framework", "")
+                        break
 
     except Exception as e:
         logging.info(f"get_service_info failed, id: {service_id}, error: {str(e)}")
@@ -291,16 +308,23 @@ class InferService:
                     if ams_get_service_status_return == "Available":
                         ams_service_status[str(service.gid)] = "Ready"
                     elif ams_get_service_status_return == "Unavailable":
-                        # 判断service.updated_time与当前系统时间是否超过2分钟，如果没有超过2分钟，则设置为Running
                         if (
                             service.updated_time + timedelta(minutes=2)
                             > TimeTools.now_datetime_china()
                         ):
-                            ams_service_status[str(service.gid)] = "Running"
+                            ams_service_status[str(service.gid)] = "Pending"
                         else:
                             ams_service_status[str(service.gid)] = "Failed"
                     elif ams_get_service_status_return == "Unknown":
                         ams_service_status[str(service.gid)] = "Cancelled"
+                    elif ams_get_service_status_return == "Done":
+                        # Done 状态可能表示服务启动完成，但也可能表示启动失败
+                        # 如果 endpoint 是 "unknown"，说明服务启动失败
+                        if ams_get_service_status_endpoint == "unknown":
+                            ams_service_status[str(service.gid)] = "Failed"
+                        else:
+                            # endpoint 有效，说明服务启动成功，映射为 Ready
+                            ams_service_status[str(service.gid)] = "Ready"
                     else:
                         ams_service_status[str(service.gid)] = (
                             ams_get_service_status_return
@@ -309,17 +333,21 @@ class InferService:
                     model_info = Lazymodel.query.get(service.model_id)
                     if model_info.model_from == "finetune":
                         ams_model_name = model_info.model_key_ams
-                    for local_ams_model in ams_local_model_list_ams:
-                        if local_ams_model["model_name"] == ams_model_name:
-                            if "http" in ams_get_service_status_endpoint:
-                                endpoint_url = ams_get_service_status_endpoint
-                            else:
+
+                    endpoint_url = ""
+                    if "http" in ams_get_service_status_endpoint:
+                        endpoint_url = ams_get_service_status_endpoint
+                    else:
+                        for local_ams_model in ams_local_model_list_ams:
+                            if local_ams_model["name"] == ams_model_name:
                                 endpoint_url = (
-                                    "http://"
-                                    + ams_get_service_status_endpoint
-                                    + local_ams_model["endpoint"]
+                                "http://"
+                                + ams_get_service_status_endpoint
+                                + local_ams_model["endpoint"]
                                 )
-                            ams_service_endpoint[str(service.gid)] = endpoint_url
+                                break
+                    ams_service_endpoint[str(service.gid)] = endpoint_url
+
         return ams_service_status, ams_service_endpoint
 
     def _process_status_filter(self, status):
@@ -376,6 +404,7 @@ class InferService:
                     "job_id": ams_service_endpoint.get(service.gid, ""),
                     "token": service.tenant_id,
                     "logs": service.logs,
+                    "model_num_gpus": service.model_num_gpus if hasattr(service, 'model_num_gpus') else 1,
                     "created_by": Account.query.get(service.created_by).name,
                     "created_at": service.created_time.strftime("%Y-%m-%d %H:%M:%S"),
                     "updated_at": service.updated_time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -595,23 +624,24 @@ class InferService:
         ams_get_service_status_result, ams_get_service_status_status, ams_get_service_status_endpoint = self.ams_get_service_status(
             service_info_map["service_name_ams"]
         )
+        service_info_map["url"] = ""
         
         # 如果AMS服务状态获取失败，返回空URL
         if not ams_get_service_status_result or not ams_get_service_status_endpoint:
-            service_info_map["url"] = ""
             return service_info_map
             
-        for local_ams_model in ams_local_model_list_ams:
-            if local_ams_model["model_name"] == service_info_map["model_name"]:
-                if "http" in ams_get_service_status_endpoint:
-                    service_info_map["url"] = ams_get_service_status_endpoint
-                else:
+        if "http" in ams_get_service_status_endpoint:
+            service_info_map["url"] = ams_get_service_status_endpoint
+        else:
+            for local_ams_model in ams_local_model_list_ams:
+                if local_ams_model["name"] == service_info_map["model_name"]:
                     service_info_map["url"] = (
                         "http://"
                         + ams_get_service_status_endpoint
                         + local_ams_model["endpoint"]
                     )
-                break
+                    break
+
         return service_info_map
 
     def create_infer_model_service_group(
@@ -779,13 +809,8 @@ class InferService:
             cleaned_count = 0
             for service in orphaned_services:
                 try:
-                    # 停止服务
+                    # 停止服务（stop_service 内部会处理 GPU 资源释放）
                     self.stop_service(service.id)
-
-                    # 释放GPU资源（如果不是超级管理员）
-                    account = Account.default_getone(current_user.id)
-                    if not account.is_super:
-                        Tenant.decrement_gpu_usage(service.tenant_id, 1)
 
                     # 删除服务记录
                     db.session.delete(service)
@@ -821,21 +846,28 @@ class InferService:
         try:
             service = InferModelService.query.get(service_id)
             if not service:
+                logging.warning(f"删除服务失败：服务不存在，service_id: {service_id}")
                 raise ValueError("服务不存在")
 
             # 保存服务组ID，用于后续检查
             group_id = service.group_id
 
             # 停止服务
-            stop_service_result = self.stop_service(service.id)
-            if not stop_service_result:
-                return False
+            try:
+                stop_service_result = self.stop_service(service.id)
+                if not stop_service_result:
+                    logging.warning(f"停止服务失败，service_id: {service_id}，但继续尝试删除数据库记录")
+                    # 即使停止服务失败，也尝试删除数据库记录（可能是服务已经不存在于AMS中）
+            except Exception as e:
+                logging.warning(f"停止服务时发生异常，service_id: {service_id}，但继续尝试删除数据库记录: {str(e)}")
+                # 即使停止服务失败，也尝试删除数据库记录
 
             # 使用事务确保原子性操作
             try:
                 # 删除服务记录
                 db.session.delete(service)
                 db.session.commit()
+                logging.info(f"已删除服务记录: {service_id}")
 
                 # 检查服务组是否还有其他服务（在事务中重新查询）
                 remaining_services = InferModelService.query.filter_by(
@@ -853,12 +885,16 @@ class InferService:
 
             except Exception as e:
                 db.session.rollback()
-                logging.error(f"删除服务时数据库操作失败: {str(e)}")
+                logging.error(f"删除服务时数据库操作失败: {str(e)}", exc_info=True)
                 raise
 
+        except ValueError as e:
+            # 重新抛出 ValueError，让上层处理
+            raise
         except Exception as e:
             db.session.rollback()
-            raise ValueError("删除推理服务失败") from e
+            logging.error(f"删除推理服务异常: {str(e)}", exc_info=True)
+            raise ValueError(f"删除推理服务失败: {str(e)}") from e
 
     def ams_stop_service(self, lws_release_name):
         """通过AMS停止服务。
@@ -918,26 +954,51 @@ class InferService:
         Raises:
             ValueError: 当停止服务失败时抛出异常。
         """
-        service = InferModelService.query.get(service_id)
         try:
+            from flask_login import current_user
+            from core.account_manager import AccountService
+
+            logging.info(f"[stop_service] 开始停止服务，service_id: {service_id}")
+            admin_account = AccountService.load_user(user_id=Account.get_administrator_id())
+            current_user = current_user if current_user else admin_account
+
+            service = InferModelService.query.get(service_id)
+            if not service:
+                logging.warning(f"[stop_service] 服务不存在，service_id: {service_id}")
+                return False
+
+            logging.info(f"[stop_service] 服务信息: id={service.id}, gid={service.gid}, model_num_gpus={service.model_num_gpus}")
+
             if service.gid:
+                logging.info(f"[stop_service] 调用AMS停止服务，gid: {service.gid}")
                 ams_stop_service_result = self.ams_stop_service(service.gid)
                 if not ams_stop_service_result:
-                    logging.info(f"ams delete failed: {service.gid}")
+                    logging.warning(f"[stop_service] AMS停止服务失败，gid: {service.gid}")
                     return False
+                logging.info(f"[stop_service] AMS停止服务成功，gid: {service.gid}")
+                service.gid = None
+            else:
+                logging.warning(f"[stop_service] 服务gid为空，跳过AMS停止调用，service_id: {service_id}")
 
             # 检查当前用户是否为超级管理员
             account = Account.default_getone(current_user.id)
             # 只有非超级管理员需要释放GPU资源统计
             if not account.is_super:
+                gpu_count = 1 if service.model_num_gpus is None or service.model_num_gpus < 1 else service.model_num_gpus
+                logging.info(f"[stop_service] 释放GPU资源，tenant_id: {service.tenant_id}, gpu_count: {gpu_count}")
                 # 释放GPU资源
-                Tenant.decrement_gpu_usage(service.tenant_id, 1 if service.model_num_gpus is None or service.model_num_gpus < 1 else service.model_num_gpus)
+                Tenant.decrement_gpu_usage(service.tenant_id, gpu_count)
+            else:
+                logging.info(f"[stop_service] 超级管理员，跳过GPU资源释放")
 
             db.session.commit()
+            logging.info(f"[stop_service] 服务停止成功，service_id: {service_id}")
             return True
         except Exception as e:
             db.session.rollback()
-            raise ValueError(f"任务取消失败，id: {service.gid}") from e
+            service_gid = service.gid if service and hasattr(service, 'gid') else 'unknown'
+            logging.error(f"停止服务异常，service_id: {service_id}, gid: {service_gid}, error: {str(e)}", exc_info=True)
+            raise ValueError(f"任务取消失败，id: {service_gid}") from e
 
     def ams_start_service(self, service_name, model_name, model_num_gpus=1):
         """通过AMS启动服务。

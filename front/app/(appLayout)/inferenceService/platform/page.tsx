@@ -534,15 +534,19 @@ const InferenceService = () => {
                               rules={[
                                 {
                                   required: true,
-                                  message: '',
+                                  type: 'number',
+                                  message: '请输入显卡数量',
                                 },
                                 {
                                   validator: (_, value) => {
-                                    if (value === undefined || value === null || value === '')
-                                      return Promise.reject(new Error('请输入显卡数量'))
-                                    const numValue = Number(value)
-                                    if (!Number.isInteger(numValue) || numValue < 1)
+                                    // 先检查值是否存在（required 规则会处理 undefined/null）
+                                    if (value === undefined || value === null) {
+                                      return Promise.resolve()
+                                    }
+                                    // 检查是否为整数且 >= 1
+                                    if (!Number.isInteger(value) || value < 1) {
                                       return Promise.reject(new Error('显卡数量需为大于等于1的整数'))
+                                    }
                                     return Promise.resolve()
                                   },
                                 },

@@ -20,6 +20,7 @@ from flask_login import current_user
 from flask_restful import inputs, marshal, reqparse
 
 from core.restful import Resource
+from core.account_manager import CommonError
 from libs.feature_gate import require_internet_feature
 from libs.login import login_required
 from parts.finetune.finetune_service import FinetuneService
@@ -140,7 +141,20 @@ class FinetuneListPageApi(Resource):
         
         client = FinetuneService(current_user)
         pagination = client.get_paginate_tasks(current_user, args)
-        return marshal(pagination, fields.finetune_pagination_fields)
+        result = marshal(pagination, fields.finetune_pagination_fields)
+        # Format train_runtime with progress percent for each task in the list
+        if result.get('data') and pagination.items:
+            # Match tasks by index (marshal preserves order)
+            for idx, task in enumerate(result['data']):
+                if idx < len(pagination.items):
+                    task_obj = pagination.items[idx]
+                    train_runtime = task.get('train_runtime', 0)
+                    if task_obj.task_job_info_dict and task_obj.task_job_info_dict.get('progress_percent') is not None:
+                        progress_percent = task_obj.task_job_info_dict['progress_percent']
+                        task['train_runtime'] = f"{train_runtime}s(进度约{progress_percent}%)"
+                    else:
+                        task['train_runtime'] = f"{train_runtime}s"
+        return result
 
 
 class FinetuneDeleteApi(Resource):
@@ -467,11 +481,12 @@ class FinetunePauseApi(Resource):
         Returns:
             tuple: (响应消息, HTTP状态码)
                 成功: ({"message": "操作成功", "code": 200}, 200)
-                失败: ({"message": "停止失败，请重试。", "code": 400}, 400)
+                失败: ({"message": 错误信息, "code": 400}, 400)
 
         Raises:
             PermissionError: 当用户没有暂停权限时
             ValueError: 当任务不存在时
+            CommonError: 当暂停失败时（包含详细错误信息）
         """
         task = (
             db.session.query(FinetuneTask)
@@ -482,11 +497,14 @@ class FinetunePauseApi(Resource):
         )
         self.check_can_write_object(task)
         service = FinetuneService(current_user)
-        res = service.pause_task(task_id)
-        if res:
-            return {"message": "操作成功", "code": 200}, 200
-        else:
-            return {"message": "停止失败，请重试。", "code": 400}, 400
+        try:
+            res = service.pause_task(task_id)
+            if res:
+                return {"message": "操作成功", "code": 200}, 200
+            else:
+                return {"message": "停止失败，请重试。", "code": 400}, 400
+        except CommonError as e:
+            return {"message": str(e), "code": 400}, 400
 
 
 class FinetuneResumeApi(Resource):
@@ -502,11 +520,12 @@ class FinetuneResumeApi(Resource):
         Returns:
             tuple: (响应消息, HTTP状态码)
                 成功: ({"message": "操作成功", "code": 200}, 200)
-                失败: ({"message": "启动失败，请重试。", "code": 400}, 400)
+                失败: ({"message": 错误信息, "code": 400}, 400)
 
         Raises:
             PermissionError: 当用户没有恢复权限时
             ValueError: 当任务不存在时
+            CommonError: 当恢复失败时（包含详细错误信息）
         """
         task = (
             db.session.query(FinetuneTask)
@@ -517,11 +536,14 @@ class FinetuneResumeApi(Resource):
         )
         self.check_can_write_object(task)
         service = FinetuneService(current_user)
-        res = service.resume_task(task_id)
-        if res:
-            return {"message": "操作成功", "code": 200}, 200
-        else:
-            return {"message": "启动失败，请重试。", "code": 400}, 400
+        try:
+            res = service.resume_task(task_id)
+            if res:
+                return {"message": "操作成功", "code": 200}, 200
+            else:
+                return {"message": "启动失败，请重试。", "code": 400}, 400
+        except CommonError as e:
+            return {"message": str(e), "code": 400}, 400
 
 
 class FinetuneRunningMetricsApi(Resource):

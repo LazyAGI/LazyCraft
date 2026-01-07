@@ -84,7 +84,11 @@ class EngineExecutor:
                 graph_data[key] = []
 
         if not graph_data["nodes"]:
-            raise ValueError("Graph data must contain at least one node")
+            raise ValueError(
+                "图数据验证失败：图数据必须包含至少一个节点。"
+                "可能的原因：1) 节点不存在或已被删除；2) 节点构建失败；3) 工作流数据异常。"
+                "建议：请刷新页面以同步最新数据，或检查节点配置是否正确。"
+            )
 
     def _setup_database_connection(self) -> None:
         """设置数据库连接信息。
@@ -253,7 +257,8 @@ class EngineExecutor:
             check_res = LazyConverter.is_graph_can_run(graph_data)
             if not check_res:
                 raise ValueError(
-                    "Graph data processing failed: There are nodes that have failed to build"
+                    "图数据处理失败：存在构建失败的节点。"
+                    "建议：请检查节点配置是否正确，或刷新页面后重试。"
                 )
 
             self._validate_graph_data(graph_data)
@@ -263,9 +268,16 @@ class EngineExecutor:
             )
 
             return graph_data
+        except ValueError as e:
+            # ValueError 已经包含友好的中文错误信息，直接抛出
+            self._logger.error(f"图数据处理失败: {e}")
+            raise
         except Exception as e:
-            self._logger.error(f"Graph data processing failed: {e}")
-            raise ValueError(f"Graph data processing failed: {e}")
+            self._logger.error(f"图数据处理失败: {e}", exc_info=True)
+            raise ValueError(
+                f"图数据处理失败: {str(e)}。"
+                "建议：请检查工作流配置是否正确，或刷新页面后重试。"
+            )
 
     def add_server_resource_if_needed(
         self, resources: list[dict[str, Any]]
@@ -463,17 +475,51 @@ class EngineExecutor:
             raise
 
     def process_single_node_graph(self, workflow, node_id) -> dict[str, Any]:
-        converter = LazyConverter(workflow)
-        graph_data = converter.single_virtual_node_graph(node_id)
+        try:
+            converter = LazyConverter(workflow)
+        except Exception as e:
+            self._logger.error(f"工作流数据转换失败: {e}")
+            raise ValueError(
+                f"工作流数据异常，无法处理。错误详情: {str(e)}。"
+                "建议：请刷新页面以同步最新数据。"
+            )
+        
+        try:
+            graph_data = converter.single_virtual_node_graph(node_id)
+        except KeyError as e:
+            self._logger.error(f"节点 {node_id} 不存在: {e}")
+            raise ValueError(
+                f"节点不存在或已被删除。"
+                "建议：请刷新页面以同步最新数据，或检查节点是否已被删除。"
+            )
+        except ValueError as e:
+            # single_virtual_node_graph 已经提供了友好的错误信息，直接抛出
+            self._logger.error(f"节点 {node_id} 图数据生成失败: {e}")
+            raise
+        except Exception as e:
+            self._logger.error(f"节点 {node_id} 处理失败: {e}", exc_info=True)
+            raise ValueError(
+                f"节点处理失败: {str(e)}。"
+                "建议：请检查节点配置是否正确，或刷新页面后重试。"
+            )
+        
         check_res = LazyConverter.is_graph_can_run(graph_data)
         if not check_res:
+            self._logger.error(
+                f"节点 {node_id} 图数据验证失败: "
+                f"nodes={len(graph_data.get('nodes', []))}, "
+                f"edges={len(graph_data.get('edges', []))}, "
+                f"resources={len(graph_data.get('resources', []))}"
+            )
             raise ValueError(
-                "Graph data processing failed: There are nodes that have failed to build"
+                f"图数据验证失败：存在构建失败的节点。"
+                "建议：请检查节点配置是否正确，或刷新页面后重试。"
             )
 
         self._validate_graph_data(graph_data)
         self._logger.info(
-            f"Graph data processing completed: nodes={len(graph_data.get('nodes', []))}, "
+            f"节点 {node_id} 图数据处理完成: "
+            f"nodes={len(graph_data.get('nodes', []))}, "
             f"edges={len(graph_data.get('edges', []))}"
         )
 

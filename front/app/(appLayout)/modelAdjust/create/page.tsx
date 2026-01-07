@@ -31,7 +31,6 @@ const CreateModelAdjust = () => {
   const [configForm] = Form.useForm()
   const [modalForm] = Form.useForm()
   const [configType, setConfigType] = useState(1)
-  const [mType, setMType] = useState('')
   const [selectKey, setSelectKey] = useState(null)
   const [modelList, setModelList] = useState<ModelItemType[]>([])
   const [temValue, setTempValue] = useState({})
@@ -65,8 +64,8 @@ const CreateModelAdjust = () => {
     baseForm.validateFields().then((data) => {
       configForm.validateFields().then((values) => {
         const { base_model, val_size, training_type } = data
-        if (mType !== 'local')
-          delete values?.num_gpus
+        // 移除删除num_gpus的逻辑，所有微调任务都需要GPU卡数
+        // 如果没有设置，后端会使用默认值1
         values.val_size = val_size / 100
         values.training_type = training_type
         delete data.val_size
@@ -127,6 +126,7 @@ const CreateModelAdjust = () => {
       num_epochs: option?.num_epochs,
       lora_alpha: option?.lora_alpha,
       num_gpus: option?.num_gpus,
+      save_steps: option?.save_steps,
     })
   }
   const saveConfig = () => {
@@ -399,27 +399,47 @@ const CreateModelAdjust = () => {
                     />
                   </Form.Item>
                 </Col>
-                {
-                  mType === 'local'
-                  && <Col xl={12} lg={24}>
-                    <Form.Item
-                      name="num_gpus"
-                      label="GPU卡数"
-                      initialValue={1}
-                      rules={[{ required: true, message: '请选择GPU卡数' }]}
-                    >
-                      <Select
-                        placeholder='请选择GPU卡数'
-                        options={[
-                          { value: 1, label: 1 },
-                          { value: 2, label: 2 },
-                          { value: 4, label: 4 },
-                          { value: 8, label: 8 },
-                        ]}
-                      />
-                    </Form.Item>
-                  </Col>
-                }
+                <Col xl={12} lg={24}>
+                  <Form.Item
+                    name="num_gpus"
+                    label="GPU卡数"
+                    initialValue={1}
+                    rules={[{ required: true, message: '请选择GPU卡数' }]}
+                  >
+                    <Select
+                      placeholder='请选择GPU卡数'
+                      options={[
+                        { value: 1, label: 1 },
+                        { value: 2, label: 2 },
+                        { value: 4, label: 4 },
+                        { value: 8, label: 8 },
+                      ]}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xl={12} lg={24}>
+                  <Form.Item
+                    name="save_steps"
+                    label="断点保存间隔(步)"
+                    initialValue={500}
+                    validateTrigger='onBlur'
+                    rules={[
+                      { required: true, message: '请输入断点保存间隔' },
+                      {
+                        validator: (_, value) => {
+                          if (!value && value !== 0)
+                            return Promise.reject(new Error('断点保存间隔不能为空'))
+                          const numValue = Number(value)
+                          if (!Number.isInteger(numValue) || numValue < 1)
+                            return Promise.reject(new Error('必须为≥1的整数'))
+                          return Promise.resolve()
+                        },
+                      },
+                    ]}
+                  >
+                    <InputNumber precision={0} style={{ width: '100%' }} max={2147483647} min={1} placeholder='保存间隔步数，默认500' />
+                  </Form.Item>
+                </Col>
                 <Col xl={12} lg={24}>
                   <Form.Item
                     name="batch_size"

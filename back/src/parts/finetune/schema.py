@@ -72,6 +72,7 @@ class FinetuneConfigSchema(Schema):
         required=False, validate=validate.Range(min=0, max=100)
     )  # 范围 [0, 100]
     lora_alpha = fields.Int(required=False, validate=validate.OneOf([8, 16, 32, 64]))
+    save_steps = fields.Int(required=False, validate=validate.Range(min=1))
 
     @validates("num_gpus")
     def validate_num_gpus(self, num_gpus, **kwargs):

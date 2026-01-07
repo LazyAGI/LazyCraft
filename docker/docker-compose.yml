@@ -323,9 +323,10 @@ services:
       - "${PORT:-30382}:80"  # HTTP端口（宿主机30382映射到容器80）
       - "${HTTPS_PORT:-30383}:443"  # HTTPS端口（宿主机30383映射到容器443）
   # cloud-service:
-  #   image: registry.cn-hangzhou.aliyuncs.com/lazyllm/lazyllm:0.6.2
+  #   image: registry.cn-hangzhou.aliyuncs.com/lazyllm/lazyllm:0b1a31c
   #   # lazyllm/lazyllm:0.6.2
   #   restart: always
+  #   shm_size: 2gb
   #   ports:
   #     - "31340:31340"  # 暴露 AMS 服务端口
   #     - "31341:31341"  # 暴露 FT 服务端口
@@ -336,6 +337,7 @@ services:
   #     LAZYLLM_TEMP_DIR: /mnt/lustre/share_data/temp
   #     LAZYLLM_INFER_LOG_ROOT: /mnt/lustre/share_data/logs/infer
   #     LAZYLLM_TRAIN_TARGET_ROOT: /mnt/lustre/share_data/finetune_models
+  #     VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
   #   entrypoint: >
   #     /bin/bash -lc "
   #       source activate lazyllm &&

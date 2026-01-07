@@ -30,6 +30,7 @@ class TaskStatus(Enum):
     """
 
     PENDING = "Pending"  # 等待
+    SUBMITTING = "Submitting"  # 提交中（正在提交到LazyLLM服务）
     IN_PROGRESS = "InProgress"  # 进行中
     COMPLETED = "Completed"  # 已完成
     FAILED = "Failed"  # 失败
@@ -52,6 +53,7 @@ class TaskStatus(Enum):
             TaskStatus.TERMINATED: "终止",
             TaskStatus.SUSPENDED: "暂停",
             TaskStatus.PENDING: "等待",
+            TaskStatus.SUBMITTING: "提交中",
             TaskStatus.IN_PROGRESS: "进行中",
             TaskStatus.COMPLETED: "已完成",
             TaskStatus.FAILED: "失败",
@@ -140,6 +142,9 @@ class FinetuneTask(db.Model):
     finetuning_type = db.Column(db.String(20), nullable=False, default="")
     train_end_time = db.Column(db.DateTime, nullable=True)
     task_job_info = db.Column(db.String(500), nullable=True, default="{}")
+    num_gpus = db.Column(db.Integer, nullable=False, default=1, comment="任务使用的GPU数量")
+    checkpoint_path = db.Column(db.String(500), nullable=True, default=None, comment="checkpoint保存路径（目录），用于恢复训练")
+    suspended_at = db.Column(db.DateTime, nullable=True, default=None, comment="任务暂停时间")
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="finetune_pkey"),
         db.Index("finetune_task_tenant_id_idx", "tenant_id"),

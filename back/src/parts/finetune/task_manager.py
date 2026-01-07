@@ -82,6 +82,8 @@ class TaskManager:
             if self.supplier == "maas"
             else self._handle_completed_task_lazy
         )
+        # 记录上次同步 LazyLLM 任务的时间（用于控制同步频率）
+        self._last_sync_lazyllm_jobs_time = None
 
     def ft_upload_finetuned_model(self, job_id, model_name, model_space_id):
         """上传微调后的模型到FT服务。
@@ -115,11 +117,12 @@ class TaskManager:
             return False
         return True
 
-    def ft_delete_service(self, job_id):
+    def ft_delete_service(self, job_id, max_retries=3):
         """删除FT服务中的任务。
 
         Args:
             job_id (str): 任务ID。
+            max_retries (int): 最大重试次数，默认3次。
 
         Returns:
             bool: 删除操作是否成功。
@@ -129,20 +132,52 @@ class TaskManager:
         """
         ft_delete_url = os.getenv("FT_ENDPOINT", "NOT_SET_FT_ENDPOINT!!") + "/v1/finetuneTasks/" + job_id
         logging.info(f"ft_delete_url: {ft_delete_url}")
-        response = requests.delete(ft_delete_url)
-        response_data = response.json()
-        logging.info(f"ft delete response: {response.status_code}")
-        if response.status_code != 200:
-            logging.info(
-                f"ft_delete_service failed: {response_data.get('code')}, {response_data.get('message')}"
-            )
-            # 如果任务不存在，则返回True code=3表示 task id invalid或者已经删除
-            if (response.status_code == 500 and response_data.get("code") == 13) or (
-                response.status_code == 400 and response_data.get("code") == 3
-            ):
-                return True
-            return False
-        return True
+        
+        for attempt in range(max_retries):
+            try:
+                response = requests.delete(ft_delete_url, timeout=10)
+                response_data = response.json()
+                logging.info(f"ft delete response (attempt {attempt + 1}): {response.status_code}")
+                
+                if response.status_code == 200:
+                    return True
+                
+                if (response.status_code == 500 and response_data.get("code") == 13) or (
+                    response.status_code == 400 and response_data.get("code") == 3
+                ) or response.status_code == 404:
+                    logging.info(f"Job {job_id} not found or already deleted, considering as success")
+                    return True
+                
+                # 如果不是最后一次尝试，等待后重试（指数退避：1秒、2秒、4秒）
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logging.warning(
+                        f"ft_delete_service failed (attempt {attempt + 1}), will retry in {wait_time} seconds: "
+                        f"{response_data.get('code')}, {response_data.get('message')}"
+                    )
+                    time.sleep(wait_time)
+                else:
+                    logging.error(
+                        f"ft_delete_service failed after {max_retries} attempts: "
+                        f"{response_data.get('code')}, {response_data.get('message')}"
+                    )
+            except requests.exceptions.Timeout:
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logging.warning(f"ft_delete_service timeout (attempt {attempt + 1}), will retry in {wait_time} seconds")
+                    time.sleep(wait_time)
+                else:
+                    logging.error(f"ft_delete_service timeout after {max_retries} attempts")
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logging.warning(f"ft_delete_service exception (attempt {attempt + 1}), will retry in {wait_time} seconds: {e}")
+                    time.sleep(wait_time)
+                else:
+                    logging.error(f"ft_delete_service exception after {max_retries} attempts: {e}")
+                    raise
+        
+        return False
 
     def status_change(self, ft_task_status):
         """转换FT任务状态。
@@ -159,9 +194,28 @@ class TaskManager:
             ValueError: 当状态值无效时抛出异常。
         """
         if self.supplier == "lazyllm":
+            # LazyLLM Status 枚举：TBSubmitted, InQueue, Running, Pending, Done, Cancelled, Failed
+            # serve.py 中手动设置的状态：Suspended
+            # Craft TaskStatus 枚举：Pending, Submitting, InProgress, Completed, Failed, Cancel, Unknown, Terminated, Suspended, Download
+            
             if ft_task_status == "Done":
                 return "Completed"
+            elif ft_task_status == "Cancelled":
+                return "Cancel"
+            elif ft_task_status == "Failed":
+                return "Failed"
+            elif ft_task_status == "Running":
+                return "InProgress"
+            elif ft_task_status == "Pending":
+                return "Pending"
+            elif ft_task_status == "TBSubmitted":
+                return "Pending"
+            elif ft_task_status == "InQueue":
+                return "Pending"
+            elif ft_task_status == "Suspended":
+                return "Suspended"
             else:
+                logging.warning(f"Unknown LazyLLM status: {ft_task_status}, returning as is")
                 return ft_task_status
         if ft_task_status == "TASK_STATE_UNSPECIFIED":
             return "Unknown"
@@ -184,36 +238,71 @@ class TaskManager:
         else:
             return "Unknown"
 
-    def get_ft_status(self, job_id):
+    def get_ft_status(self, job_id, task_db=None):
         """获取FT任务状态。
 
         从FT服务获取指定任务的状态。
 
         Args:
             job_id (str): 任务ID。
+            task_db (FinetuneTask, optional): 任务数据库对象
 
         Returns:
-            tuple: (bool, str) 获取结果元组，包含：
+            tuple: (bool, str, dict) 获取结果元组，包含：
                 - bool: 是否成功获取
                 - str: 任务状态或错误信息
+                - dict: 完整的job_info
+                - 特殊返回值：当返回 404 时，返回 "NotReady" 表示任务还未加入 active_jobs
 
         Raises:
             Exception: 当请求FT服务失败时抛出异常。
         """
         ft_status_url = os.getenv("FT_ENDPOINT", "NOT_SET_FT_ENDPOINT!!") + "/v1/finetuneTasks/" + job_id
         logging.info(f"get_ft_status_url: {ft_status_url}")
-        response = requests.get(ft_status_url)
-        response_data = response.json()
-        logging.info(f"get_ft_status response: {response.status_code}")
-        if response.status_code != 200:
-            logging.info(
-                f"get_ft_status failed: {response_data.get('code')}, {response_data.get('message')}"
-            )
-            if response.status_code == 400 and response_data.get("code") == 3:
-                return True, "Terminated"
-            elif response.status_code == 404:
-                return True, "Failed"
-        return True, self.status_change(response_data.get("status"))
+        try:
+            response = requests.get(ft_status_url, timeout=10)
+            response_data = response.json()
+            logging.info(f"get_ft_status response: {response.status_code}")
+            if response.status_code != 200:
+                logging.info(
+                    f"get_ft_status failed: {response_data.get('code')}, {response_data.get('message')}"
+                )
+                if response.status_code == 400 and response_data.get("code") == 3:
+                    return True, "Terminated", None
+                elif response.status_code == 404:
+                    # 404 可能表示：
+                    # 1. 任务还未加入 active_jobs（初始化中）
+                    # 2. 任务已完成并从 active_jobs 中移除，但 _user_job_info 中也没有（可能被清理）
+                    # 3. 任务确实不存在
+                    # 尝试通过 list_jobs 查找已完成的任务
+                    logging.info(f"Job {job_id} not found in get_job_info (404), checking list_jobs for completed tasks")
+                    try:
+                        # 尝试从 list_jobs 中查找已完成的任务
+                        token = "default_token"
+                        lazyllm_jobs = self.ft_list_jobs(token)
+                        if job_id in lazyllm_jobs:
+                            job_info = lazyllm_jobs[job_id]
+                            job_status = self.status_change(job_info.get("status", "Unknown"))
+                            logging.info(f"Found job {job_id} in list_jobs with status: {job_status}")
+                            return True, job_status, job_info
+                        else:
+                            # 任务确实不存在，根据任务创建时间判断
+                            # 如果任务创建超过10分钟仍未找到，可能是任务已被删除或从未创建成功
+                            if task_db and task_db.created_at:
+                                ten_minutes_ago = TimeTools.get_china_now(output="datetime") - timedelta(minutes=10)
+                                if task_db.created_at <= ten_minutes_ago:
+                                    logging.warning(f"Job {job_id} not found in LazyLLM and created more than 10 minutes ago, may be deleted or never created")
+                                    return True, "NotFound", None
+                            logging.info(f"Job {job_id} not found in list_jobs either, may be still initializing")
+                            return True, "NotReady", None
+                    except Exception as e:
+                        logging.error(f"Error checking list_jobs for job {job_id}: {e}")
+                        return True, "NotReady", None
+                return False, str(response_data.get("message", "Unknown error")), None
+            return True, self.status_change(response_data.get("status")), response_data
+        except Exception as e:
+            logging.error(f"get_ft_status exception: {e}")
+            return False, str(e), None
 
     def get_ft_amp_upload_status(self, job_id):
         """获取FT任务AMP上传状态。
@@ -369,6 +458,7 @@ class TaskManager:
         validate_dataset_split_percent,
         training_args,
         training_type,
+        finetune_task_id=None,
     ):
         """向FT服务添加微调任务。
 
@@ -379,6 +469,7 @@ class TaskManager:
             validate_dataset_split_percent (float): 验证集分割百分比。
             training_args (dict): 训练参数。
             training_type (str): 训练类型。
+            finetune_task_id (str, optional): Craft 任务ID，用于幂等性检查。
 
         Returns:
             tuple: (bool, str) 添加结果元组，包含：
@@ -391,7 +482,7 @@ class TaskManager:
         ft_add_task_url = os.getenv("FT_ENDPOINT", "NOT_SET_FT_ENDPOINT!!") + "/v1/finetuneTasks"
         logging.info(
             f"add_task_ft: {ft_add_task_url}, {task_name}, {model_name}, {training_dataset_list}, "
-            f"{validate_dataset_split_percent}, {training_args}, {training_type}"
+            f"{validate_dataset_split_percent}, {training_args}, {training_type}, finetune_task_id={finetune_task_id}"
         )
         json_data = {
             "name": task_name,
@@ -404,7 +495,11 @@ class TaskManager:
         logging.info(
             f"add_task_ft, ft_add_task_url: {ft_add_task_url}, json_data: {json_data}"
         )
-        response = requests.post(ft_add_task_url, json=json_data)
+        # 传递 finetune_task_id 作为查询参数，用于幂等性检查
+        params = {}
+        if finetune_task_id:
+            params['finetune_task_id'] = str(finetune_task_id)
+        response = requests.post(ft_add_task_url, json=json_data, params=params)
         response_data = response.json()
         logging.info(f"add_task_ft response: {response.status_code}")
         if response.status_code != 200:
@@ -467,7 +562,18 @@ class TaskManager:
             "finetuning_type",
             "lora_rate",
             "num_gpus",
+            "quantization_bit",
+            "quantization_type",
+            "double_quantization",
+            "ngpus",
+            "save_steps",
         }
+
+        if "num_gpus" in finetune_config:
+            training_args["ngpus"] = int(finetune_config["num_gpus"])
+
+        if "save_steps" in finetune_config:
+            training_args["save_steps"] = int(finetune_config["save_steps"])
 
         for key, value in finetune_config.items():
             if key in skip_keys:
@@ -477,6 +583,8 @@ class TaskManager:
                 training_args["num_train_epochs"] = str(value)
             elif key == "batch_size":
                 training_args["per_device_train_batch_size"] = str(value)
+            elif key == "finetuning_type":
+                continue
             else:
                 training_args[key] = str(value)
 
@@ -485,16 +593,34 @@ class TaskManager:
     def _add_finetuning_type(self, training_args, finetuning_type):
         """添加微调类型参数。
 
-        向训练参数中添加微调类型。
+        向训练参数中添加微调类型，并根据类型设置相应的量化参数。
+        
+        注意：QLoRA在LLaMA-Factory中使用finetuning_type="lora"，通过quantization参数区分。
+        LoRA和QLoRA的区别：
+        - LoRA: finetuning_type="lora", quantization_type=null, double_quantization=false
+        - QLoRA: finetuning_type="lora", quantization_type="nf4", double_quantization=true
 
         Args:
             training_args (dict): 训练参数字典
-            finetuning_type (str): 微调类型
+            finetuning_type (str): 微调类型（LoRA, QLoRA, Full）
 
         Returns:
             dict: 更新后的训练参数字典
         """
-        training_args["finetuning_type"] = str(finetuning_type).lower()
+        finetuning_type_lower = str(finetuning_type).lower() if finetuning_type else ""
+        
+        # QLoRA 映射为 lora（LLaMA-Factory 中 QLoRA 使用 lora 类型，通过 quantization 参数区分）
+        if finetuning_type_lower == "qlora":
+            training_args["finetuning_type"] = "lora"
+            if "quantization_type" not in training_args or training_args.get("quantization_type") in [None, "null", ""]:
+                training_args["quantization_type"] = "nf4"
+            if "double_quantization" not in training_args:
+                training_args["double_quantization"] = True
+            if "quantization_bit" not in training_args or training_args.get("quantization_bit") in [None, "null", "", 0]:
+                training_args["quantization_bit"] = 4
+        else:
+            training_args["finetuning_type"] = finetuning_type_lower
+        
         return training_args
 
     def _add_lora_config(self, training_args, finetune_config, finetuning_type):
@@ -589,8 +715,13 @@ class TaskManager:
         """
         logging.info("start add_task")
         task = db.session.query(FinetuneTask).get(task_id)
+        
+        if task.status == TaskStatus.CANCEL.value:
+            logging.info(f"Task {task_id} has been cancelled, skipping add_task")
+            return
+        
         config = json.loads(task.finetune_config)
-        token = str(uuid.uuid4())
+        token = "default_token" #str(uuid.uuid4())
         try:
             if task.is_online_model:
                 logging.info("skip online model in ft")
@@ -649,6 +780,8 @@ class TaskManager:
 
                 training_type = config.get("training_type").lower()
 
+                logging.info(f"Submitting task {task_id} to LazyLLM: {task.name}")
+                
                 add_task_ft_result, add_task_ft_return, add_task_ft_status = (
                     self.add_task_ft(
                         task.name,
@@ -657,6 +790,7 @@ class TaskManager:
                         config.get("val_size"),
                         training_args,
                         training_type,
+                        finetune_task_id=str(task_id),  # 传递 Craft 任务ID用于幂等性检查
                     )
                 )
                 logging.info(
@@ -675,10 +809,21 @@ class TaskManager:
                     }
                     logging.info(f"job_info: {job_info}")
                     task = db.session.query(FinetuneTask).get(task_id)
+                    
+                    if task.status == TaskStatus.CANCEL.value:
+                        logging.warning(f"Task {task_id} was cancelled after submission to LazyLLM, cancelling LazyLLM job {add_task_ft_return}")
+                        try:
+                            self.ft_delete_service(add_task_ft_return)
+                            logging.info(f"Cancelled LazyLLM job {add_task_ft_return} for cancelled task {task_id}")
+                        except Exception as e:
+                            logging.error(f"Failed to cancel LazyLLM job {add_task_ft_return}: {e}")
+                        return
+                    
                     task.task_job_info = json.dumps(job_info)
+                    if task.status == TaskStatus.SUBMITTING.value:
+                        task.status = TaskStatus.IN_PROGRESS.value
                     db.session.commit()
 
-                    # 获取初始日志
                     try:
                         logging.info(
                             f"start get_ft_log_sse, job_id: {add_task_ft_return}"
@@ -731,6 +876,10 @@ class TaskManager:
         """检查所有任务状态。
 
         定期检查所有微调任务的状态，更新任务进度和状态。
+        
+        检查范围：
+        - IN_PROGRESS: 正常检查 LazyLLM 状态并同步
+        - SUBMITTING: 检查是否超时，或是否已获得 job_id 但状态未更新
 
         Returns:
             None: 无返回值。
@@ -738,7 +887,9 @@ class TaskManager:
         eight_hours_ago = TimeTools.get_china_now(output="datetime") - timedelta(
             hours=48
         )
-        tasks_db = (
+        
+        # 检查 IN_PROGRESS 状态的任务（正常轮询）
+        tasks_in_progress = (
             db.session.query(FinetuneTask)
             .filter(
                 FinetuneTask.status == TaskStatus.IN_PROGRESS.value,
@@ -748,10 +899,67 @@ class TaskManager:
             .all()
         )
 
-        if tasks_db is not None and len(tasks_db) > 0:
-            for t_db in tasks_db:
+        if tasks_in_progress is not None and len(tasks_in_progress) > 0:
+            for t_db in tasks_in_progress:
                 self._process_single_task(t_db)
+        
+        # 检查 SUBMITTING 状态的任务（防止长时间卡在提交中）
+        five_minutes_ago = TimeTools.get_china_now(output="datetime") - timedelta(
+            minutes=5
+        )
+        tasks_submitting = (
+            db.session.query(FinetuneTask)
+            .filter(
+                FinetuneTask.status == TaskStatus.SUBMITTING.value,
+                FinetuneTask.deleted_flag == 0,
+                FinetuneTask.updated_at <= five_minutes_ago,  # 超过5分钟未更新
+            )
+            .all()
+        )
+        
+        if tasks_submitting is not None and len(tasks_submitting) > 0:
+            for t_db in tasks_submitting:
+                self._process_submitting_task(t_db)
+        
+        # 定期同步 LazyLLM 中的任务（发现 Craft 中不存在但 LazyLLM 中存在的任务）
+        # 每小时执行一次（通过检查时间戳）
+        current_time = TimeTools.get_china_now(output="datetime")
+        if self._last_sync_lazyllm_jobs_time is None or \
+           (current_time - self._last_sync_lazyllm_jobs_time).total_seconds() >= 3600:
+            self._sync_lazyllm_jobs()
+            self._last_sync_lazyllm_jobs_time = current_time
 
+    def _process_submitting_task(self, task_db):
+        """处理 Submitting 状态的任务。
+        
+        检查任务是否：
+        1. 已获得 job_id 但状态未更新（同步状态）
+        2. 超时未获得 job_id（标记为失败）
+        
+        Args:
+            task_db (FinetuneTask): 任务数据库对象
+            
+        Returns:
+            None
+        """
+        if task_db.task_job_info_dict:
+            job_id = task_db.task_job_info_dict.get("job_id")
+            if job_id:
+                logging.info(f"Task {task_db.id} has job_id {job_id} but status is still Submitting, syncing status")
+                task_db.status = TaskStatus.IN_PROGRESS.value
+                db.session.commit()
+                self._process_single_task(task_db)
+                return
+        
+        logging.warning(
+            f"Task {task_db.id} has been in Submitting status for more than 5 minutes "
+            f"without job_id, marking as Failed"
+        )
+        self.handle_failed_task(
+            task_db.id,
+            "任务提交超时：超过5分钟未获得任务ID，可能 LazyLLM 服务异常或网络问题"
+        )
+    
     def _process_single_task(self, task_db):
         """处理单个任务的状态检查。
 
@@ -769,9 +977,36 @@ class TaskManager:
         job_id = task_db.task_job_info_dict["job_id"]
         token = task_db.task_job_info_dict["token"]
         check_count = task_db.task_job_info_dict["check_count"]
-        model_id_or_path = task_db.task_job_info_dict["model_id_or_path"]
+        model_id_or_path = task_db.task_job_info_dict.get("model_id_or_path")
 
-        status = self._get_task_status(task_db, job_id)
+        status, job_info_detail = self._get_task_status(task_db, job_id)
+        
+        # 如果状态为 NotReady，说明任务还未加入 active_jobs，不更新状态
+        # 保持 Submitting 状态，前端按钮不可操作
+        if status == "NotReady":
+            logging.info(f"Task {task_db.id} job {job_id} is not ready yet, keeping Submitting status")
+            # 如果任务状态是 InProgress，但 LazyLLM 返回 NotReady，说明任务可能还在初始化
+            # 将状态回退到 Submitting，等待下次轮询
+            if task_db.status == TaskStatus.IN_PROGRESS.value:
+                task_db.status = TaskStatus.SUBMITTING.value
+                db.session.commit()
+            
+            # 防止僵尸任务：如果任务长时间（10分钟）一直返回 NotReady，标记为失败
+            ten_minutes_ago = TimeTools.get_china_now(output="datetime") - timedelta(minutes=10)
+            if task_db.updated_at <= ten_minutes_ago:
+                logging.warning(
+                    f"Task {task_db.id} job {job_id} has been in NotReady status for more than 10 minutes, "
+                    f"marking as Failed to prevent zombie task"
+                )
+                self.handle_failed_task(
+                    task_db.id,
+                    "任务初始化超时：超过10分钟任务仍未准备好，可能 LazyLLM 服务异常"
+                )
+            return
+
+        if status is None:
+            logging.warning(f"Failed to get status for task {task_db.id} job {job_id}, skipping update")
+            return
 
         try:
             get_ft_log_result, get_ft_log_return = self.get_ft_log(job_id)
@@ -780,43 +1015,81 @@ class TaskManager:
         except Exception as e:
             logging.error(f"get_ft_log error: {e}")
 
+        if job_info_detail:
+            cost = job_info_detail.get('cost')
+            fine_tuned_model = job_info_detail.get('fine_tuned_model')
+            progress_percent = job_info_detail.get('progress_percent')
+            if cost is not None:
+                job_info = task_db.task_job_info_dict
+                job_info['lazyllm_model_path'] = fine_tuned_model
+                old_cost = job_info.get('cost')
+                job_info['cost'] = cost
+                if progress_percent is not None:
+                    job_info['progress_percent'] = progress_percent
+                elif 'progress_percent' in job_info:
+                    job_info.pop('progress_percent', None)
+                task_db.task_job_info = json.dumps(job_info)
+                
+                if old_cost != cost:
+                    task_db.train_runtime = int(cost)
+                    db.session.commit()
+                    logging.info(f"Updated cost and train_runtime for task {task_db.id} from LazyLLM: {cost}s (old: {old_cost}), progress: {progress_percent}%")
+                else:
+                    db.session.commit()
+
         if status == "Completed":
+            job_info = task_db.task_job_info_dict
+            if 'progress_percent' in job_info:
+                job_info.pop('progress_percent', None)
+                task_db.task_job_info = json.dumps(job_info)
+                db.session.commit()
+                logging.info(f"Cleared progress_percent for completed task {task_db.id}")
             self._handle_completed_task(
                 task_db, job_id, token, check_count, model_id_or_path
             )
-            # 调用handle_done_task来处理完成的任务
             self.handle_done_task(task_db.id)
         elif status in ["Failed"]:
+            job_info = task_db.task_job_info_dict
+            if 'progress_percent' in job_info:
+                job_info.pop('progress_percent', None)
+                task_db.task_job_info = json.dumps(job_info)
+                db.session.commit()
+                logging.info(f"Cleared progress_percent for failed task {task_db.id}")
             self.handle_failed_task(task_db.id, "")
 
         print(f"task_id={task_db.id} 状态 job_id={job_id},status={status}")
 
     def _get_task_status(self, task_db, job_id):
-        """获取任务状态。
+        """获取任务状态和完整信息。
 
-        获取指定任务的状态。
+        获取指定任务的状态和完整信息（包含cost等）。
 
         Args:
             task_db (FinetuneTask): 任务数据库对象
             job_id (str): 任务ID
 
         Returns:
-            str: 任务状态
+            tuple: (str, dict) 任务状态和完整的job_info字典
+                - str: 任务状态，如果获取失败则为None
+                - dict: 完整的job_info（包含cost等信息），如果获取失败则为None
 
         Raises:
             Exception: 当获取状态失败时
         """
         if task_db.is_online_model:
-            return None
+            return None, None
         else:
-            get_ft_status_result, get_ft_statusreturn = self.get_ft_status(job_id)
+            get_ft_status_result, get_ft_statusreturn, job_info = self.get_ft_status(job_id, task_db)
             logging.info(
                 f"get_ft_status_result, get_ft_statusreturn: {get_ft_status_result}, {get_ft_statusreturn}"
             )
             if get_ft_status_result:
-                return get_ft_statusreturn
+                # 如果返回 NotFound，说明任务可能已被删除或从未创建成功
+                if get_ft_statusreturn == "NotFound":
+                    return None, None
+                return get_ft_statusreturn, job_info
             else:
-                return None
+                return None, None
 
     def _handle_completed_task_lazy(
         self, task_db, job_id, token, check_count, model_id_or_path
@@ -830,13 +1103,13 @@ class TaskManager:
             job_id (str): 任务ID
             token (str): 认证令牌
             check_count (int): 检查次数
-            model_id_or_path (str): 模型ID或路径
+            model_id_or_path (str): 模型ID或路径（可能是训练路径，需要通过model:export导出）
 
         Returns:
             None
         """
-        if model_id_or_path is None or model_id_or_path == "":
-            # 上传微调模型
+        if model_id_or_path != task_db.target_model_name:
+            # 执行model:export导出模型
             ft_upload_result = self.ft_upload_finetuned_model(
                 job_id,
                 task_db.target_model_name,
@@ -852,7 +1125,7 @@ class TaskManager:
                     return
                 raise Exception("任务发起异常")
 
-            # 更新任务信息
+            # 更新任务信息，model_id_or_path 设置为 target_model_name（模型名称）
             self._update_task_job_info(
                 task_db, job_id, task_db.target_model_name, token, check_count
             )
@@ -1141,14 +1414,15 @@ class TaskManager:
         Returns:
             None
         """
-        job_info = {
-            "job_id": job_id,
-            "status": "Completed",
-            "model_id_or_path": model_id_or_path,
-            "token": token,
-            "source": "local",
-            "check_count": check_count,
-        }
+        job_info = task_db.task_job_info_dict.copy() if task_db.task_job_info_dict else {}
+        
+        # 更新必要的字段
+        job_info["job_id"] = job_id
+        job_info["status"] = "Completed"
+        job_info["model_id_or_path"] = model_id_or_path
+        job_info["token"] = token
+        job_info["source"] = "local"
+        job_info["check_count"] = check_count
         task_db.task_job_info = json.dumps(job_info)
         db.session.commit()
 
@@ -1256,11 +1530,15 @@ class TaskManager:
             None: 无返回值。
         """
         task = db.session.query(FinetuneTask).filter(FinetuneTask.id == task_id).first()
-        self.update_task_status_to_db(task_id, TaskStatus.FAILED.value)
+        if not task:
+            return
+        
+        # 保存旧状态，用于GPU资源释放判断
+        old_status = task.status
+        self.update_task_status_to_db(task_id, TaskStatus.FAILED.value, old_status=old_status)
         if task.task_job_info_dict:
             job_id = task.task_job_info_dict["job_id"]
 
-            # 检查是否已有日志内容
             if not self._check_existing_log_content(task):
                 get_ft_log_result, get_ft_log_return = self.get_ft_log(job_id)
                 if get_ft_log_result:
@@ -1275,7 +1553,7 @@ class TaskManager:
                 task_id=task.id, log_content="", message=error_message
             )
 
-    def update_task_status_to_db(self, task_id, status):
+    def update_task_status_to_db(self, task_id, status, old_status=None):
         """更新任务状态到数据库。
 
         更新微调任务的状态，包括GPU资源释放、日志记录等。
@@ -1283,6 +1561,7 @@ class TaskManager:
         Args:
             task_id (int): 任务ID。
             status (str): 新的任务状态。
+            old_status (str, optional): 旧状态。如果提供，则使用提供的值；否则从数据库查询。
 
         Returns:
             None: 无返回值。
@@ -1290,45 +1569,76 @@ class TaskManager:
         t = db.session.query(FinetuneTask).filter(FinetuneTask.id == task_id).first()
         if t is None:
             return
-        if t.status not in [TaskStatus.FAILED.value, TaskStatus.COMPLETED.value]:
-            print(f"更新任务状态 task_id={task_id},status={status}")
-            t.status = status
+        
+        # 保存旧状态，用于GPU资源释放判断
+        if old_status is None:
+            old_status = t.status
+        
+        # 如果状态没有变化，且不是终态，直接返回（避免重复更新）
+        if t.status == status and status not in [TaskStatus.FAILED.value, TaskStatus.COMPLETED.value]:
+            return
+        
+        # 如果状态已经是终态（COMPLETED/FAILED），且新状态也是终态，只更新 train_runtime，不更新状态
+        if t.status in [TaskStatus.FAILED.value, TaskStatus.COMPLETED.value] and status in [TaskStatus.FAILED.value, TaskStatus.COMPLETED.value]:
+            # 只更新 train_runtime，不更新状态（避免覆盖终态）
+            if t.task_job_info_dict and t.task_job_info_dict.get('cost') is not None:
+                t.train_runtime = int(t.task_job_info_dict['cost'])
+                t.updated_at = TimeTools.get_china_now()
+                db.session.commit()
+                logging.info(f"Updated train_runtime for task {task_id} from cost: {t.task_job_info_dict['cost']}s")
+            return
+        
+        print(f"更新任务状态 task_id={task_id},status={status}")
+        t.status = status
 
-            # 检查是否为超级管理员
-            account = Account.default_getone(t.created_by)
-            if not account.is_super:
-                # 获取租户信息
-                tenant = db.session.query(Tenant).filter_by(id=t.tenant_id).first()
-                if tenant:
-                    # 检查租户的GPU使用情况
-                    if tenant.status != "private":  # 如果不是个人空间
-                        # 当任务开始运行或结束时(完成/失败)都需要释放GPU资源
-                        if status in [
-                            TaskStatus.IN_PROGRESS.value,
-                            TaskStatus.COMPLETED.value,
-                            TaskStatus.FAILED.value,
-                        ]:
-                            if tenant.gpu_used > 0:
-                                tenant.gpu_used -= 1
+        # 检查是否为超级管理员
+        account = Account.default_getone(t.created_by)
+        if not account.is_super:
+            # 获取租户信息
+            tenant = db.session.query(Tenant).filter_by(id=t.tenant_id).first()
+            if tenant:
+                # 当任务完成/失败时释放GPU资源（使用任务的num_gpus）
+                # 如果任务在 InProgress 或 Submitting 状态完成/失败，需要释放GPU
+                if old_status in [TaskStatus.IN_PROGRESS.value, TaskStatus.SUBMITTING.value] and status in [
+                    TaskStatus.COMPLETED.value,
+                    TaskStatus.FAILED.value,
+                ]:
+                    # 使用Tenant的统一方法释放GPU
+                    num_gpus = getattr(t, 'num_gpus', 1)  # 向后兼容，默认1
+                    Tenant.decrement_gpu_usage(t.tenant_id, num_gpus)
+                    logging.info(
+                        f"Released {num_gpus} GPU(s) for task {task_id} "
+                        f"(status: {old_status} -> {status})"
+                    )
 
-            if status == TaskStatus.COMPLETED.value:
-                LogService().add(
-                    Module.MODEL_FINETUNE,
-                    Action.FINETUNE_TRAIN_SUCCESS,
-                    task_name=t.name,
-                    user_id=t.created_by,
-                )
-            if status == TaskStatus.FAILED.value:
-                LogService().add(
-                    Module.MODEL_FINETUNE,
-                    Action.FINETUNE_TRAIN_FAIL,
-                    task_name=t.name,
-                    user_id=t.created_by,
-                )
+        if status == TaskStatus.COMPLETED.value:
+            LogService().add(
+                Module.MODEL_FINETUNE,
+                Action.FINETUNE_TRAIN_SUCCESS,
+                task_name=t.name,
+                user_id=t.created_by,
+            )
+        if status == TaskStatus.FAILED.value:
+            LogService().add(
+                Module.MODEL_FINETUNE,
+                Action.FINETUNE_TRAIN_FAIL,
+                task_name=t.name,
+                user_id=t.created_by,
+            )
+        
+        # 优先使用 LazyLLM 的 cost 值（如果已设置），否则使用 created_at 计算
+        # 注意：cost 可能为 0（任务刚创建），需要显式检查是否为 None
+        if t.task_job_info_dict and t.task_job_info_dict.get('cost') is not None:
+            t.train_runtime = int(t.task_job_info_dict['cost'])
+            logging.info(f"Updated train_runtime for task {task_id} from cost: {t.task_job_info_dict['cost']}s")
+        else:
             t.train_runtime = calculate_time_difference(t.created_at)
-            t.updated_at = TimeTools.get_china_now()
+            logging.info(f"Updated train_runtime for task {task_id} from created_at: {t.train_runtime}s")
+        
+        t.updated_at = TimeTools.get_china_now()
+        if status in [TaskStatus.COMPLETED.value, TaskStatus.FAILED.value]:
             t.train_end_time = TimeTools.get_china_now()
-            db.session.commit()
+        db.session.commit()
 
     def update_task_status_to_db_ft(self, task_id, status):
         """更新FT任务状态到数据库。
@@ -1396,6 +1706,83 @@ class TaskManager:
         storage.save(save_path, content_byte)
         task.log_path = save_path
         db.session.commit()
+
+    def ft_list_jobs(self, token):
+        """获取 LazyLLM 中的所有任务列表。
+        
+        Args:
+            token (str): 认证 token
+            
+        Returns:
+            dict: LazyLLM 返回的任务列表，格式为 {job_id: job_info}
+        """
+        ft_list_jobs_url = os.getenv("FT_ENDPOINT", "NOT_SET_FT_ENDPOINT!!") + "/v1/finetuneTasks/jobs"
+        logging.info(f"ft_list_jobs_url: {ft_list_jobs_url}")
+        try:
+            response = requests.get(ft_list_jobs_url, headers={"token": token}, timeout=30)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logging.warning(f"ft_list_jobs failed: {response.status_code}, {response.text}")
+                return {}
+        except Exception as e:
+            logging.error(f"ft_list_jobs exception: {e}")
+            return {}
+    
+    def _sync_lazyllm_jobs(self):
+        """同步 LazyLLM 中的任务。
+        
+        定期调用 LazyLLM list_jobs API，发现 Craft 中不存在但 LazyLLM 中存在的任务，
+        进行清理（取消这些孤立任务）。
+        """
+        eight_hours_ago = TimeTools.get_china_now(output="datetime") - timedelta(hours=48)
+        recent_tasks = (
+            db.session.query(FinetuneTask)
+            .filter(
+                FinetuneTask.deleted_flag == 0,
+                FinetuneTask.created_at >= eight_hours_ago,
+                FinetuneTask.task_job_info.isnot(None),
+            )
+            .all()
+        )
+        
+        # 收集所有唯一的 token
+        tokens = set()
+        craft_job_ids = set()  # Craft 中已知的 job_id
+        for task in recent_tasks:
+            if task.task_job_info_dict:
+                token = task.task_job_info_dict.get("token")
+                job_id = task.task_job_info_dict.get("job_id")
+                if token:
+                    tokens.add(token)
+                if job_id:
+                    craft_job_ids.add(job_id)
+        
+        # 为每个 token 调用 list_jobs
+        for token in tokens:
+            try:
+                lazyllm_jobs = self.ft_list_jobs(token)
+                if not lazyllm_jobs:
+                    continue
+                
+                # 找出 LazyLLM 中存在但 Craft 中不存在的任务
+                for job_id, job_info in lazyllm_jobs.items():
+                    if job_id not in craft_job_ids:
+                        # 发现孤立任务，尝试取消
+                        job_status = job_info.get("status", "")
+                        # 只取消非终态的任务（Running, Pending, InQueue 等）
+                        if job_status not in ["Done", "Failed", "Cancelled"]:
+                            logging.warning(
+                                f"Found orphaned LazyLLM job {job_id} with status {job_status}, "
+                                f"attempting to cancel"
+                            )
+                            try:
+                                self.ft_delete_service(job_id)
+                                logging.info(f"Cancelled orphaned LazyLLM job {job_id}")
+                            except Exception as e:
+                                logging.error(f"Failed to cancel orphaned job {job_id}: {e}")
+            except Exception as e:
+                logging.error(f"Error syncing LazyLLM jobs for token {token}: {e}")
 
 
 manage = TaskManager()

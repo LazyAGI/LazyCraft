@@ -460,10 +460,10 @@ ams_model_list = [
         "model_type": "local",
         "model_status": 1,
         "is_finetune_model": False,
-        "can_finetune_model": True,
+        "can_finetune_model": False,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "BAAI"
     },
@@ -476,7 +476,7 @@ ams_model_list = [
         "can_finetune_model": True,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Baichuan"
     },
@@ -489,7 +489,7 @@ ams_model_list = [
         "can_finetune_model": True,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Baichuan"
     },
@@ -502,7 +502,7 @@ ams_model_list = [
         "can_finetune_model": True,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "ZhipuAI"
     },
@@ -515,7 +515,7 @@ ams_model_list = [
         "can_finetune_model": True,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "ZhipuAI"
     },
@@ -528,7 +528,7 @@ ams_model_list = [
         "can_finetune_model": True,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Shanghai AI Lab"
     },
@@ -541,7 +541,7 @@ ams_model_list = [
         "can_finetune_model": True,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Shanghai AI Lab"
     },
@@ -554,7 +554,7 @@ ams_model_list = [
         "can_finetune_model": True,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Meta"
     },
@@ -567,7 +567,7 @@ ams_model_list = [
         "can_finetune_model": True,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Meta"
     },
@@ -580,7 +580,7 @@ ams_model_list = [
         "can_finetune_model": True,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Alibaba"
     },
@@ -593,7 +593,7 @@ ams_model_list = [
         "can_finetune_model": True,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Alibaba"
     },
@@ -606,7 +606,7 @@ ams_model_list = [
         "can_finetune_model": True,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Alibaba"
     },
@@ -619,7 +619,7 @@ ams_model_list = [
         "can_finetune_model": True,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Alibaba"
     },
@@ -632,7 +632,7 @@ ams_model_list = [
         "can_finetune_model": True,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Alibaba"
     },
@@ -642,10 +642,10 @@ ams_model_list = [
         "model_type": "local",
         "model_status": 1,
         "is_finetune_model": False,
-        "can_finetune_model": True,
+        "can_finetune_model": False,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Alibaba"
     },
@@ -658,7 +658,7 @@ ams_model_list = [
         "can_finetune_model": False,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Alibaba"
     },
@@ -671,7 +671,7 @@ ams_model_list = [
         "can_finetune_model": True,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Alibaba"
     },
@@ -684,7 +684,20 @@ ams_model_list = [
         "can_finetune_model": True,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
+        "endpoint": "/v1/chat/interactive",
+        "model_brand": "Alibaba"
+    },
+    {
+        "name": "Qwen2.5-32B-Instruct",
+        "key": "Qwen2.5-32B-Instruct",
+        "model_type": "local",
+        "model_status": 1,
+        "is_finetune_model": False,
+        "can_finetune_model": True,
+        "model_kind": "localLLM",
+        "model_from": "modelscope",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Alibaba"
     },
@@ -697,7 +710,7 @@ ams_model_list = [
         "can_finetune_model": False,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Alibaba"
     },
@@ -710,7 +723,7 @@ ams_model_list = [
         "can_finetune_model": False,
         "model_kind": "localLLM",
         "model_from": "modelscope",
-        "framework": "LMDeploy",
+        "framework": "vllm",
         "endpoint": "/v1/chat/interactive",
         "model_brand": "Alibaba"
     },
@@ -859,7 +872,7 @@ ams_model_list = [
         "model_type": "local",
         "model_status": 1,
         "is_finetune_model": False,
-        "can_finetune_model": False,
+        "can_finetune_model": True,
         "model_kind": "reranker",
         "model_from": "modelscope",
         "framework": "RerankerDeploy",
@@ -872,7 +885,7 @@ ams_model_list = [
         "model_type": "local",
         "model_status": 1,
         "is_finetune_model": False,
-        "can_finetune_model": False,
+        "can_finetune_model": True,
         "model_kind": "reranker",
         "model_from": "modelscope",
         "framework": "RerankerDeploy",
