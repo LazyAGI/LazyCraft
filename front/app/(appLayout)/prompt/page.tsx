@@ -13,7 +13,8 @@ import { bindTags } from '@/infrastructure/api/tagManage'
 import TagMode from '@/app/components/tagSelect/TagMode'
 import CreatorSelect from '@/app/components/tagSelect/creatorSelect'
 import { useApplicationContext } from '@/shared/hooks/app-context'
-import { createPrompt, deletePrompt, getAdjustList, getPromptDetail } from '@/infrastructure/api/prompt'
+import { createPrompt, deletePrompt, getPromptDetail } from '@/infrastructure/api/prompt'
+import { PromptService } from '@/infrastructure/api/generated'
 import { pageCache } from '@/shared/utils'
 import AIPromptModal from '@/app/components/AIPromptModal'
 import { usePermitContext } from '@/shared/hooks/permit-context'
@@ -53,20 +54,14 @@ const Prompt = () => {
   }, [isModalOpen])
 
   const getList = async (flag: any, page) => {
-    const url = isPrompt ? '/prompt/list' : '/prompt-template/list'
-    const param: any = {
-      ...pageOption,
-      page,
-      per_page: 16,
-      search_tags: selectTags?.map(item => item.name),
-      user_id: creator,
-      search_name: sName,
-    }
     setLoading(true)
     try {
-      const res: any = await getAdjustList({
-        url,
-        body: param,
+      const res = await PromptService.postPromptList({
+        page,
+        per_page: 16,
+        search_tags: selectTags?.map(item => item.name),
+        user_id: Array.isArray(creator) ? creator : (creator ? [creator] : []),
+        search_name: sName,
       })
       if (res?.result) {
         const { templates = [], next_page, prompts = [] } = res?.result
@@ -80,6 +75,9 @@ const Prompt = () => {
         else
           setHaveMore(true)
       }
+    }
+    catch (error) {
+      console.error('获取列表失败:', error)
     }
     finally {
       setLoading(false)
@@ -103,7 +101,7 @@ const Prompt = () => {
     setIsCopy(false)
     setId(item?.id)
     setTitle(isPrompt ? '编辑Prompt' : '编辑Prompt 模版')
-    const url = isPrompt ? `/prompt/${item?.id}` : `/prompt-template/${item?.id}`
+    const url = `/prompt/${item?.id}`
     const res: any = await getPromptDetail({ url })
     if (res?.status === 0) {
       const { result } = res
