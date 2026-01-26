@@ -260,7 +260,7 @@ class ToolFieldsDetailApi(Resource):
                 except ValueError:
                     return [fields[0]]  # 如果不能转换为整数，保留原字符串
 
-        # 处理多个元素的列表
+        # 同步MCP服务器的工具
         try:
             return [int(f) for f in fields]
         except ValueError:
@@ -270,6 +270,7 @@ class ToolFieldsDetailApi(Resource):
 class ToolApiCreateAndUpdateApi(Resource):
 
     @login_required
+    @require_internet_feature("使用外部API创建TOOL")
     def post(self):
         """HTTP部分的页面编辑(每次都是新增就很诡异)"""
         data = request.json

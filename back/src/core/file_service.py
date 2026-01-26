@@ -156,6 +156,13 @@ class FileService:
         file_name_list = []
         try:
             for file_record in files_to_move:
+                if file_record.user_id != self.user_id:
+                    raise ValueError("文件不属于当前用户")
+                if file_record.knowledge_base_id == knowledge_base_id:
+                    continue  # 文件已经在知识库中，跳过
+                if file_record.knowledge_base_id is not None:
+                    raise ValueError("文件已属于其他知识库")
+                
                 file_record_exist = (
                     db.session.query(FileRecord)
                     .filter(
