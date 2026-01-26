@@ -85,8 +85,17 @@ const CreateModal = (props: any) => {
     form.validateFields().then((data) => {
       if (data.file_urls)
         data.file_urls = data.file_urls.split(',')
-      if (data.file_paths && data.file_paths.fileList && data.file_paths.fileList.length > 0)
-        data.file_paths = data.file_paths.fileList.map(item => item.response.file_path)
+      if (data.file_paths && data.file_paths.fileList && data.file_paths.fileList.length > 0) {
+        const fileList = data.file_paths.fileList
+        // 提取 file_path
+        data.file_paths = fileList.map(item => item.response?.file_path)
+        // 提取所有上传成功文件的 file_id
+        const fileIds = fileList
+          .filter(item => item.response?.file_id)
+          .map(item => item.response.file_id)
+        if (fileIds.length > 0)
+          data.file_ids = fileIds
+      }
       data.from_type = 'upload' // upload 上传， return 回流
 
       createDataset({ url: '/data/create_date_set', body: { ...data } }).then((res) => {
@@ -113,7 +122,7 @@ const CreateModal = (props: any) => {
 
   const uploadProps: UploadProps = {
     name: 'file',
-    customRequest: async ({ file, onSuccess, onError, onProgress }) => {
+    customRequest: async ({ file, onSuccess, onError, onProgress: _onProgress }) => {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('file_type', form.getFieldValue('data_type'))
@@ -135,7 +144,7 @@ const CreateModal = (props: any) => {
         onSuccess?.(result)
       }
       catch (error) {
-        onError?.(error)
+        onError?.(error as Error)
       }
     },
     accept: dataType === 'doc' ? allowedDocTypes.join(',') : allowedPicTypes.join(','),
