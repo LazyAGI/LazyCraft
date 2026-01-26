@@ -144,9 +144,14 @@ const ScriptManage = () => {
     form.validateFields().then(async (values) => {
       setBtnLoading(true)
       try {
+        // 提取 file_id 并添加到请求体中（以数组形式）
+        const body: any = { ...values, icon: '' }
+        if (values.file_id)
+          body.file_id = [values.file_id]
+
         const res: any = await createPrompt({
           url: gUrl,
-          body: { ...values, icon: '' },
+          body,
         })
         if (res?.name) {
           message.success('保存成功')
@@ -195,6 +200,9 @@ const ScriptManage = () => {
       if (info.file.response?.file_path) {
         setFileList(info?.fileList)
         form.setFieldValue('script_url', info.file.response.file_path)
+        // 保存 file_id（如果响应中包含）
+        if (info.file.response?.file_id)
+          form.setFieldValue('file_id', info.file.response.file_id)
         message.success('上传成功')
       }
       else {
@@ -202,6 +210,7 @@ const ScriptManage = () => {
         const filteredFileList = info.fileList.filter((file: any) => file.status !== 'done' || file.response?.file_path)
         setFileList(filteredFileList)
         form.setFieldValue('script_url', '')
+        form.setFieldValue('file_id', '')
         message.error('上传失败，响应数据异常')
       }
     }
@@ -212,6 +221,7 @@ const ScriptManage = () => {
       const filteredFileList = info.fileList.filter((file: any) => file.status !== 'error')
       setFileList(filteredFileList)
       form.setFieldValue('script_url', '')
+      form.setFieldValue('file_id', '')
       const errorMessage = info.file.response?.message || info.file.error?.message || '上传失败，请重试'
       message.error(errorMessage)
     }
@@ -223,6 +233,7 @@ const ScriptManage = () => {
   const onRemove = () => {
     setFileList([])
     form.setFieldValue('script_url', '')
+    form.setFieldValue('file_id', '')
     return true
   }
   const normFile = (e: any) => {
@@ -354,11 +365,11 @@ const ScriptManage = () => {
         </Form.Item>
         <Input.Search allowClear onChange={onSearchChange} value={sValue} onSearch={onSearch} style={{ width: 270 }} placeholder='请输入关键字进行搜索' />
       </div>
-      {loading && !list?.length
+      {(loading && !list?.length)
         ? <div className='flex justify-center items-center' style={{ height: '400px' }}>
           <Spin size="large" tip="加载中..." />
         </div>
-        : list?.length
+        : (list?.length)
           ? <div className={style.scrollWrap} id='scrollableDiv'>
             <InfiniteScroll
               // scrollThreshold={0.3}
@@ -424,6 +435,9 @@ const ScriptManage = () => {
             <Form.Item name="script_id" hidden>
               <Input />
             </Form.Item>
+            <Form.Item name="file_id" hidden>
+              <Input />
+            </Form.Item>
             <Form.Item
               name="name"
               validateTrigger="onBlur"
@@ -449,7 +463,7 @@ const ScriptManage = () => {
                 {
                   validator: (_, value) => {
                     if (value && value.trim() === '')
-                      return Promise.reject('简介不能为空格')
+                      return Promise.reject(new Error('简介不能为空格'))
 
                     return Promise.resolve()
                   },
