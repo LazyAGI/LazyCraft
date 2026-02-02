@@ -9,40 +9,33 @@ import style from './page.module.scss'
 import Iconfont from '@/app/components/base/iconFont'
 import useRadioAuth from '@/shared/hooks/use-radio-auth'
 import TagSelect from '@/app/components/tagSelect'
-import { bindTags } from '@/infrastructure/api/tagManage'
 import TagMode from '@/app/components/tagSelect/TagMode'
 import CreatorSelect from '@/app/components/tagSelect/creatorSelect'
 import { useApplicationContext } from '@/shared/hooks/app-context'
-import { createPrompt, deletePrompt, getPromptDetail } from '@/infrastructure/api/prompt'
-import { PromptService } from '@/infrastructure/api/generated'
-import { pageCache } from '@/shared/utils'
+import { PromptService, Service } from '@/infrastructure/api/generated'
 import AIPromptModal from '@/app/components/AIPromptModal'
 import { usePermitContext } from '@/shared/hooks/permit-context'
 const Prompt = () => {
   const [form] = Form.useForm()
   const authRadio = useRadioAuth()
-  const [value, setValue] = useState(pageCache.getTab({ name: pageCache.category.promptBelong }) || 'prompt')
   const { statusAi } = usePermitContext()
   const [id, setId] = useState('')
   const [title, setTitle] = useState('新建Prompt')
   const [isEdit, setIsEdit] = useState(false)
   const [isView, setIsView] = useState(false)
-  const [isCopy, setIsCopy] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [icon, setIcon] = useState(p1)
+  const [icon] = useState(p1)
   const [list, setList] = useState<any>([])
   const [btnLoading, setBtnLoading] = useState(false)
   const [loading, setLoading] = useState(false)
   const [haveMore, setHaveMore] = useState(true)
   const [pageOption, setPageOption] = useState({ page: 1, per_page: 16 })
-  const [promptType, setPromptType] = useState<'string' | 'dict'>('string')
   const [searchVal, setSearchVal] = useState('')
   const [sName, setSName] = useState('')
   const [creator, setCreator] = useState([]) as any
   const [selectTags, setSelectTags] = useState([]) as any
   const [refreshFlag, setRefreshFlag] = useState(false)
   const [tagSelectKey, setTagSelectKey] = useState(0)
-  const isPrompt = value == 'prompt'
   const selectRef: any = useRef()
   const { userSpecified } = useApplicationContext()
   const [isAIModalOpen, setIsAIModalOpen] = useState(false)
@@ -63,12 +56,14 @@ const Prompt = () => {
         user_id: Array.isArray(creator) ? creator : (creator ? [creator] : []),
         search_name: sName,
       })
-      if (res?.result) {
-        const { templates = [], next_page, prompts = [] } = res?.result
+      const data = res?.data ?? (res as any)?.result
+      if (data) {
+        const prompts = data.prompts ?? []
+        const next_page = data.next_page
         if (flag === 1)
-          setList([...templates, ...prompts])
+          setList(prompts)
         else
-          setList([...list, ...templates, ...prompts])
+          setList([...list, ...prompts])
 
         if (!next_page)
           setHaveMore(false)
@@ -89,7 +84,7 @@ const Prompt = () => {
 
   useUpdateEffect(() => {
     getList(1, 1)
-  }, [value, sName, creator, selectTags, refreshFlag])
+  }, [sName, creator, selectTags, refreshFlag])
   const syncSystemContentFromForm = () => {
     setSystemContent(form.getFieldValue('system') || '')
   }
@@ -98,33 +93,42 @@ const Prompt = () => {
     e.stopPropagation()
     setIsView(false)
     setIsEdit(true)
-    setIsCopy(false)
     setId(item?.id)
-    setTitle(isPrompt ? '编辑Prompt' : '编辑Prompt 模版')
-    const url = `/prompt/${item?.id}`
-    const res: any = await getPromptDetail({ url })
-    if (res?.status === 0) {
-      const { result } = res
+    setTitle('编辑Prompt')
+    setTagSelectKey(prev => prev + 1)
+    setIsModalOpen(true)
+    try {
+      const id = item?.id != null ? Number(item.id) : item?.id
+      if (id == null || Number.isNaN(id)) {
+        message.warning('无法获取该 Prompt 的 ID')
+        return
+      }
+      const res: any = await PromptService.getPrompt(id)
+      const resultData = res?.data ?? res?.result
+      if (!resultData) {
+        message.warning('获取详情失败，请重试')
+        return
+      }
       const currentData: any = {
-        name: result?.name,
-        describe: result?.describe,
-        content: result?.content,
-        tag_names: item?.tags,
+        name: resultData?.name,
+        describe: resultData?.describe,
+        content: resultData?.content,
+        tag_names: item?.tags ?? [],
       }
-      // 解析角色内容
       try {
-        currentData.system = JSON.parse(result?.content)?.find((item: any) => item.role === 'system')?.content?.trim() || ''
-        currentData.user = JSON.parse(result?.content)?.find((item: any) => item.role === 'user')?.content?.trim() || ''
+        currentData.system = JSON.parse(resultData?.content || '[]')?.find((x: any) => x.role === 'system')?.content?.trim() || ''
+        currentData.user = JSON.parse(resultData?.content || '[]')?.find((x: any) => x.role === 'user')?.content?.trim() || ''
       }
-      catch (error) {
+      catch {
         currentData.system = ''
         currentData.user = ''
       }
-      form.setFieldsValue({
-        ...currentData,
-      })
+      form.setFieldsValue({ ...currentData })
       syncSystemContentFromForm()
-      setIsModalOpen(true)
+    }
+    catch (err) {
+      console.error('获取详情失败:', err)
+      message.error('获取详情失败，请重试')
     }
   }
 
@@ -132,26 +136,24 @@ const Prompt = () => {
     e.stopPropagation()
     setIsView(false)
     setIsEdit(false)
-    setIsCopy(true)
     setId('')
-    setTitle(isPrompt ? '复制Prompt' : '复制Prompt 模版')
-    const url = isPrompt ? `/prompt/${item?.id}` : `/prompt-template/${item?.id}`
-    const res: any = await getPromptDetail({ url })
-    if (res?.status === 0) {
-      const { result } = res
+    setTitle('复制Prompt')
+    try {
+      const res: any = await PromptService.getPrompt(Number(item?.id))
+      const result = res?.data ?? res?.result
+      if (!result)
+        return
       let systemContent = ''
       let userContent = ''
-
       try {
         const contentArray = JSON.parse(result?.content || '[]')
-        systemContent = contentArray.find((item: any) => item.role === 'system')?.content?.trim() || ''
-        userContent = contentArray.find((item: any) => item.role === 'user')?.content?.trim() || ''
+        systemContent = contentArray.find((x: any) => x.role === 'system')?.content?.trim() || ''
+        userContent = contentArray.find((x: any) => x.role === 'user')?.content?.trim() || ''
       }
-      catch (error) {
+      catch {
         systemContent = ''
         userContent = ''
       }
-
       const currentData = {
         name: `${result?.name}`,
         describe: result?.describe,
@@ -160,68 +162,69 @@ const Prompt = () => {
         user: userContent,
         tag_names: item?.tags,
       }
-
       form.setFieldsValue(currentData)
       setSystemContent(systemContent)
       setIsModalOpen(true)
+    }
+    catch (err) {
+      console.error('获取详情失败:', err)
     }
   }
 
   const viewDetail = async (item: any) => {
     setIsView(true)
     setIsEdit(false)
-    setIsCopy(false)
     setId(item?.id)
-    setTitle(isPrompt ? '查看Prompt' : '查看Prompt 模版')
-    const url = isPrompt ? `/prompt/${item?.id}` : `/prompt-template/${item?.id}`
-    const res: any = await getPromptDetail({ url })
-    if (res?.status === 0) {
-      const { result } = res
-
+    setTitle('查看Prompt')
+    try {
+      const res: any = await PromptService.getPrompt(Number(item?.id))
+      const result = res?.data ?? res?.result
+      if (!result)
+        return
       const currentData: any = {
         name: result?.name,
         describe: result?.describe,
         content: result?.content,
-        tag_names: item?.tags,
+        tag_names: item?.tags ?? [],
       }
-
-      // 解析角色内容
       try {
-        currentData.system = JSON.parse(result?.content)?.find((item: any) => item.role === 'system')?.content?.trim() || ''
-        currentData.user = JSON.parse(result?.content)?.find((item: any) => item.role === 'user')?.content?.trim() || ''
+        currentData.system = JSON.parse(result?.content || '[]')?.find((x: any) => x.role === 'system')?.content?.trim() || ''
+        currentData.user = JSON.parse(result?.content || '[]')?.find((x: any) => x.role === 'user')?.content?.trim() || ''
       }
-      catch (error) {
+      catch {
         currentData.system = ''
         currentData.user = ''
       }
-
-      form.setFieldsValue({
-        ...currentData,
-      })
+      form.setFieldsValue({ ...currentData })
       syncSystemContentFromForm()
       setIsModalOpen(true)
+    }
+    catch (err) {
+      console.error('获取详情失败:', err)
     }
   }
   const handleDelete = async (e, id: any) => {
     e.stopPropagation()
-    const url = isPrompt ? `/prompt/delete/${id}` : `/prompt-template/delete/${id}`
-    const res: any = await deletePrompt({ url, body: {} })
-    if (res.status === 0) {
-      message.success('删除成功')
-      setPageOption({ ...pageOption, page: 1 })
-      setList([])
-      getList(1, 1)
-      // 重新获取标签
-      selectRef.current.getList()
+    try {
+      const res: any = await PromptService.postPromptDelete(Number(id))
+      const ok = res?.status === 0 || res?.code === 0 || res?.code === 200
+      if (ok) {
+        message.success('删除成功')
+        setPageOption(prev => ({ ...prev, page: 1 }))
+        setList([])
+        await getList(1, 1)
+        selectRef.current?.getList()
+      }
+    }
+    catch (err) {
+      console.error('删除失败:', err)
     }
   }
   const handleCreatePrompt = () => {
     setIsEdit(false)
     setIsView(false)
-    setIsCopy(false)
-    // isPrompt && getOriginList()
-    isPrompt && setPromptType('string')
-    setTitle(isPrompt ? '新建Prompt' : '新建Prompt 模版')
+    setId('')
+    setTitle('新建Prompt')
     form.resetFields()
     setSystemContent('')
     setIsModalOpen(true)
@@ -233,17 +236,9 @@ const Prompt = () => {
       setIsView(false)
       return
     }
-    let gUrl = ''
-    if (isEdit)
-      gUrl = isPrompt ? `/prompt/${id}` : `/prompt-template/${id}`
-    else
-      gUrl = isPrompt ? '/prompt' : '/prompt-template'
-
     form.validateFields().then(async (values) => {
       setBtnLoading(true)
-
       const params = { ...values }
-      // 始终使用角色格式
       params.content = JSON.stringify([
         { role: 'system', content: params.system || '' },
         { role: 'user', content: params.user || '' },
@@ -252,21 +247,32 @@ const Prompt = () => {
       delete params.user
 
       try {
-        const res: any = await createPrompt({
-          url: gUrl,
-          body: params,
-        })
-        if (res.status == 0) {
+        const body = { name: params.name, describe: params.describe, content: params.content, category: params.category }
+        const res: any = isEdit
+          ? await PromptService.postPrompt1(Number(id), body)
+          : await PromptService.postPrompt(body)
+        const ok = res?.status === 0
+        if (ok) {
           message.success('保存成功')
-          form.resetFields()
-          await bindTags({ url: 'tags/bindings/update', body: { type: isPrompt ? 'prompt' : 'prompt_template', tag_names: params?.tag_names, target_id: isEdit ? id : res?.result?.id } })
           setIsModalOpen(false)
-          setPageOption({ ...pageOption, page: 1 })
-          selectRef.current.getList()
+          form.resetFields()
+          setSystemContent('')
+          setPageOption(prev => ({ ...prev, page: 1 }))
           setList([])
-          getList(1, 1)
           if (!isEdit)
             setHaveMore(true)
+          const targetId = isEdit ? String(id) : String(res?.result?.id)
+          try {
+            await Service.postTagsBindingsUpdate({
+              type: 'prompt',
+              tag_names: params?.tag_names ?? [],
+              target_id: targetId,
+            })
+          }
+          finally {
+            selectRef.current?.getList()
+            await getList(1, 1)
+          }
         }
       }
       finally {
@@ -323,7 +329,7 @@ const Prompt = () => {
     <div className={style.promptWrap}>
       <div className={style.top}>
         <TagMode ref={selectRef} selectLabels={selectTags} setSelectLabels={setSelectTags} type='prompt' />
-        <Button type='primary' onClick={handleCreatePrompt}>{isPrompt ? ' 新建 Prompt' : '新建 Prompt模版'}</Button>
+        <Button type='primary' onClick={handleCreatePrompt}>新建 Prompt</Button>
       </div>
       <div className='flex justify-between mt-[15px]'>
         <Form.Item label="其他选项">
@@ -403,7 +409,7 @@ const Prompt = () => {
             <Form.Item
               name="name"
               validateTrigger="onBlur"
-              label={isPrompt ? 'Prompt 名称' : 'Prompt 模版名称'}
+              label="Prompt 名称"
               rules={[
                 { required: true, message: '请输入名称' },
                 { whitespace: true, message: '输入不能为空或仅包含空格' },
@@ -420,7 +426,7 @@ const Prompt = () => {
               noStyle
             >
               {/* TagSelect内部已自带Form.Item */}
-              <TagSelect label={isPrompt ? 'prompt 标签' : 'prompt 模版标签'} key={tagSelectKey} disabled={isView} fieldName="tag_names" type="prompt" onRefresh={async () => {
+              <TagSelect label="prompt 标签" key={tagSelectKey} disabled={isView} fieldName="tag_names" type="prompt" onRefresh={async () => {
                 await selectRef.current.getList()
               }} onTagsDeleted={() => {
                 // 当标签被删除时，清空筛选状态
