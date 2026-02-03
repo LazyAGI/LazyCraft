@@ -4,7 +4,7 @@ import { Button, Cascader, Form, Input, InputNumber, Popconfirm, Select, Table, 
 import { InfoCircleOutlined } from '@ant-design/icons'
 import { COLUMN_DICT, DATA_TYPE_DICT, booleanTypeOptions, dataTypeOptions, defaultAddVal, handleTableCellValue } from '../utils'
 
-import { getDataBaseTableStructureByName } from '@/infrastructure/api/database'
+import { Service } from '@/infrastructure/api/generated'
 
 type FormInstance<T> = GetRef<typeof Form<T>>
 
@@ -12,7 +12,7 @@ const EditableContext = React.createContext<FormInstance<any> | null>(null)
 type EditableRowProps = {
   index: number
 }
-const EditableRow: React.FC<EditableRowProps> = ({ index, ...props }) => {
+const EditableRow: React.FC<EditableRowProps> = ({ index: _index, ...props }) => {
   const [form] = Form.useForm()
   return (
     <Form form={form} component={false}>
@@ -64,16 +64,17 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
       inputRef.current?.focus()
   }, [editing])
 
+  const unionKeyValue = record?.[COLUMN_DICT.UNION_KEY]
   useEffect(() => {
-    if (record?.[COLUMN_DICT.UNION_KEY])
+    if (unionKeyValue)
       setDisableDataType(true)
     else
       setDisableDataType(false)
-  }, [record?.[COLUMN_DICT.UNION_KEY]])
+  }, [unionKeyValue])
 
   const loadData = (selectedOptions: any[]) => {
     const targetOption = selectedOptions[selectedOptions.length - 1]
-    getDataBaseTableStructureByName({ database_id, table_name: targetOption.name })
+    Service.getDatabaseTableName(Number(database_id), targetOption.name)
       .then((res: any) => {
         const temp = res.data.columns.filter(el => (el.is_primary_key || el.is_unique))
         targetOption.children = temp.map(el => ({ ...el, label: el.name, value: el.name }))
@@ -143,7 +144,7 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
         }
       }
       for (const key in values) {
-        if (values.hasOwnProperty(key) && values[key] === '')
+        if (Object.prototype.hasOwnProperty.call(values, key) && values[key] === '')
           values[key] = null
       }
       handleSave({ ...record, ...values })
@@ -209,7 +210,6 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
                     || (selectedTypeValue === DATA_TYPE_DICT.INT && selectedTypeValue === DATA_TYPE_DICT.NUMERIC)
                   ))
                     ? <InputNumber
-                      ref={inputRef}
                       onPressEnter={save}
                       onBlur={save}
                       placeholder="请输入默认值"

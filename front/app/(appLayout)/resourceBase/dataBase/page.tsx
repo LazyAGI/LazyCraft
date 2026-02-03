@@ -6,11 +6,10 @@ import { useAntdTable, useToggle, useUpdateEffect } from 'ahooks'
 import { useRouter } from 'next/navigation'
 import dayjs from 'dayjs'
 import CreatorSelect from '@/app/components/tagSelect/creatorSelect'
-import { createDatabase, deleteDatabase, getDataBaseList } from '@/infrastructure/api/database'
+import { Service } from '@/infrastructure/api/generated'
 import useRadioAuth from '@/shared/hooks/use-radio-auth'
 import { useApplicationContext } from '@/shared/hooks/app-context'
 import { noOnlySpacesRule } from '@/shared/utils'
-const { Search } = Input
 const { Column } = Table
 const Database = () => {
   const { userSpecified } = useApplicationContext()
@@ -24,13 +23,17 @@ const Database = () => {
   const [searchVal, setSearchVal] = useState('')
   const [sName, setSName] = useState('')
   const getTableData = ({ current, pageSize }): Promise<any> => {
-    return getDataBaseList('/database/list/page', { page: current, limit: pageSize, db_name: sName, user_id: creator })
-      .then((res: any) => {
-        return {
-          total: res.total,
-          list: res.data,
-        }
-      })
+    return Service.postDatabaseListPage({
+      page: current,
+      limit: pageSize,
+      db_name: sName,
+      user_id: creator,
+    }).then((res: any) => {
+      return {
+        total: res?.total ?? 0,
+        list: res?.data ?? [],
+      }
+    })
   }
   const { tableProps, search, pagination, refresh, loading } = useAntdTable(getTableData, {
     defaultPageSize: 10,
@@ -42,7 +45,7 @@ const Database = () => {
   const onSubmit = async (values: any) => {
     try {
       setSubmitting(true)
-      await createDatabase(values)
+      await Service.postDatabase(values)
       message.success('创建数据库成功')
       toggle()
       refresh()
@@ -57,7 +60,7 @@ const Database = () => {
   }
 
   const handleDelete = async (record) => {
-    const res = await deleteDatabase(record?.id)
+    const res = await Service.deleteDatabase(record?.id)
     if (res) {
       message.success('删除成功')
       search.submit()

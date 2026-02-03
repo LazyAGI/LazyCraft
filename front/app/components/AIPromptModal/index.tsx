@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { Button, Input, Modal, Spin, message } from 'antd'
 import styles from './index.module.scss'
 import Icon from '@/app/components/base/iconFont'
-import { createPromptAI } from '@/infrastructure/api//prompt'
+import { Service } from '@/infrastructure/api/generated'
 
 type AIPromptModalProps = {
   open: boolean
@@ -123,11 +123,9 @@ const AIPromptModal: React.FC<AIPromptModalProps> = ({ open, onClose, onConfirm 
     try {
       setLoading(true)
       setLastQuery(inputContent)
-      const res: any = await createPromptAI({
-        body: {
-          query: inputContent,
-          session: currentSessionId,
-        },
+      const res: any = await Service.postAppsWorkflowsPromptAssistant({
+        prompt: inputContent,
+        session: currentSessionId,
       })
 
       // 验证响应是否有效
@@ -163,11 +161,9 @@ const AIPromptModal: React.FC<AIPromptModalProps> = ({ open, onClose, onConfirm 
 
     try {
       setLoading(true)
-      const res: any = await createPromptAI({
-        body: {
-          query: lastQuery,
-          session: currentSessionId,
-        },
+      const res: any = await Service.postAppsWorkflowsPromptAssistant({
+        prompt: lastQuery,
+        session: currentSessionId,
       })
 
       // 验证响应是否有效

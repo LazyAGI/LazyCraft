@@ -264,6 +264,32 @@ export const getResponseBody = async (response: Response): Promise<any> => {
 };
 
 export const catchErrorCodes = (options: ApiRequestOptions, result: ApiResult): void => {
+    const notifyError = (message: string) => {
+        if (!message) {
+            return;
+        }
+        if (typeof window === 'undefined') {
+            return;
+        }
+        import('antd')
+            .then(({ message: antdMessage }) => antdMessage.error(message))
+            .catch(() => undefined);
+    };
+
+    const resolveErrorMessage = (): string => {
+        const body = result.body as any;
+        if (body?.message) {
+            return body.message;
+        }
+        if (body?.detail) {
+            return body.detail;
+        }
+        if (typeof body === 'string' && body.trim()) {
+            return body;
+        }
+        return '';
+    };
+
     const errors: Record<number, string> = {
         400: 'Bad Request',
         401: 'Unauthorized',
@@ -277,6 +303,7 @@ export const catchErrorCodes = (options: ApiRequestOptions, result: ApiResult): 
 
     const error = errors[result.status];
     if (error) {
+        notifyError(resolveErrorMessage() || error);
         throw new ApiError(options, result, error);
     }
 
@@ -291,6 +318,7 @@ export const catchErrorCodes = (options: ApiRequestOptions, result: ApiResult): 
             }
         })();
 
+        notifyError(resolveErrorMessage() || errorStatusText || 'Request Error');
         throw new ApiError(options, result,
             `Generic Error: status: ${errorStatus}; status text: ${errorStatusText}; body: ${errorBody}`
         );

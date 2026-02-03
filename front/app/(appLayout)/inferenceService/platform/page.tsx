@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Collapse, Empty, Form, Input, Modal, Pagination, Popconfirm, Select, Spin, Tag, Tooltip, message } from 'antd'
 import { MinusCircleOutlined, PlusCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import { useUpdateEffect } from 'ahooks'
@@ -9,7 +9,7 @@ import ClassifyMode from '@/app/components/tagSelect/ClassifyMode'
 import CreatorSelect from '@/app/components/tagSelect/creatorSelect'
 import useRadioAuth from '@/shared/hooks/use-radio-auth'
 import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
-import { createPrompt, deletePrompt, getAdjustList, getPromptList } from '@/infrastructure/api/prompt'
+import { Service } from '@/infrastructure/api/generated'
 
 const { Panel } = Collapse
 const showText: any = {
@@ -43,7 +43,6 @@ const formItemLayoutWithOutLabel = {
 const InferenceService = () => {
   const [form] = Form.useForm()
   const authRadio = useRadioAuth()
-  const [authValue, setAuthValue] = useState(authRadio.is_self_space ? 'mine' : 'group')
   const [info, setInfo] = useState<any>({})
   const [testInfo, setTestInfo] = useState<any>({})
   const [title, setTitle] = useState('新建模型服务')
@@ -68,8 +67,7 @@ const InferenceService = () => {
   // 添加轮询相关的引用
   const pollingTimer = useRef<NodeJS.Timeout | null>(null)
 
-  const getList = async (page, search_name = '') => {
-    const url = '/infer-service/list'
+  const getList = useCallback(async (page, search_name = '') => {
     const param: any = {
       page,
       per_page: 10,
@@ -79,12 +77,9 @@ const InferenceService = () => {
     }
     setLoading(true)
     try {
-      const res: any = await getAdjustList({
-        url,
-        body: param,
-      })
-      if (res?.result) {
-        const { result = [], total } = res?.result
+      const res: any = await Service.postInferServiceList(param)
+      if (res?.data) {
+        const { result = [], total } = res.data
         setList(result)
         setTotal(total)
       }
@@ -92,33 +87,33 @@ const InferenceService = () => {
     finally {
       setLoading(false)
     }
-  }
+  }, [creator, sName, selectLabels])
 
   // 检查是否有启动中的服务
-  const hasStartingServices = () => {
+  const hasStartingServices = useCallback(() => {
     const startingStatuses = ['Done', 'InQueue', 'Running', 'Pending']
     return list.some((item: any) =>
       item.services?.some((service: any) => startingStatuses.includes(service.status)),
     )
-  }
+  }, [list])
 
   // 启动轮询
-  const startPolling = () => {
+  const startPolling = useCallback(() => {
     if (pollingTimer.current)
       clearInterval(pollingTimer.current)
 
     pollingTimer.current = setInterval(() => {
       getList(pageOption.page, searchVal)
     }, 15000) // 15秒轮询
-  }
+  }, [getList, pageOption.page, searchVal])
 
   // 停止轮询
-  const stopPolling = () => {
+  const stopPolling = useCallback(() => {
     if (pollingTimer.current) {
       clearInterval(pollingTimer.current)
       pollingTimer.current = null
     }
-  }
+  }, [])
 
   // 检查并管理轮询状态
   useEffect(() => {
@@ -131,51 +126,43 @@ const InferenceService = () => {
     return () => {
       stopPolling()
     }
-  }, [list, pageOption.page, searchVal])
+  }, [hasStartingServices, startPolling, stopPolling])
 
-  const getModelList = async () => {
-    const url = '/infer-service/model/list'
+  const getModelList = useCallback(async () => {
     const param: any = {
       model_type: 'local',
       model_kind: modelType,
       qtype: 'already',
     }
     try {
-      const res: any = await getPromptList({
-        url,
-        options: { params: param },
-      })
+      const res: any = await Service.getInferServiceModelList(
+        param.model_type,
+        param.model_kind,
+        param.qtype,
+      )
       if (res)
         setModelList(res)
     }
     finally {
       setLoading(false)
     }
-  }
+  }, [modelType])
 
   useEffect(() => {
     getList(pageOption.page, '')
-  }, [pageOption.page])
+  }, [getList, pageOption.page])
 
   useUpdateEffect(() => {
     getList(1, '')
-  }, [sName, creator, selectLabels])
+  }, [creator, getList, sName, selectLabels])
 
   useEffect(() => {
     getModelList()
-  }, [modelType])
-
-  const altChange = ({ target: { value } }: any) => {
-    setAuthValue(value)
-    setSName('')
-    setSearchVal('')
-    setPageOption({ ...pageOption, page: 1 })
-  }
+  }, [getModelList])
 
   const handleDelete = async (e, id: any) => {
     e.stopPropagation()
-    const url = '/infer-service/service/delete'
-    const res: any = await deletePrompt({ url, body: { service_id: id } })
+    const res: any = await Service.postInferServiceServiceDelete({ service_id: id })
     if (res) {
       message.success('删除成功')
       setPageOption({ ...pageOption, page: 1 })
@@ -191,20 +178,12 @@ const InferenceService = () => {
   }
 
   const submitFormValues = async (values: any) => {
-    let gUrl = ''
-    if (isEdit)
-      gUrl = '/infer-service/service/create'
-
-    else
-      gUrl = '/infer-service/group/create'
-
     setBtnLoading(true)
 
     try {
-      const res: any = await createPrompt({
-        url: gUrl,
-        body: values,
-      })
+      const res: any = isEdit
+        ? await Service.postInferServiceServiceCreate(values)
+        : await Service.postInferServiceGroupCreate(values)
       if (res) {
         message.success('保存成功')
         form.resetFields()
@@ -284,13 +263,11 @@ const InferenceService = () => {
   const clickStartStopA = async (e, id, flag) => {
     e.stopPropagation()
     const params = { group_id: id }
-    const url = flag === 'start' ? '/infer-service/group/start' : '/infer-service/group/close'
     setLoading(true)
     try {
-      const res = await createPrompt({
-        url,
-        body: params,
-      })
+      const res = flag === 'start'
+        ? await Service.postInferServiceGroupStart(params)
+        : await Service.postInferServiceGroupClose(params)
       if (res) {
         Toast.notify({ type: ToastTypeEnum.Success, message: '操作成功' })
         refreshList()
@@ -307,13 +284,11 @@ const InferenceService = () => {
   const clickStartStop = async (e, id, flag) => {
     e.stopPropagation()
     const params = { service_id: id }
-    const url = flag === 'start' ? '/infer-service/service/start' : '/infer-service/service/stop'
     setLoading(true)
     try {
-      const res = await createPrompt({
-        url,
-        body: params,
-      })
+      const res = flag === 'start'
+        ? await Service.postInferServiceServiceStart(params)
+        : await Service.postInferServiceServiceStop(params)
       if (res) {
         if ((res as any).status === 0) {
           Toast.notify({ type: ToastTypeEnum.Success, message: '操作成功' })

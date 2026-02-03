@@ -12,7 +12,7 @@ import CreatorSelect from '@/app/components/tagSelect/creatorSelect'
 import ClassifyMode, { tagList } from '@/app/components/tagSelect/ClassifyMode'
 import Iconfont from '@/app/components/base/iconFont'
 import useAuthPermissions from '@/shared/hooks/use-radio-auth'
-import { createPrompt, deletePrompt } from '@/infrastructure/api/prompt'
+import { Service } from '@/infrastructure/api/generated'
 import { getDatasetListNew } from '@/infrastructure/api/data'
 import { API_PREFIX } from '@/app-specs'
 const { Dragger } = Upload
@@ -112,8 +112,7 @@ const ScriptManage = () => {
   }
   const handleDelete = async (e, id: any) => {
     e.stopPropagation()
-    const url = '/script/delete'
-    const res: any = await deletePrompt({ url, body: { script_id: id } })
+    const res: any = await Service.postScriptDelete({ script_id: Number(id) })
     if (res.code === 200) {
       message.success('删除成功')
       setPageOption({ ...pageOption, page: 1 })
@@ -135,19 +134,13 @@ const ScriptManage = () => {
       setIsView(false)
       return
     }
-    let gUrl = ''
-    if (isEdit)
-      gUrl = '/script/update'
-    else
-      gUrl = '/script/create'
-
     form.validateFields().then(async (values) => {
       setBtnLoading(true)
       try {
-        const res: any = await createPrompt({
-          url: gUrl,
-          body: { ...values, icon: '' },
-        })
+        const submitValues = { ...values, icon: '' }
+        const res: any = isEdit
+          ? await Service.postScriptUpdate(submitValues)
+          : await Service.postScriptCreate(submitValues)
         if (res?.name) {
           message.success('保存成功')
           form.resetFields()
@@ -354,7 +347,7 @@ const ScriptManage = () => {
         </Form.Item>
         <Input.Search allowClear onChange={onSearchChange} value={sValue} onSearch={onSearch} style={{ width: 270 }} placeholder='请输入关键字进行搜索' />
       </div>
-      {loading && !list?.length
+      {(loading && !list?.length)
         ? <div className='flex justify-center items-center' style={{ height: '400px' }}>
           <Spin size="large" tip="加载中..." />
         </div>
@@ -449,7 +442,7 @@ const ScriptManage = () => {
                 {
                   validator: (_, value) => {
                     if (value && value.trim() === '')
-                      return Promise.reject('简介不能为空格')
+                      return Promise.reject(new Error('简介不能为空格'))
 
                     return Promise.resolve()
                   },

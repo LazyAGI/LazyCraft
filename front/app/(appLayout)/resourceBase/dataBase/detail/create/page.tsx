@@ -12,15 +12,20 @@ import { useRequest } from 'ahooks'
 import EditableTable from './editableTable'
 
 import style from './index.module.scss'
-import { createDatabaseTable, getDataBaseTable } from '@/infrastructure/api/database'
+import { Service } from '@/infrastructure/api/generated'
 
 const DatabaseDetailCreateContent = () => {
   const [form] = Form.useForm()
-  const [formVal, setFormVal] = useState([])
+  const [_formVal, setFormVal] = useState([])
   const { back } = useRouter()
   const searchParams = useSearchParams()
   const id = searchParams.get('id')
-  const { data: tableList } = useRequest(() => getDataBaseTable({ database_id: id, page: 1, limit: 10000 }).then((res: any) => res.data.map(el => ({ ...el, label: el.name, value: el.name, isLeaf: false }))))
+  const { data: tableList } = useRequest(() =>
+    Service.getDatabaseTableList(Number(id), 1, 10000, '')
+      .then((res: any) =>
+        res.data.map(el => ({ ...el, label: el.name, value: el.name, isLeaf: false })),
+      ),
+  )
 
   const handleTableSubmit = async (tableData) => {
     const formValues = await form.validateFields()
@@ -30,7 +35,6 @@ const DatabaseDetailCreateContent = () => {
     }
     const submitData = {
       ...formValues,
-      database_id: id,
       columns: tableData.map((el: any) => {
         const { foreign_key_info, ...rest } = el
         return (foreign_key_info && foreign_key_info[1])
@@ -45,12 +49,12 @@ const DatabaseDetailCreateContent = () => {
           : rest
       }),
     }
-    await createDatabaseTable(submitData)
+    await Service.postDatabaseTable(Number(id), submitData)
     message.success('创建成功')
     back()
   }
 
-  const onFormFinish = async (val) => {
+  const onFormFinish = async (_val) => {
     // 这个函数现在主要用于处理基础信息的验证
     // 实际提交由handleTableSubmit处理
   }

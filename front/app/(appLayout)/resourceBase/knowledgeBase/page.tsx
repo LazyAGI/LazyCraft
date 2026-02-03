@@ -8,13 +8,13 @@ import styles from './page.module.scss'
 import InfoModal from './InfoModal'
 import UploadModule from './UploadModule'
 import { Service } from '@/infrastructure/api/generated'
-import Toast from '@/app/components/base/flash-notice'
 import Iconfont from '@/app/components/base/iconFont'
 import TagMode from '@/app/components/tagSelect/TagMode'
 import CreatorSelect from '@/app/components/tagSelect/creatorSelect'
 import useRadioAuth from '@/shared/hooks/use-radio-auth'
 import { useApplicationContext } from '@/shared/hooks/app-context'
 import ReferenceResultModal from '@/app/components/referenceResultModal'
+import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
 
 const KnowledgeBase = () => {
   const router = useRouter()
@@ -48,7 +48,7 @@ const KnowledgeBase = () => {
   const handleDelete = async (item: any, e) => {
     e.stopPropagation()
     await Service.postKbDelete({ id: item.id })
-    Toast.notify({ type: 'success', message: '删除成功' })
+    Toast.notify({ type: ToastTypeEnum.Success, message: '删除成功' })
     getCardList()
   }
   const handleInfoSuccess = (id: string, type: 'create' | 'edit') => {

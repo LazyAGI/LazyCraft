@@ -1,13 +1,13 @@
 'use client'
 
-import React, { Suspense, useEffect, useState } from 'react'
+import React, { Suspense, useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import styles from './page.module.scss'
 import PreviewTxt from '@/app/components/preview/previewTxt'
 import PreviewDoc from '@/app/components/preview/previewDoc'
 import PreviewExcel from '@/app/components/preview/previewExcel'
 import PreviewPdf from '@/app/components/preview/previewPdf'
-import { getFilePathById } from '@/infrastructure/api/knowledgeBase'
+import { Service } from '@/infrastructure/api/generated'
 import PreviewJson from '@/app/components/preview/previewJSON'
 import PreviewMD from '@/app/components/preview/previewMD'
 import PreviewHtml from '@/app/components/preview/previewHTML'
@@ -80,19 +80,19 @@ const PreviewPageContent = () => {
       </div>
     }
   }
-  const getPath = async () => {
+  const getPath = useCallback(async () => {
     try {
-      const res = await getFilePathById({ url: '/kb/file/get', body: { file_id: seachParams.get('id') } }) as any
+      const res = await Service.postKbFileGet({ file_id: seachParams.get('id') || '' }) as any
       setPath(res.file_path)
       setType(res.file_type)
     }
     catch (error) {
       console.error('获取文件路径失败:', error)
     }
-  }
+  }, [seachParams])
   useEffect(() => {
     getPath()
-  }, [])
+  }, [getPath])
 
   return (
     <div className="page">

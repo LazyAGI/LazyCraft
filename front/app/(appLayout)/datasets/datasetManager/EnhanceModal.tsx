@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { Form, Input, Modal, Select } from 'antd'
-import { createKnowledgeBase, updateKnowledgeBase } from '@/infrastructure/api/knowledgeBase'
-import Toast from '@/app/components/base/flash-notice'
+import { Service } from '@/infrastructure/api/generated'
+import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
 import { categoryItems } from '@/shared/utils'
 
 const EnhanceModal = (props: any) => {
@@ -11,13 +11,13 @@ const EnhanceModal = (props: any) => {
   const handleOk = async () => {
     form.validateFields().then((values) => {
       if (data) {
-        updateKnowledgeBase({ url: '/kb/update', body: { ...data, ...values } }).then((res) => {
-          Toast.notify({ type: 'success', message: '更新成功' })
+        Service.postKbUpdate({ ...data, ...values }).then((res: any) => {
+          Toast.notify({ type: ToastTypeEnum.Success, message: '更新成功' })
           onSuccess(res.id, 'edit')
         })
       }
       else {
-        createKnowledgeBase({ url: '/kb/create', body: values }).then((res) => {
+        Service.postKbCreate(values).then((res: any) => {
           onSuccess(res.id, 'create')
           onSuccess(res.id)
         })
