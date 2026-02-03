@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 import { Button, Input, Modal, message } from 'antd'
 import styles from './code-ai-modal.module.scss'
 import Icon from '@/app/components/base/iconFont'
-import { createCodeAI } from '@/infrastructure/api/prompt'
+import { CancelError, Service } from '@/infrastructure/api/generated'
 import type { CodeAIResponse } from '@/core/data/common'
 
 type Props = {
@@ -25,14 +25,12 @@ const CodeAiModal: FC<Props> = ({
   const [isGenerating, setIsGenerating] = useState(false)
   const [inputText, setInputText] = useState('')
   const [generatedCode, setGeneratedCode] = useState('')
-  const abortControllerRef = useRef<AbortController | null>(null)
+  const requestRef = useRef<ReturnType<typeof Service.postAppsWorkflowsCodeAssistant> | null>(null)
 
   const handleCancel = () => {
     // 取消正在进行的请求
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort()
-      abortControllerRef.current = null
-    }
+    requestRef.current?.cancel()
+    requestRef.current = null
 
     setInputText('')
     setGeneratedCode('')
@@ -47,32 +45,24 @@ const CodeAiModal: FC<Props> = ({
     }
 
     // 如果之前有请求正在进行，先取消它
-    if (abortControllerRef.current)
-      abortControllerRef.current.abort()
-
-    // 创建新的AbortController
-    abortControllerRef.current = new AbortController()
+    requestRef.current?.cancel()
     setIsGenerating(true)
 
     try {
-      // 调用真实的AI API生成代码
-      const res = await createCodeAI({
-        url: '/apps/workflows/code_assistant',
-        body: {
-          query: inputText,
-        },
-      }, {
-        getAbortController: (controller) => {
-          abortControllerRef.current = controller
-        },
-      }) as unknown as CodeAIResponse
+      const request = Service.postAppsWorkflowsCodeAssistant({
+        prompt: inputText,
+        code: currentCode,
+        language,
+      })
+      requestRef.current = request
+      const res = await request as unknown as CodeAIResponse
 
       const generatedCode = res.message
       setGeneratedCode(generatedCode)
     }
     catch (error) {
       // 检查是否是取消请求导致的错误
-      if (error instanceof Error && error.name === 'AbortError')
+      if (error instanceof CancelError)
         return
 
       console.error('代码生成失败:', error)
@@ -80,7 +70,7 @@ const CodeAiModal: FC<Props> = ({
     }
     finally {
       setIsGenerating(false)
-      abortControllerRef.current = null
+      requestRef.current = null
     }
   }
 

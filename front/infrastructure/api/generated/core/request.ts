@@ -233,14 +233,28 @@ export const getResponseBody = async (response: Response): Promise<any> => {
     if (response.status !== 204) {
         try {
             const contentType = response.headers.get('Content-Type');
+            const contentDisposition = response.headers.get('Content-Disposition');
+            const isAttachment = !!contentDisposition && contentDisposition.toLowerCase().includes('attachment');
+            if (isAttachment) {
+                return await response.blob();
+            }
             if (contentType) {
+                const lowerType = contentType.toLowerCase();
                 const jsonTypes = ['application/json', 'application/problem+json']
-                const isJSON = jsonTypes.some(type => contentType.toLowerCase().startsWith(type));
+                const isJSON = jsonTypes.some(type => lowerType.startsWith(type));
                 if (isJSON) {
                     return await response.json();
-                } else {
-                    return await response.text();
                 }
+                const isBinary = lowerType.startsWith('application/octet-stream')
+                    || lowerType.startsWith('application/zip')
+                    || lowerType.startsWith('application/pdf')
+                    || lowerType.startsWith('application/vnd')
+                    || lowerType.startsWith('application/msword')
+                    || lowerType.startsWith('application/vnd.openxmlformats-officedocument');
+                if (isBinary) {
+                    return await response.blob();
+                }
+                return await response.text();
             }
         } catch (error) {
             console.error(error);

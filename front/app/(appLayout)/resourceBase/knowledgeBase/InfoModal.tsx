@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react'
-import { Form, Input, Modal } from 'antd'
-import { createKnowledgeBase, updateKnowledgeBase } from '@/infrastructure/api/knowledgeBase'
-import Toast from '@/app/components/base/flash-notice'
+import { Form, Input, Modal, message } from 'antd'
+import { Service } from '@/infrastructure/api/generated'
+import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
 import { noOnlySpacesRule } from '@/shared/utils'
 import TagSelect from '@/app/components/tagSelect'
-import { bindTags } from '@/infrastructure/api/tagManage'
 
 const CreateModal = (props: any) => {
   const { visible, onClose, onSuccess, data, gettaglist } = props
@@ -12,22 +11,43 @@ const CreateModal = (props: any) => {
 
   const handleOk = async () => {
     gettaglist()
-    form.validateFields().then((values) => {
-      if (data) {
-        updateKnowledgeBase({ url: '/kb/update', body: { ...data, ...values } }).then((res) => {
-          Toast.notify({ type: 'success', message: '更新成功' })
-          bindTags({ url: 'tags/bindings/update', body: { type: 'knowledgebase', tag_names: values?.tags, target_id: res?.id } }).then(() => {
-            onSuccess(res.id, 'edit')
+    form.validateFields().then(async (values) => {
+      try {
+        if (data) {
+          const res = await Service.postKbUpdate({
+            id: data.id,
+            name: values.name,
+            description: values.description,
           })
-        })
+          const id = res.data?.id ?? (data as any).id
+          await Service.postTagsBindingsUpdate({
+            type: 'knowledgebase',
+            tag_names: values?.tags ?? [],
+            target_id: id,
+          })
+          Toast.notify({ type: ToastTypeEnum.Success, message: '更新知识库成功' })
+          onSuccess(id, 'edit')
+        }
+        else {
+          const res = await Service.postKbCreate({
+            name: values.name,
+            description: values.description,
+          })
+          const id = res.data?.id ?? (res as any)?.id
+          if (!id) {
+            message.error('创建知识库失败：缺少ID')
+            return
+          }
+          await Service.postTagsBindingsUpdate({
+            type: 'knowledgebase',
+            tag_names: values?.tags ?? [],
+            target_id: id,
+          })
+          onSuccess(id, 'create')
+        }
       }
-      else {
-        createKnowledgeBase({ url: '/kb/create', body: values }).then((res) => {
-          bindTags({ url: 'tags/bindings/update', body: { type: 'knowledgebase', tag_names: values?.tags, target_id: res?.id } }).then(() => {
-            onSuccess(res.id, 'create')
-            onSuccess(res.id)
-          })
-        })
+      catch (err) {
+        console.error(err)
       }
     }).catch((err) => {
       console.error(err)

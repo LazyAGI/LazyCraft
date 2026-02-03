@@ -22,8 +22,16 @@ const PreviewPageContent = () => {
     const fileUrl = path.replace('/app', '/static')
 
     const suffix = type.split('.').pop()
-    if (suffix === 'txt') { return <div className='p-5'><PreviewTxt url={fileUrl} /></div> }
-    else if (suffix === 'docx') { return <PreviewDoc url={fileUrl} /> }
+    if (suffix === 'txt') {
+      return (
+        <div className='p-5'>
+          <PreviewTxt url={fileUrl} />
+        </div>
+      )
+    }
+    else if (suffix === 'docx') {
+      return <PreviewDoc url={fileUrl} />
+    }
     else if (suffix === 'doc') {
       return <div className='p-5 text-center'>
         <div className='mb-4 text-gray-600'>暂不支持.doc文件预览</div>
@@ -31,12 +39,32 @@ const PreviewPageContent = () => {
         <a href={fileUrl} download className='inline-block mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'>下载文件</a>
       </div>
     }
-    else if (suffix === 'xlsx' || suffix === 'xls' || suffix === 'csv') { return <PreviewExcel url={fileUrl} /> }
-    else if (suffix === 'pdf') { return <PreviewPdf url={fileUrl} /> }
-    else if (suffix === 'md') { return <div className='p-5'> <PreviewMD url={fileUrl} /></div> }
-    else if (suffix === 'json') { return <div className='p-5'><PreviewJson url={fileUrl} /></div> }
-    else if (suffix === 'html') { return <PreviewHtml url={fileUrl} /> }
-    else if (suffix === 'pptx') { return <PreviewPpt url={fileUrl} /> }
+    else if (suffix === 'xlsx' || suffix === 'xls' || suffix === 'csv') {
+      return <PreviewExcel url={fileUrl} />
+    }
+    else if (suffix === 'pdf') {
+      return <PreviewPdf url={fileUrl} />
+    }
+    else if (suffix === 'md') {
+      return (
+        <div className='p-5'>
+          <PreviewMD url={fileUrl} />
+        </div>
+      )
+    }
+    else if (suffix === 'json') {
+      return (
+        <div className='p-5'>
+          <PreviewJson url={fileUrl} />
+        </div>
+      )
+    }
+    else if (suffix === 'html') {
+      return <PreviewHtml url={fileUrl} />
+    }
+    else if (suffix === 'pptx') {
+      return <PreviewPpt url={fileUrl} />
+    }
     else if (suffix === 'ppt') {
       return <div className='p-5 text-center'>
         <div className='mb-4 text-gray-600'>暂不支持.ppt文件预览</div>

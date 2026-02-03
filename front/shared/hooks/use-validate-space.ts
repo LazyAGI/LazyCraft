@@ -1,6 +1,6 @@
 // 校验算力是否还有存储，如无则无法进行上传文件的相关操作
 import { useCallback, useState } from 'react'
-import { getValidateStatu } from '@/infrastructure/api//prompt'
+import { Service } from '@/infrastructure/api/generated'
 import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
 
 /**
@@ -70,9 +70,7 @@ const useStorageValidation = (): UseStorageValidationReturn => {
     setState(prev => ({ ...prev, isValidating: true, validationError: null }))
 
     try {
-      const response = await getValidateStatu({
-        url: '/workspaces/storage/check',
-      })
+      const response = await Service.getWorkspacesStorageCheck()
 
       const hasSpace = Boolean(response?.data)
 

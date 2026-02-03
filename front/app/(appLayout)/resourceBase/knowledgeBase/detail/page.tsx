@@ -11,11 +11,9 @@ import { useMount } from 'ahooks'
 import Link from 'next/link'
 import UploadModule from '../UploadModule'
 import styles from './index.module.scss'
-import { API_PREFIX } from '@/app-specs'
 import ModalCooperation from '@/app/components/app/picker-user/ModalCooperation'
-import { deleteFile, getFileList } from '@/infrastructure/api/knowledgeBase'
+import { Service } from '@/infrastructure/api/generated'
 import { useApplicationContext } from '@/shared/hooks/app-context'
-import { getJoins } from '@/infrastructure/api/apps'
 import { usePermitCheck } from '@/app/components/app/permit-check'
 import useValidateSpace from '@/shared/hooks/use-validate-space'
 
@@ -23,11 +21,10 @@ type TableRowSelection<T extends object = object> = TableProps<T>['rowSelection'
 
 const { Search } = Input
 type DataType = {
-  key: string
-  name: string
-  age: number
-  address: string
-  tags: string[]
+  id?: string
+  name?: string
+  file_type?: string
+  updated_at?: string
 }
 
 const KnowledgeBaseDetailContent = () => {
@@ -53,11 +50,10 @@ const KnowledgeBaseDetailContent = () => {
   const [form] = Form.useForm()
 
   const getData = useCallback(async () => {
-    getFileList({ url: '/kb/file/list', options: { params: { file_name: fileName, knowledge_base_id: id, page: current, page_size: pageSize } } }).then((res) => {
-      setInfo(res.knowledge_base_info)
-      setData(res.data)
-      setTotal(res.total)
-    })
+    const res = await Service.getKbFileList(id, current, pageSize, fileName)
+    setInfo(res.knowledge_base_info)
+    setData(res.data ?? [])
+    setTotal(res.total ?? 0)
   }, [current, fileName, pageSize, id])
 
   useEffect(() => {
@@ -67,46 +63,32 @@ const KnowledgeBaseDetailContent = () => {
     }
   }, [state])
 
-  const handleDelete = (data) => {
-    deleteFile({ url: '/kb/file/delete', body: { file_ids: [data.id] } }).then(() => {
-      // Toast.notify({ type: 'success', message: '删除成功' })
-      message.success('删除成功')
-      getData()
-    })
+  const handleDelete = async (recordData) => {
+    await Service.postKbFileDelete({ file_ids: [String(recordData.id)] })
+    message.success('删除成功')
+    getData()
   }
   const handleJumpDetail = (data) => {
     window.open(`/resourceBase/knowledgeBase/preview?id=${data.id}`, '_blank')
   }
 
-  const reqDownload = ({ file_ids, filename }) => {
-    const token = localStorage.getItem('console_token')
-    fetch(`${API_PREFIX}/kb/download`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ file_ids }),
+  const reqDownload = async ({ file_ids, filename }) => {
+    try {
+      const blob = await Service.postKbDownload({
+        file_ids: file_ids.map((id: any) => Number(id)),
       })
-      .then((response) => {
-        if (!response.ok)
-          throw new Error('网络错误，请稍后再试。')
-        return response.blob()
-      })
-      .then((blob) => {
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = filename
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        window.URL.revokeObjectURL(url)
-      })
-      .catch((error) => {
-        console.error('handleDownload:', error)
-      })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    }
+    catch (error) {
+      console.error('handleDownload:', error)
+    }
   }
 
   const handleDownload = (recordData) => {
@@ -156,9 +138,8 @@ const KnowledgeBaseDetailContent = () => {
   ]
 
   useEffect(() => {
-    // 获取协作数据
-    getJoins({ url: '/workspaces/coop/joins', options: { params: { target_type: 'knowledgebase' } } }).then((res) => {
-      setJoins(res.data)
+    Service.getWorkspacesCoopJoins('knowledge_base').then((res) => {
+      setJoins(res.data ?? [])
     })
   }, [])
 
@@ -202,17 +183,20 @@ const KnowledgeBaseDetailContent = () => {
     onChange: onSelectChange,
   }
 
-  const batchDelete = () => {
-    deleteFile({ url: '/kb/file/delete', body: { file_ids: selectedRowKeys } }).then(() => {
-      // Toast.notify({ type: 'success', message: '删除成功' })
+  const batchDelete = async () => {
+    try {
+      await Service.postKbFileDelete({ file_ids: selectedRowKeys.map(key => String(key)) })
       message.success('删除成功')
       getData()
       setOpen(false)
-      setConfirmLoading(false)
       setSelectedRowKeys([])
-    }).catch(() => {
+    }
+    catch {
+      // ignore
+    }
+    finally {
       setConfirmLoading(false)
-    })
+    }
   }
 
   const batchDownload = () => {
@@ -336,7 +320,7 @@ const KnowledgeBaseDetailContent = () => {
               {
                 validator: (_, value) => {
                   if (value && value.trim() === '')
-                    return Promise.reject('文件夹名称不能为空格')
+                    return Promise.reject(new Error('文件夹名称不能为空格'))
 
                   return Promise.resolve()
                 },
