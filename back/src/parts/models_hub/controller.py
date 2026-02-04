@@ -35,7 +35,7 @@ from . import fields
 from .model import Lazymodel, LazymodelOnlineModels, ModelStatus
 from .model_list import online_model_list
 from .service import ModelService
-
+from libs.feature_gate import require_internet_feature
 
 class modelHubListApi(Resource):
     @login_required
@@ -159,7 +159,8 @@ class modelCreateApi(Resource):
                 raise CommonError(f"暂不支持{data['model_brand']}厂商的模型")
         model = ModelService(current_user).create_model(data)
 
-        if model.can_download:
+        enabled = os.getenv("INTERNET_FEATURES_ENABLED", "false").lower()
+        if model.can_download and enabled in ("true", "1", "yes", "on"):
 
             @copy_current_request_context
             def async_download_model(model_id, model_key, model_from, access_tokens):
@@ -254,13 +255,19 @@ class ModelOnlineListDeleteApi(Resource):
         model_keys = data.get("model_keys")
         if not model_id or not model_keys:
             return {"message": "model_id和model_keys不能为空"}, 400
-        service = ModelService(current_user)
-        result = service.delete_online_model_list(model_id, model_keys)
-        return result
+        try:
+            service = ModelService(current_user)
+            result = service.delete_online_model_list(model_id, model_keys)
+            return result
+        except CommonError as e:
+            return {"message": str(e)}, 400
+        except Exception as e:
+            return {"message": f"删除失败: {str(e)}"}, 500
 
 
 class modelRetryDownloadApi(Resource):
     @login_required
+    @require_internet_feature("重试下载模型")
     def get(self, model_id):
         """重试下载模型。
         
@@ -297,6 +304,7 @@ class modelRetryDownloadApi(Resource):
 
 class modelFinetuneRetryDownloadApi(Resource):
     @login_required
+    @require_internet_feature("重试下载微调模型")
     def get(self, model_id, finetune_model_id):
         """重试下载微调模型。
         
@@ -594,8 +602,11 @@ class ModelHubDeleteUploadedFileApi(Resource):
         self.check_can_write()
         
         service = ModelService(current_user)
-        result = service.delete_uploaded_file(filename, file_dir)
-        return result
+        try:
+            result = service.delete_uploaded_file(filename, file_dir)
+            return result
+        except Exception as e:
+            return {"message": str(e)}, 500
 
 
 class modelHubCheckModelNameApi(Resource):
@@ -752,7 +763,9 @@ class ModelCreateFinetuneApi(Resource):
         model = ModelService(current_user).create_finetune_model(
             data["base_model_id"], data, ModelStatus.START.value
         )
-        if model.can_download:
+
+        enabled = os.getenv("INTERNET_FEATURES_ENABLED", "false").lower()
+        if model.can_download and enabled in ("true", "1", "yes", "on"):
 
             @copy_current_request_context
             def async_download_model(m):
