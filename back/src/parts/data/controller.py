@@ -150,8 +150,10 @@ class ScriptCreateApi(Resource):
         file_id = data["file_id"][0]
         if file_id is None or file_id == "":
             raise ValueError("输入的参数格式有误")
-        file_record = db.session.query(FileRecord).filter(FileRecord.id == file_id).all()
-
+        file_record = db.session.query(FileRecord).filter(FileRecord.id == file_id).first()
+        
+        if file_record is None:
+            raise ValueError("文件不存在")
         if file_record.user_id != current_user.id:
             raise ValueError("当前用户没有该文件的上传权限")
 
@@ -476,11 +478,10 @@ class DataSetCreateApi(Resource):
                 if file_record.user_id != current_user.id:
                     raise ValueError(f"当前用户没有文件ID {file_record.id} 的上传权限")
             
-        enabled = os.getenv("INTERNET_FEATURES_ENABLED", "false").lower()
-        if enabled in ("true", "1", "yes", "on") and data["upload_type"] == "url":
-            raise ValueError("当前环境暂不支持url上传，如需使用请私有化部署")
-        
         if data["upload_type"] == "url":
+            enabled = os.getenv("INTERNET_FEATURES_ENABLED", "false").lower()
+            if enabled not in ("true", "1", "yes", "on"):
+                raise ValueError("当前环境暂不支持url上传，如需使用请私有化部署")
             if data["file_urls"] is None or data["file_urls"] == []:
                 raise ValueError("请填写url")
 

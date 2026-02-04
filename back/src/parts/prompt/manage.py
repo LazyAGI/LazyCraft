@@ -152,7 +152,7 @@ class UpdatePrompt(Resource):
             if prompt is None:
                 return build_response(status=400, message="提示不存在")
             if prompt.is_builtin:
-                self.check_is_super()
+                self._check_object_perms(prompt)
             self.check_can_write_object(prompt)
             updated = self.prompt_service.update_prompt(prompt, args)
             if updated:
