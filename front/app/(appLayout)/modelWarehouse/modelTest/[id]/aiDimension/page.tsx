@@ -7,7 +7,7 @@ import Link from 'next/link'
 import InfoTitle from '../../../components/InfoTitle'
 import styles from './index.module.scss'
 import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
-import { getAdjustInfo, getResultInfo, saveChoose } from '@/infrastructure/api/modelTest'
+import { Service } from '@/infrastructure/api/generated'
 
 const Dimension = (req) => {
   const { id } = req.params
@@ -22,47 +22,53 @@ const Dimension = (req) => {
   // 获取参数值
   const option_select_id = searchParams.get('option_id')
   const getInfo = useCallback(() => {
-    getAdjustInfo({ url: `/model_evalution/task_info/${id}` }).then((res) => {
+    Service.getModelEvalutionTaskInfo(Number(id)).then((res) => {
       setBaseInfo(res?.result?.task_info)
     })
   }, [id])
 
-  const getLeftInfo = () => {
+  const getLeftInfo = useCallback(() => {
     setSpinning(true)
-    getResultInfo({ url: `/model_evalution/evaluation_data/${id}`, options: { params: { page } } }).then((res) => {
-      setResultInfo(res?.result?.data)
-      setMaxPage(res?.result?.total_pages || 1)
-      if (res?.result?.data?.evaluations.length > 0)
-        form.setFieldValue('evaluations', res?.result?.data?.evaluations)
+    const optionId = (option_select_id && option_select_id !== 'view') ? Number(option_select_id) : undefined
+    Service.getModelEvalutionEvaluationData(Number(id), page, optionId).then((res) => {
+      const data = res?.result?.data ?? res?.result
+      setResultInfo(data)
+      setMaxPage(res?.result?.total_pages ?? 1)
+      if (data?.evaluations?.length > 0)
+        form.setFieldValue('evaluations', data.evaluations)
     }).finally(() => {
       setSpinning(false)
     })
-  }
+  }, [id, page, option_select_id, form])
 
-  const getRightInfo = () => {
-    getAdjustInfo({ url: `/model_evalution/get_evaluation_dimensions/${id}` }).then((res) => {
+  const getRightInfo = useCallback(() => {
+    Service.getModelEvalutionGetEvaluationDimensions(Number(id)).then((res) => {
       setRightInfo(res?.result)
     })
-  }
+  }, [id])
 
   useEffect(() => {
     getInfo()
   }, [getInfo])
   useEffect(() => {
     getLeftInfo()
-  }, [page])
+  }, [getLeftInfo])
   useEffect(() => {
     getRightInfo()
-  }, [])
+  }, [getRightInfo])
   const handleOk = () => {
     form.validateFields().then((values) => {
-      saveChoose({ url: '/model_evalution/evaluate_save', body: { ...values, task_id: +id, data_id: resultInfo?.id } }).then((res) => {
-        if (res.status === 500) {
+      Service.postModelEvalutionEvaluateSave({
+        ...values,
+        task_id: Number(id),
+        data_id: resultInfo?.id,
+      }).then((res: any) => {
+        if (res?.status === 500 || res?.code === 500) {
           Toast.notify({
-            type: ToastTypeEnum.Error, message: res?.message,
+            type: ToastTypeEnum.Error, message: res?.message || '保存失败',
           })
         }
-        if (res?.status === 0) {
+        else {
           Toast.notify({
             type: ToastTypeEnum.Success, message: '保存成功',
           })
@@ -73,6 +79,10 @@ const Dimension = (req) => {
             form.resetFields()
           }
         }
+      }).catch((err: any) => {
+        Toast.notify({
+          type: ToastTypeEnum.Error, message: err?.body?.message || err?.message || '保存失败',
+        })
       })
     })
   }

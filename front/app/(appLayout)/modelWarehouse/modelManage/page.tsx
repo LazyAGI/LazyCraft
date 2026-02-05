@@ -12,7 +12,7 @@ import styles from './page.module.scss'
 import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
 import HoverGuide from '@/app/components/base/hover-tip-pro'
 import IconFont from '@/app/components/base/iconFont'
-import { deleteModel, getModelListNew } from '@/infrastructure/api/modelWarehouse'
+import { Service } from '@/infrastructure/api/generated'
 import { useApplicationContext } from '@/shared/hooks/app-context'
 import { usePermitCheck } from '@/app/components/app/permit-check'
 import TagMode from '@/app/components/tagSelect/TagMode'
@@ -20,9 +20,9 @@ import useRadioAuth from '@/shared/hooks/use-radio-auth'
 import useValidateSpace from '@/shared/hooks/use-validate-space'
 import { pageCache } from '@/shared/utils'
 
-const TagContainer = ({ tags }) => {
-  const wrapperRef = useRef(null)
-  const [visibleTags, setVisibleTags] = useState([])
+const TagContainer = ({ tags }: { tags: string[] }) => {
+  const wrapperRef = useRef<HTMLDivElement | null>(null)
+  const [visibleTags, setVisibleTags] = useState<string[]>([])
 
   useLayoutEffect(() => {
     const calculateVisibleTags = () => {
@@ -79,7 +79,7 @@ const ModelWarehouse = () => {
   const [kind, setKind] = React.useState('all')
   const { validate } = useValidateSpace()
 
-  const [list, setList] = useState([])
+  const [list, setList] = useState<any[]>([])
   const [showModelList, setShowModelList] = useState(false)
   const [showCreateModule, setShowCreateModule] = useState(false)
   const [showEditModule, setShowEditModule] = useState(false)
@@ -98,8 +98,18 @@ const ModelWarehouse = () => {
   const getCardList = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await getModelListNew({ url: '/mh/list', body: { page: '1', page_size: '9999', model_type: type === 'all' ? '' : type, model_kind: kind === 'all' ? '' : kind, status: dValue, search_tags: selectTags?.map(item => item?.name), available: tValue === 'all' ? -1 : tValue, search_name: sName } })
-      setList(res.data)
+      const res = await Service.postMhList({
+        page: 1,
+        page_size: 9999,
+        model_type: type === 'all' ? '' : type,
+        model_kind: kind === 'all' ? '' : kind,
+        status: dValue,
+        search_tags: selectTags?.map((item: any) => item?.name),
+        available: tValue === 'all' ? -1 : tValue,
+        search_name: sName,
+        qtype: category as 'mine' | 'group' | 'builtin' | 'already',
+      })
+      setList(res?.data || [])
     }
     finally { setLoading(false) }
   }, [type, category, sName, sValue, tValue, kind, dValue, selectTags])
@@ -110,9 +120,14 @@ const ModelWarehouse = () => {
   }
   const handleDelete = async (item: any, e) => {
     e.stopPropagation()
-    await deleteModel({ url: '/mh/delete', body: { model_id: item.id, qtype: category, namespace: isMine } })
-    Toast.notify({ type: ToastTypeEnum.Success, message: '删除成功' })
-    getCardList()
+    try {
+      await Service.postMhDelete({ model_id: String(item.id) }, category)
+      Toast.notify({ type: ToastTypeEnum.Success, message: '删除成功' })
+      getCardList()
+    }
+    catch (err: any) {
+      Toast.notify({ type: ToastTypeEnum.Error, message: err?.body?.message || err?.message || '删除失败' })
+    }
   }
   const onChange = ({ target: { value } }: RadioChangeEvent) => {
     pageCache.setTab({ name: pageCache.category.modelKind, key: value })
@@ -250,7 +265,7 @@ const ModelWarehouse = () => {
       </div>
       <Spin spinning={loading}>
         <div className={styles.content}>
-          {list && list.length > 0
+          {(list && list.length > 0)
             ? (
               <Row gutter={[16, 16]}>
                 {list.map((item: any) => (
@@ -318,7 +333,7 @@ const ModelWarehouse = () => {
                                 title="提示"
                                 description="是否确认删除"
                                 onConfirm={e => handleDelete(item, e)}
-                                onCancel={e => e.stopPropagation()}
+                                onCancel={e => e?.stopPropagation()}
                                 okText="是"
                                 cancelText="否"
                               >

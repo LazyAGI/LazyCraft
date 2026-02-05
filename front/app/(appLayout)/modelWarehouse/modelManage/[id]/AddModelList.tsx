@@ -1,45 +1,39 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Form, Input, Modal, Select, Space } from 'antd'
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
-import Toast from '@/app/components/base/flash-notice'
-import { getTagList, updateList } from '@/infrastructure/api/tagManage'
+import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
+import { Service } from '@/infrastructure/api/generated'
 
 const { Option } = Select
-enum EKind {
-  'OnlineLLM' = 'llm_list',
-  'Embedding' = 'embedding_list',
-  'reranker' = 'rerank_list',
-}
+
 const AddModal = (props: any) => {
   const { visible, onClose, id, baseInfo, getInfo, qtype, isMine } = props
   const [form] = Form.useForm()
-  const [temps, setTemps] = useState<any>([])
   const [origin, setOrigin] = useState<any>([])
-  const getmodels = async () => {
-    const res: any = await getTagList({ url: '/mh/online_model_support_list', options: { params: {} } })
-    if (res)
-      setTemps(res[baseInfo?.model_brand][EKind[baseInfo?.model_kind]])
-  }
-  useEffect(() => {
-    visible && getmodels()
-  }, [visible])
-  const fixData = (data) => {
+
+  const fixData = (data: any) => {
     return data?.map((item) => {
       return { ...item, can_finetune: item?.can_finetune ? 1 : 0 }
     })
   }
   useEffect(() => {
     setOrigin(fixData(baseInfo?.model_list))
-  }, [visible, baseInfo.model_list])
-  const handleOk = async () => {
+  }, [visible, baseInfo?.model_list])
+  const handleOk = () => {
     form.validateFields().then((values) => {
-      updateList({ url: '/mh/update_online_model_list', body: { ...values, qtype, namespace: isMine } }).then(() => {
-        Toast.notify({ type: 'success', message: '操作成功' })
-        // form.resetFields()
+      Service.postMhUpdateOnlineModelList(
+        {
+          base_model_id: Number(id),
+          model_list: fixData(values.model_list),
+          namespace: isMine,
+        } as any,
+        qtype || 'already',
+      ).then(() => {
+        Toast.notify({ type: ToastTypeEnum.Success, message: '操作成功' })
         onClose()
         getInfo()
-      }).catch((err) => {
-        console.error(err)
+      }).catch((err: any) => {
+        Toast.notify({ type: ToastTypeEnum.Error, message: err?.body?.message || err?.message || '操作失败' })
       })
     })
   }
@@ -49,11 +43,6 @@ const AddModal = (props: any) => {
     form.resetFields()
   }
 
-  const onModelKeyChange = (value, option, index) => {
-    const temp = form.getFieldValue('model_list')
-    temp[index].can_finetune = option.support_finetune ? 1 : 0
-    form.setFieldValue('model_list', temp)
-  }
   return (
     <Modal title='添加模型清单' open={visible} onOk={handleOk} onCancel={handleCancel} cancelText='取消' okText='保存'>
       <Form.Item
@@ -77,7 +66,7 @@ const AddModal = (props: any) => {
           <Form.List name='model_list' initialValue={origin}>
             {(fields, { add, remove }) => (
               <>
-                {fields.map(({ key, name, ...restField }, index) => (
+                {fields.map(({ key, name, ...restField }) => (
                   <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
                     <Form.Item
                       {...restField}
@@ -86,9 +75,6 @@ const AddModal = (props: any) => {
                       rules={[{ required: true, message: '请选择模型' }]}
                     >
                       <Input placeholder="模型名字" maxLength={50} />
-                      {/* <Select placeholder="请选择" onChange={(value, option) => onModelKeyChange(value, option, index)} style={{ width: 220 }}>
-                        {temps?.map((item: any, index) => <Option key={index} support_finetune={item?.support_finetune} value={item?.model_name}>{item?.model_name}</Option>)}
-                      </Select> */}
                     </Form.Item>
                     <Form.Item
                       {...restField}

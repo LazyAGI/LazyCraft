@@ -78,8 +78,8 @@ const InferenceService = () => {
     setLoading(true)
     try {
       const res: any = await Service.postInferServiceList(param)
-      if (res?.data) {
-        const { result = [], total } = res.data
+      if (res?.result) {
+        const { result = [], total } = res.result
         setList(result)
         setTotal(total)
       }

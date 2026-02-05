@@ -28,11 +28,11 @@ const ModelListModal = (componentProps: ModelListModalProps) => {
   }
 
   return (
-    <Modal 
-      title="模型查看" 
-      open={visible} 
-      onOk={onClose} 
-      onCancel={onClose} 
+    <Modal
+      title="模型查看"
+      open={visible}
+      onOk={onClose}
+      onCancel={onClose}
       footer={renderModalFooter}
     >
       {renderModelList()}

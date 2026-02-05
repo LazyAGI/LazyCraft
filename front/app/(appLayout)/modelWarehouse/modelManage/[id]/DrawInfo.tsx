@@ -18,7 +18,7 @@ const DrawInfo = (props: any) => {
     existModel: '已有模型导入',
   }
   return (
-    <Drawer title="模型基础信息" width={520} open={visible} onClose={handleCancel} maskdismissible closable>
+    <Drawer title="模型基础信息" width={520} open={visible} onClose={handleCancel} maskClosable closable>
       {/* <InfoTitle text="基本信息" /> */}
       {baseInfo?.model_name && <InfoItem labelSpan={4} label="模型名称：" content={baseInfo?.model_name} />}
       <InfoItem labelSpan={4} label="模型类型：" content={moduleMap[baseInfo?.model_type]} />

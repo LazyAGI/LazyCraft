@@ -9,7 +9,7 @@ import InfoTitle from '../../../modelAdjust/components/InfoTitle'
 import ModelTreeSelect from '../../components/modelTreeSelect'
 import styles from './index.module.scss'
 import Iconfont from '@/app/components/base/iconFont'
-import { createModel, getBaseModelList, getModelListDraw } from '@/infrastructure/api/modelAdjust'
+import { Service } from '@/infrastructure/api/generated'
 import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
 import { noOnlySpacesRule } from '@/shared/utils'
 
@@ -31,27 +31,20 @@ const templateMap = [
 ]
 const ModelTestCreate = () => {
   const router = useRouter()
-  const token = localStorage.getItem('console_token')
   const [baseForm] = Form.useForm()
   const [options] = useState([{ option_name: '', option_value: '' }, { option_name: '', option_value: '' }, { option_name: '', option_value: '' }])
   const [roundData] = useState([{ dimension_name: '', dimension_description: '' }])
   const [aiRoundData] = useState([{ dimension_name: '', dimension_description: '', ai_base_score: '', choose_num: 3 }])
   const [aiOptions] = useState([{ option_name: '' }, { option_name: '' }, { option_name: '' }])
-  const [modelList, setModelList] = useState([])
-  const [datasetList, setDatasetList] = useState([])
+  const [modelList, setModelList] = useState<any[]>([])
+  const [datasetList, setDatasetList] = useState<any[]>([])
   const [evaluation_type, setDatasetType] = useState('online')
   const [testType, setTestType] = useState('manual')
   const getMList = async () => {
-    const res: any = await getModelListDraw({
-      url: '/infer-service/list/draw',
-      body: {
-        qtype: 'already',
-        available: 1,
-        model_kind: 'localLLM',
-      },
-    })
+    const res: any = await Service.getInferServiceListDraw('localLLM')
     if (res) {
-      const temp: any = res?.result?.result?.map((item) => {
+      const result = res?.result?.result || res?.data?.result
+      const temp: any = result?.map((item) => {
         const serviceId = item?.services?.[0]?.id
 
         return {
@@ -67,9 +60,9 @@ const ModelTestCreate = () => {
     }
   }
   const getDataset = async () => {
-    const res: any = await getBaseModelList({ url: '/model_evalution/all_online_datasets', options: {} })
+    const res = await Service.getModelEvalutionAllOnlineDatasets()
     if (res)
-      setDatasetList(res?.result)
+      setDatasetList(res?.result || [])
   }
   useEffect(() => {
     getMList()
@@ -94,20 +87,17 @@ const ModelTestCreate = () => {
       if (ai_evaluator_name?.[1])
         values.ai_evaluator_name = ai_evaluator_name[1]
 
-      createModel({ url: '/model_evalution/create_task', body: { ...values } }).then((res) => {
-        if (res.status === 500 || res.status === 400) {
-          Toast.notify({
-            type: ToastTypeEnum.Error, message: res?.message,
-          })
-        }
-        else {
-          Toast.notify({
-            type: ToastTypeEnum.Success, message: '创建成功',
-          })
-          setTimeout(() => {
-            router.push('/modelWarehouse/modelTest')
-          }, 1000)
-        }
+      Service.postModelEvalutionCreateTask({ ...values }).then((_res) => {
+        Toast.notify({
+          type: ToastTypeEnum.Success, message: '创建成功',
+        })
+        setTimeout(() => {
+          router.push('/modelWarehouse/modelTest')
+        }, 1000)
+      }).catch((err: any) => {
+        Toast.notify({
+          type: ToastTypeEnum.Error, message: err?.body?.message || err?.message || '创建失败',
+        })
       })
     })
   }
@@ -159,10 +149,25 @@ const ModelTestCreate = () => {
   }
   const uploadProps: any = {
     name: 'files',
-    action: '/console/api/model_evalution/upload_dataset',
-    headers: { Authorization: `Bearer ${token}` },
     accept: ['.json', '.xlsx', '.xls', '.csv', '.zip', '.gz', 'tar'],
     multiple: true,
+    customRequest: async ({ file, onSuccess, onError }) => {
+      const rawFile = file as any
+      const originFile = rawFile?.originFileObj || rawFile
+      try {
+        const res = await Service.postModelEvalutionUploadDataset({
+          files: originFile,
+        })
+        onSuccess?.({
+          status: 0,
+          result: res?.result,
+        })
+      }
+      catch (err: any) {
+        onError?.(err)
+        message.error(err?.body?.message || err?.message || `${rawFile?.name || '文件'} 上传失败`)
+      }
+    },
     onChange: (info) => {
       const { file, fileList } = info
       // 更新文件列表，过滤掉上传失败的文件
@@ -306,7 +311,41 @@ const ModelTestCreate = () => {
                   <div>1. 为json、csv、xlsx格式文件或包含上述文件类型的tar.gz、zip压缩包文件上传</div>
                   <div>2.文件大小在1G以内</div>
                   <Space size="small">3.模板示例：{templateMap.map((item, index) => {
-                    return <a key={index} target="_blank" href={`${window.location.origin}/console/api/model_evalution/evaluation_datasettpl_download/${item.url}`}>{item.name}</a>
+                    return <a
+                      key={index}
+                      href="#"
+                      onClick={async (e) => {
+                        e.preventDefault()
+                        try {
+                          const res = await Service.getModelEvalutionEvaluationDatasettplDownload(item.url as 'json' | 'csv' | 'xlsx')
+                          const blob = res instanceof Blob
+                            ? res
+                            : new Blob(
+                              [
+                                typeof res === 'string'
+                                  ? res
+                                  : JSON.stringify(res, null, 2),
+                              ],
+                              {
+                                type: item.url === 'csv'
+                                  ? 'text/csv;charset=utf-8'
+                                  : 'application/json;charset=utf-8',
+                              },
+                            )
+                          const url = window.URL.createObjectURL(blob)
+                          const a = document.createElement('a')
+                          a.href = url
+                          a.download = `${item.name}模板.${item.url}`
+                          document.body.appendChild(a)
+                          a.click()
+                          window.URL.revokeObjectURL(url)
+                          document.body.removeChild(a)
+                        }
+                        catch (err) {
+                          message.error('下载模板失败')
+                        }
+                      }}
+                    >{item.name}</a>
                   })} </Space>
                 </div>)}
                 rules={[{ required: true, message: '请上传文件' }]}

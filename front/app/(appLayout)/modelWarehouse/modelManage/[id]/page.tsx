@@ -9,8 +9,7 @@ import DrawInfo from './DrawInfo'
 import AddModal from './AddModal'
 import AddModelList from './AddModelList'
 import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
-import { getModelInfo, reDown } from '@/infrastructure/api/modelWarehouse'
-import { deleteModel, getModelList } from '@/infrastructure/api/modelAdjust'
+import { Service } from '@/infrastructure/api/generated'
 import { useApplicationContext } from '@/shared/hooks/app-context'
 import { usePermitCheck } from '@/app/components/app/permit-check'
 
@@ -50,10 +49,16 @@ const ModelDetail = (req) => {
   }
 
   const getTableData = ({ current, pageSize }): Promise<any> => {
-    return getModelList({ url: '/mh/finetune_model_page', body: { page: current, page_size: pageSize, model_id: id, online_model_id: type, qtype, namespace: isMine } }).then((res) => {
+    return Service.postMhFinetuneModelPage({
+      page: current,
+      page_size: pageSize,
+      model_id: String(id),
+      online_model_id: type,
+      qtype: qtype as 'mine' | 'group' | 'builtin' | 'already',
+    }).then((res) => {
       return {
-        total: res.total,
-        list: res.data,
+        total: res?.total ?? 0,
+        list: res?.data ?? [],
       }
     })
   }
@@ -69,7 +74,7 @@ const ModelDetail = (req) => {
     manual: true,
   })
   const getInfo = () => {
-    getModelInfo({ url: `mh/model_info/${id}`, options: { params: { qtype, namespace: isMine } } }).then((res) => {
+    Service.getMhModelInfo(Number(id), qtype || 'mine', isMine || 'already').then((res) => {
       setBaseInfo(res)
       if (res?.models?.length > 0)
         setType(res?.models[0]?.id)
@@ -81,18 +86,21 @@ const ModelDetail = (req) => {
     getInfo()
   }, [id])
   const handleDelete = async (record) => {
-    const res = await deleteModel({ url: `/mh/delete_finetune_model/${id}/${record?.id}` })
-    if (res) {
+    try {
+      await Service.deleteMhDeleteFinetuneModel(Number(id), Number(record?.id))
       Toast.notify({ type: ToastTypeEnum.Success, message: '删除成功' })
       search.submit()
     }
+    catch (err: any) {
+      Toast.notify({ type: ToastTypeEnum.Error, message: err?.body?.message || err?.message || '删除失败' })
+    }
   }
   const reDownload = () => {
-    reDown({ url: `/mh/retry_download/${id}` }).then((res) => {
-      if (res) {
-        Toast.notify({ type: ToastTypeEnum.Success, message: '操作成功' })
-        getInfo()
-      }
+    Service.getMhRetryDownload(Number(id)).then(() => {
+      Toast.notify({ type: ToastTypeEnum.Success, message: '操作成功' })
+      getInfo()
+    }).catch((err: any) => {
+      Toast.notify({ type: ToastTypeEnum.Error, message: err?.body?.message || err?.message || '操作失败' })
     })
   }
   const handleAddSuccess = () => {
