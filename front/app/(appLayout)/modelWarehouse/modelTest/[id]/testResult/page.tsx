@@ -5,14 +5,18 @@ import Link from 'next/link'
 import InfoTitle from '../../../components/InfoTitle'
 
 import styles from './index.module.scss'
-import { getAdjustInfo } from '@/infrastructure/api/modelAdjust'
+import { Service } from '@/infrastructure/api/generated'
 
 const TestResult = (req) => {
   const { id } = req.params
   const [baseInfo, setBaseInfo] = useState<any>({})
   const getInfo = useCallback(() => {
-    getAdjustInfo({ url: `/finetune/detail/${id}` }).then((res) => {
-      setBaseInfo(res)
+    Service.getModelEvalutionTaskInfo(Number(id)).then((res) => {
+      const taskInfo = res?.result?.task_info
+      setBaseInfo({
+        ...taskInfo,
+        created_from_info: taskInfo?.username,
+      })
     })
   }, [id])
 

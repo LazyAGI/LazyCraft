@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react'
 import { InboxOutlined } from '@ant-design/icons'
 import type { GetProp, UploadFile, UploadProps } from 'antd'
 import { Form, Modal, Upload } from 'antd'
-import { addFile } from '@/infrastructure/api/knowledgeBase' // , uploadData
+import { Service } from '@/infrastructure/api/generated'
 import { API_PREFIX } from '@/app-specs'
 import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
 import { useModalContext } from '@/shared/hooks/modal-context'
@@ -92,7 +92,7 @@ const UploadModal = (props: any) => {
         const nextFileData = fileList.find((item: any) => item.uid === uid)
         if (!nextFileData) {
           const file_ids = Object.values(selfRef.current.uploadTasks).map((item: any) => item.serverId) || []
-          Promise.resolve(addFile({ url: '/kb/file/add', body: { knowledge_base_id: id, file_ids } })).then(() => {
+          Promise.resolve(Service.postKbFileAdd({ knowledge_base_id: id, file_ids })).then(() => {
             Toast.notify({ type: ToastTypeEnum.Success, message: '上传成功' })
             successEvent()
             setFileList([])

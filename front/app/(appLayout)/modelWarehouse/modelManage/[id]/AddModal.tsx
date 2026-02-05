@@ -5,12 +5,9 @@ import type { RcFile } from 'antd/es/upload/interface'
 import { ExclamationCircleOutlined, InboxOutlined } from '@ant-design/icons' // , QuestionCircleOutlined
 import { v4 as uuid4 } from 'uuid'
 import pLimit from 'p-limit'
-import { createModel } from '@/infrastructure/api/modelAdjust'
-import Toast from '@/app/components/base/flash-notice'
+import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
+import { Service } from '@/infrastructure/api/generated'
 import { useModalContext } from '@/shared/hooks/modal-context'
-import { API_PREFIX } from '@/app-specs'
-import { getTagList } from '@/infrastructure/api/tagManage'
-import { uploadMerge } from '@/infrastructure/api/modelWarehouse' // uploadChunk,
 import Iconfont from '@/app/components/base/iconFont'
 
 const { Dragger } = Upload
@@ -27,14 +24,19 @@ const AddModal = (props: any) => {
   const [modelFrom, setModelFrom] = useState()
   const [modelPath, setModelPath] = useState<any>('')
   const [existModels, setExistModels] = useState<any>([])
-  const handleOk = async () => {
+  const handleOk = () => {
     form.validateFields().then((values) => {
-      createModel({ url: '/mh/create_finetune', body: { ...values, model_type: 'local', base_model_id: id } }).then(() => {
-        Toast.notify({ type: 'success', message: '导入成功' })
+      const body: any = { ...values, model_type: 'local', base_model_id: Number(id) }
+      if (body.model_from === 'huggingface')
+        body.model_from = 'hf'
+      if (body.model_from === 'modelscope')
+        body.model_from = 'ms'
+      Service.postMhCreateFinetune(body).then(() => {
+        Toast.notify({ type: ToastTypeEnum.Success, message: '导入成功' })
         form.resetFields()
         onSuccess()
-      }).catch((err) => {
-        console.error(err)
+      }).catch((err: any) => {
+        Toast.notify({ type: ToastTypeEnum.Error, message: err?.body?.message || err?.message || '导入失败' })
       })
     })
   }
@@ -54,45 +56,13 @@ const AddModal = (props: any) => {
     setModelPath(options?.path)
   }
   const getExistModels = async () => {
-    const res: any = await getTagList({ url: '/mh/exist_model_list', options: { params: {} } })
+    const res = await Service.getMhExistModelList()
     if (res)
       setExistModels(res)
   }
   useEffect(() => {
     visible && getExistModels()
   }, [visible])
-  const requestEvent = ({ url, formData, options, onSuccess, onFail, onProgress }) => {
-    const xhr = new XMLHttpRequest()
-    const accessToken = localStorage.getItem('console_token') || ''
-
-    xhr.open('POST', url, true)
-    // xhr.setRequestHeader('Content-Type', 'multipart/form-data')
-    xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`)
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200) {
-          onSuccess && onSuccess(JSON.parse(xhr.response))
-        }
-        else {
-          onFail && onFail({
-            ...options,
-            response: JSON.parse(xhr.response),
-          })
-        }
-      }
-    }
-    xhr.upload.addEventListener('progress', (event) => {
-      if (event.lengthComputable) {
-        onProgress && onProgress({
-          ...options,
-          percent: event.loaded / event.total,
-        })
-      }
-    })
-
-    xhr.send(formData)
-  }
-
   const getActualUploadTasks = () => {
     const { uploadTasks } = selfRef.current
     const cacheData = {}
@@ -108,7 +78,7 @@ const AddModal = (props: any) => {
   const uploadProps: UploadProps = {
     name: 'file',
     multiple: true,
-    customRequest: async ({ file, onProgress, onSuccess, onError }) => {
+    customRequest: async ({ file, onSuccess, onError }) => {
       const totalChunks = Math.ceil((file as RcFile).size / CHUNK_SIZE)
       const chunkQueue: any = []
       const limit = pLimit(MAX_CONCURRENT_UPLOADS)
@@ -117,83 +87,66 @@ const AddModal = (props: any) => {
         const start = i * CHUNK_SIZE
         const end = Math.min((file as RcFile).size, start + CHUNK_SIZE)
         const chunk = file.slice(start, end)
-        const formData = new FormData()
-
-        formData.append('file', chunk)
-        formData.append('file_name', (file as RcFile).name)
-        formData.append('chunk_number', `${i}`)
-        formData.append('total_chunks', `${totalChunks}`)
-        formData.append('file_dir', uniqueId)
-
+        const uid = (file as RcFile).uid
+        const chunkId = `chunk-${i}`
+        const taskKey = `${uid}-${chunkId}`
         chunkQueue.push(
-          limit(() => new Promise((resolve, reject) => {
-            requestEvent({
-              url: `${API_PREFIX}/mh/upload/chunk`,
-              formData,
-              options: { name: (file as RcFile).name, uid: (file as RcFile).uid, chunkId: `chunk-${i}` },
-              onSuccess: (res) => {
-                resolve(res)
-              },
-              onFail: ({ uid, name, chunkId }) => {
-                const { uploadTasks } = selfRef.current
-                const failTasks = uploadTasks[`${uid}-${chunkId}`]
-                if (failTasks) {
-                  selfRef.current.uploadTasks[`${uid}-${chunkId}`] = {
-                    ...failTasks,
-                    stateTag: '上传失败',
-                  }
+          limit(() => new Promise<void>((resolve, reject) => {
+            Service.postMhUploadChunk({
+              file: chunk as Blob,
+              file_name: (file as RcFile).name,
+              chunk_number: i,
+              total_chunks: totalChunks,
+              file_dir: uniqueId,
+            }).then(() => {
+              selfRef.current.uploadTasks[taskKey] = {
+                uid,
+                name: (file as RcFile).name,
+                progress: 100,
+              }
+              const { actualIds, actualInfo } = getActualUploadTasks()
+              const progressList = actualIds.map((val) => {
+                let _item: any = {}
+                let totalProgress = 0
+                if (actualInfo[val]?.length > 0) {
+                  actualInfo[val].forEach((v: any) => {
+                    totalProgress += Number(v.progress || 0)
+                  })
+                  totalProgress = (totalProgress / actualInfo[val].length)
+                  _item = { ...actualInfo[val][0], progress: totalProgress.toFixed(2), icon: <Iconfont type="icon-moxingwenjianxiazai" /> }
                 }
-                const { actualIds, actualInfo } = getActualUploadTasks()
-                const progressList = actualIds.map((val) => {
-                  let _item: any = {}
-                  if (actualInfo[val]?.length > 0) {
-                    const { stateTag } = actualInfo[val].find(v => v.stateTag) || {}
-                    _item = { ...actualInfo[val][0] }
-
-                    if (stateTag)
-                      _item.stateTag = stateTag
-                  }
-                  return _item
-                })
-                runProgressMonitor({ list: progressList })
-              },
-              onProgress: ({ uid, name, chunkId, percent }) => {
-                selfRef.current.uploadTasks[`${uid}-${chunkId}`] = {
-                  uid,
-                  name,
-                  progress: percent,
+                return _item
+              })
+              runProgressMonitor({ list: progressList })
+              resolve()
+            }).catch(() => {
+              selfRef.current.uploadTasks[taskKey] = {
+                uid,
+                name: (file as RcFile).name,
+                progress: 0,
+                stateTag: '上传失败',
+              }
+              const { actualIds, actualInfo } = getActualUploadTasks()
+              const progressList = actualIds.map((val) => {
+                let _item: any = {}
+                if (actualInfo[val]?.length > 0) {
+                  const { stateTag } = actualInfo[val].find((v: any) => v.stateTag) || {}
+                  _item = { ...actualInfo[val][0], stateTag }
                 }
-
-                const { actualIds, actualInfo } = getActualUploadTasks()
-
-                const progressList = actualIds.map((val) => {
-                  let _item: any = {}
-                  let totalProgress: any = 0
-                  if (actualInfo[val]?.length > 0) {
-                    actualInfo[val].forEach((v: any) => {
-                      totalProgress = (Number(totalProgress) + Number(v.progress))
-                    })
-                    totalProgress = (totalProgress / actualInfo[val].length * 100).toFixed(2)
-                    _item = { ...actualInfo[val][0], progress: totalProgress, icon: <Iconfont type="icon-moxingwenjianxiazai" /> }
-                  }
-                  return _item
-                })
-
-                runProgressMonitor({ list: progressList })
-              },
+                return _item
+              })
+              runProgressMonitor({ list: progressList })
+              reject(new Error('上传失败'))
             })
-          }).then(() => { }, () => { })),
+          })),
         )
       }
 
       try {
         await Promise.all(chunkQueue)
-        await uploadMerge({
-          url: '/mh/upload/merge',
-          body: {
-            filename: (file as RcFile).name,
-            file_dir: uniqueId,
-          },
+        await Service.postMhUploadMerge({
+          filename: (file as RcFile).name,
+          file_dir: uniqueId,
         })
 
         onSuccess && onSuccess('Upload complete')
@@ -203,7 +156,7 @@ const AddModal = (props: any) => {
         onError && onError(error)
       }
     },
-    beforeUpload: (file) => {
+    beforeUpload: () => {
       oepnProgressMonitor({ title: '模型上传' })
       return true
     },

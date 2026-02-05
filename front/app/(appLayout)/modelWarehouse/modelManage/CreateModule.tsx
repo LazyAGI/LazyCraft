@@ -7,13 +7,11 @@ import type { RcFile } from 'antd/es/upload/interface'
 import pLimit from 'p-limit'
 import { useDebounceFn } from 'ahooks'
 import styles from './page.module.scss'
-import { API_PREFIX } from '@/app-specs'
 import useRadioAuth from '@/shared/hooks/use-radio-auth'
 import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
-import { checkName, createModel, uploadMerge } from '@/infrastructure/api/modelWarehouse' // uploadChunk,
+import { Service } from '@/infrastructure/api/generated'
 import { noOnlySpacesRule } from '@/shared/utils'
 import TagSelect from '@/app/components/tagSelect'
-import { bindTags, deleteFile, getTagList } from '@/infrastructure/api/tagManage'
 import { useModalContext } from '@/shared/hooks/modal-context'
 import Iconfont from '@/app/components/base/iconFont'
 import IconModal from '@/app/components/iconModal'
@@ -40,7 +38,6 @@ const CreateModal = (props: any) => {
   const [iconModal, setIconModal] = useState<any>(false)
 
   const [form] = Form.useForm()
-  const token = localStorage.getItem('console_token')
   const authRadio = useRadioAuth()
 
   // 清理所有上传任务和进度数据的公共函数
@@ -79,14 +76,25 @@ const CreateModal = (props: any) => {
 
   const { run: handleOk } = useDebounceFn(async () => {
     form.validateFields().then((values) => {
-      createModel({ url: '/mh/create', body: { ...data, ...values, model_list: JSON.stringify(values.model_list) } }).then((res) => {
+      const createBody: any = { ...data, ...values, model_list: JSON.stringify(values.model_list) }
+      if (createBody.model_from === 'huggingface')
+        createBody.model_from = 'hf'
+      if (createBody.model_from === 'modelscope')
+        createBody.model_from = 'ms'
+      Service.postMhCreate(createBody).then((res: any) => {
         Toast.notify({ type: ToastTypeEnum.Success, message: '添加成功' })
         setType('local')
         form.resetFields()
         setModelFrom(undefined)
-        bindTags({ url: 'tags/bindings/update', body: { type: 'model', tag_names: values?.tag_names, target_id: res?.id } }).then(() => {
+        Service.postTagsBindingsUpdate({
+          type: 'model',
+          tag_names: values?.tag_names || [],
+          target_id: String(res?.id),
+        }).then(() => {
           onSuccess()
         })
+      }).catch((err) => {
+        Toast.notify({ type: ToastTypeEnum.Error, message: err?.body?.message || err?.message || '添加失败' })
       })
     }).catch((err) => {
       console.error(err)
@@ -110,25 +118,28 @@ const CreateModal = (props: any) => {
   }, [visible, data, form])
 
   const getList = async () => {
-    enum EType {
-      'OnlineLLM' = 'llm',
-      'Embedding' = 'embedding',
-      'reranker' = 'reranker',
+    const typeMap: Record<string, 'llm' | 'embedding' | 'reranker'> = {
+      OnlineLLM: 'llm',
+      Embedding: 'embedding',
+      reranker: 'reranker',
     }
     if (!modelKind)
       return
-    const res: any = await getTagList({ url: '/brands', options: { params: { type: EType[modelKind] } } })
+    const brandType = typeMap[modelKind]
+    if (!brandType)
+      return
+    const res = await Service.getBrands(brandType)
     if (res)
       setTags(res)
   }
 
   const getmodels = async () => {
-    const res: any = await getTagList({ url: '/mh/online_model_support_list', options: { params: {} } })
+    const res = await Service.getMhOnlineModelSupportList()
     if (res)
       setModels(res)
   }
   const getExistModels = async () => {
-    const res: any = await getTagList({ url: '/mh/exist_model_list', options: { params: {} } })
+    const res = await Service.getMhExistModelList()
     if (res)
       setExistModels(res)
   }
@@ -176,73 +187,33 @@ const CreateModal = (props: any) => {
     }
     else if (info.file.status === 'done') {
       setLoading(false)
-      form.setFieldValue('model_icon', info.file.response.file_path)
+      form.setFieldValue('model_icon', info.file.response?.file_path)
     }
-
-    else { setLoading(false) }
+    else {
+      setLoading(false)
+    }
   }
 
-  const requestEvent = ({ url, formData, options, onSuccess, onFail, onProgress }) => {
-    const xhr = new XMLHttpRequest()
-    const accessToken = localStorage.getItem('console_token') || ''
-    const taskKey = `${options.uid}-${options.chunkId}`
-
-    // 保存XMLHttpRequest引用
-    selfRef.current.activeXHRs[taskKey] = xhr
-
-    xhr.open('POST', url, true)
-    // xhr.setRequestHeader('Content-Type', 'multipart/form-data')
-    xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`)
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === 4) {
-        // 请求完成后移除引用
-        delete selfRef.current.activeXHRs[taskKey]
-
-        // 检查请求是否被中止，如果被中止则不处理响应
-        if (xhr.status === 0) {
-          // 请求被中止，不需要处理
-          return
-        }
-
-        if (xhr.status === 200) {
-          try {
-            onSuccess && onSuccess(JSON.parse(xhr.response))
-          }
-          catch (error) {
-            console.error('JSON parse error:', error)
-            onFail && onFail({
-              ...options,
-              response: { error: 'Invalid response format' },
-            })
-          }
-        }
-        else {
-          try {
-            onFail && onFail({
-              ...options,
-              response: JSON.parse(xhr.response),
-            })
-          }
-          catch (error) {
-            onFail && onFail({
-              ...options,
-              response: { error: 'Request failed' },
-            })
-          }
-        }
-      }
-    }
-    xhr.upload.addEventListener('progress', (event) => {
-      if (event.lengthComputable) {
-        onProgress && onProgress({
-          ...options,
-          percent: event.loaded / event.total,
+  const iconUploadProps: UploadProps = {
+    name: 'file',
+    accept: '.jpg,.png,.jpeg',
+    listType: 'picture-card',
+    className: 'avatar-uploader',
+    maxCount: 1,
+    showUploadList: false,
+    beforeUpload,
+    onChange: handleIconChange,
+    customRequest: async ({ file, onSuccess, onError }) => {
+      try {
+        const res = await Service.postMhUploadIcon({
+          file: (file instanceof Blob ? file : new Blob([file])) as Blob,
         })
+        onSuccess?.(res)
       }
-    })
-
-    xhr.send(formData)
-    return xhr
+      catch (err) {
+        onError?.(err as Error)
+      }
+    },
   }
 
   const getActualUploadTasks = () => {
@@ -293,8 +264,8 @@ const CreateModal = (props: any) => {
         }
       })
 
-      deleteFile({ url: '/mh/delete_uploaded_file', body: { file_dir: uniqueId, filename: (file as RcFile).name } }).then((res) => {
-        message.success(res.message || '删除成功')
+      Service.postMhDeleteUploadedFile({ file_dir: uniqueId, filename: (file as RcFile).name }).then((res) => {
+        message.success(res?.message || '删除成功')
         // 删除文件后清空 model_dir 字段
         form.setFieldValue('model_dir', '')
 
@@ -349,104 +320,67 @@ const CreateModal = (props: any) => {
         formData.append('file_dir', uniqueId)
 
         chunkQueue.push(
-          limit(() => new Promise((resolve) => {
-            requestEvent({
-              url: `${API_PREFIX}/mh/upload/chunk`,
-              formData,
-              options: { name: (file as RcFile).name, uid: (file as RcFile).uid, chunkId: `chunk-${i}` },
-              onSuccess: (res) => {
-                resolve(res)
-              },
-              onFail: ({ uid, chunkId, response }) => {
-                const { uploadTasks } = selfRef.current
-                const failTasks = uploadTasks[`${uid}-${chunkId}`]
-
-                // 检查是否是权限错误
-                if (response && (response.code === 'no_perm' || response.status === 403)) {
-                  message.error(response.message || '没有权限，上传失败')
-
-                  // 清理所有上传任务和进度数据
-                  clearAllUploadData()
-                  onClose()
-                  return
+          limit(() => new Promise<void>((resolve, reject) => {
+            const uid = (file as RcFile).uid
+            const chunkId = `chunk-${i}`
+            const taskKey = `${uid}-${chunkId}`
+            Service.postMhUploadChunk({
+              file: chunk as Blob,
+              file_name: (file as RcFile).name,
+              chunk_number: i,
+              total_chunks: totalChunks,
+              file_dir: uniqueId,
+            }).then(() => {
+              selfRef.current.uploadTasks[taskKey] = {
+                uid,
+                name: (file as RcFile).name,
+                progress: 1,
+              }
+              const { actualIds, actualInfo } = getActualUploadTasks()
+              const progressList = actualIds.map((val) => {
+                let _item: any = {}
+                let totalProgress = 0
+                if (actualInfo[val]?.length > 0) {
+                  actualInfo[val].forEach((v: any) => {
+                    totalProgress += Number(v.progress || 0)
+                  })
+                  totalProgress = (totalProgress / actualInfo[val].length * 100)
+                  const currentMaxProgress = selfRef.current.maxProgress[val] || 0
+                  const displayProgress = Math.min(totalProgress, 99)
+                  selfRef.current.maxProgress[val] = Math.max(currentMaxProgress, displayProgress)
+                  _item = { ...actualInfo[val][0], progress: selfRef.current.maxProgress[val].toFixed(2), icon: <Iconfont type="icon-moxingwenjianxiazai" /> }
                 }
-
-                if (failTasks) {
-                  selfRef.current.uploadTasks[`${uid}-${chunkId}`] = {
-                    ...failTasks,
-                    stateTag: '上传失败',
-                  }
+                return _item
+              })
+              runProgressMonitor({ list: progressList })
+              resolve()
+            }).catch((err: any) => {
+              const response = err?.body || err
+              if (response?.code === 'no_perm' || response?.status === 403) {
+                message.error(response?.message || '没有权限，上传失败')
+                clearAllUploadData()
+                onClose()
+                return
+              }
+              selfRef.current.uploadTasks[taskKey] = {
+                uid,
+                name: (file as RcFile).name,
+                progress: 0,
+                stateTag: '上传失败',
+              }
+              const { actualIds, actualInfo } = getActualUploadTasks()
+              const progressList = actualIds.map((val) => {
+                let _item: any = {}
+                if (actualInfo[val]?.length > 0) {
+                  const { stateTag } = actualInfo[val].find((v: any) => v.stateTag) || {}
+                  _item = { ...actualInfo[val][0], stateTag }
                 }
-                const { actualIds, actualInfo } = getActualUploadTasks()
-                const progressList = actualIds.map((val) => {
-                  let _item: any = {}
-                  if (actualInfo[val]?.length > 0) {
-                    const { stateTag } = actualInfo[val].find(v => v.stateTag) || {}
-                    _item = { ...actualInfo[val][0] }
-
-                    if (stateTag)
-                      _item.stateTag = stateTag
-                  }
-                  return _item
-                })
-                runProgressMonitor({ list: progressList })
-              },
-              onProgress: ({ uid, name, chunkId, percent }) => {
-                const taskKey = `${uid}-${chunkId}`
-                const existingProgress = selfRef.current.uploadTasks[taskKey]?.progress || 0
-
-                // 只有当新进度大于已有进度时才更新
-                if (percent > existingProgress) {
-                  selfRef.current.uploadTasks[taskKey] = {
-                    uid,
-                    name,
-                    progress: percent,
-                  }
-                }
-
-                const { actualIds, actualInfo } = getActualUploadTasks()
-
-                const progressList = actualIds.map((val) => {
-                  let _item: any = {}
-                  let totalProgress: any = 0
-                  if (actualInfo[val]?.length > 0) {
-                    actualInfo[val].forEach((v: any) => {
-                      totalProgress = (Number(totalProgress) + Number(v.progress))
-                    })
-                    totalProgress = (totalProgress / actualInfo[val].length * 100).toFixed(2)
-
-                    // 只有回退超过20%时才允许回退，小于20%的回退保持历史最高进度
-                    const currentMaxProgress = selfRef.current.maxProgress[val] || 0
-                    const calculatedProgress = Number(totalProgress)
-                    const progressDiff = currentMaxProgress - calculatedProgress
-
-                    if (calculatedProgress >= currentMaxProgress) {
-                      // 进度增长，正常更新
-                      // 如果已经是100%，保持100%；否则限制为99%（除非真正完成）
-                      const displayProgress = (currentMaxProgress === 100) ? 100 : Math.min(calculatedProgress, 99)
-                      selfRef.current.maxProgress[val] = displayProgress
-                      totalProgress = displayProgress.toFixed(2)
-                    }
-                    else if (progressDiff > 20) {
-                      // 超过20%的回退，允许回退
-                      // 但如果之前已经是100%，保持100%
-                      const displayProgress = (currentMaxProgress === 100) ? 100 : Math.min(calculatedProgress, 99)
-                      totalProgress = displayProgress.toFixed(2)
-                    }
-                    else {
-                      // 20%以内的回退，保持历史最高进度
-                      totalProgress = currentMaxProgress.toFixed(2)
-                    }
-
-                    _item = { ...actualInfo[val][0], progress: totalProgress, icon: <Iconfont type="icon-moxingwenjianxiazai" /> }
-                  }
-                  return _item
-                })
-
-                runProgressMonitor({ list: progressList })
-              },
+                return _item
+              })
+              runProgressMonitor({ list: progressList })
+              reject(err)
             })
-          }).then(() => { }, () => { })),
+          })),
         )
       }
 
@@ -455,12 +389,9 @@ const CreateModal = (props: any) => {
         await Promise.all(chunkQueue)
 
         // 通知后端合并文件
-        await uploadMerge({
-          url: '/mh/upload/merge',
-          body: {
-            filename: (file as RcFile).name,
-            file_dir: uniqueId,
-          },
+        await Service.postMhUploadMerge({
+          filename: (file as RcFile).name,
+          file_dir: uniqueId,
         })
 
         // 上传真正完成，设置进度为100%
@@ -532,8 +463,8 @@ const CreateModal = (props: any) => {
       if (value && value.trim() === '')
         return reject(new Error('输入不能仅包含空格'))
 
-      checkName({ url: '/mh/check/model_name', body: { model_name: value } }).then((res) => {
-        if (res.code == 200)
+      Service.postMhCheckModelName({ model_name: value }).then((res) => {
+        if (res?.code === 200)
           resolve(true)
         else
           reject(new Error('模型名字重复'))
@@ -544,8 +475,8 @@ const CreateModal = (props: any) => {
   }
   const isNameUniqueB = (rule: any, value: string) => {
     return new Promise((resolve, reject) => {
-      checkName({ url: '/mh/check/model_name', body: { model_name: value, model_from: 'existModel' } }).then((res) => {
-        if (res.code == 200)
+      Service.postMhCheckModelName({ model_name: value, model_from: 'existModel' }).then((res) => {
+        if (res?.code === 200)
           resolve(true)
         else
           reject(new Error('该模型下已添加'))
@@ -576,20 +507,7 @@ const CreateModal = (props: any) => {
             name="model_icon"
             label="图标"
           >
-            <Upload
-              name="file"
-              accept='.jpg,.png,.jpeg'
-              listType="picture-card"
-              className="avatar-uploader"
-              maxCount={1}
-              showUploadList={false}
-              headers={
-                { Authorization: `Bearer ${token}` }
-              }
-              action="/console/api/mh/upload/icon"
-              beforeUpload={beforeUpload}
-              onChange={handleIconChange}
-            >
+            <Upload {...iconUploadProps}>
               {form.getFieldValue('model_icon')
                 ? <Image src={form.getFieldValue('model_icon')?.replace('app', 'static')} alt="avatar" preview={false} width={100} height={100} />
                 : uploadButton}

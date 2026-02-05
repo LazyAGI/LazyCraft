@@ -7,9 +7,8 @@ import { useAntdTable } from 'ahooks'
 import { useRouter } from 'next/navigation'
 import styles from './index.module.scss'
 import useRadioAuth from '@/shared/hooks/use-radio-auth'
-import Toast from '@/app/components/base/flash-notice'
-import { deleteTest, getTestList } from '@/infrastructure/api/modelTest'
-import { apiPrefix } from '@/app-specs'
+import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
+import { Service } from '@/infrastructure/api/generated'
 
 type DataType = {
   key: string
@@ -42,17 +41,12 @@ const ModelAdjust = () => {
   const pollTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   const getTableData = ({ current, pageSize }, formData): Promise<Result> => {
-    return getTestList({
-      url: '/model_evalution/list',
-      options: {
-        params: {
-          page: current,
-          per_page: pageSize,
-          keyword: formData.name || '',
-          qtype: authValue,
-        } as any,
-      },
-    })
+    return Service.getModelEvalutionList(
+      current,
+      pageSize,
+      formData.name || '',
+      authValue,
+    )
       .then((res: any) => {
         return {
           total: res?.result?.total,
@@ -115,16 +109,10 @@ const ModelAdjust = () => {
   const handleDownload = async (record) => {
     const token = window.localStorage.getItem('console_token')
     try {
-      const response = await fetch(`${apiPrefix}/model_evalution/evaluation_summary_download/${record?.id}?token=${token}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok)
-        throw new Error(`下载失败: ${response.status}`)
-
-      const blob = await response.blob()
+      const blob = await Service.getModelEvalutionEvaluationSummaryDownload(
+        record?.id,
+        token || undefined,
+      )
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -136,14 +124,14 @@ const ModelAdjust = () => {
     }
     catch (error) {
       console.error('下载出错:', error)
-      Toast.notify({ type: 'error', message: '下载失败，请稍后重试' })
+      Toast.notify({ type: ToastTypeEnum.Error, message: '下载失败，请稍后重试' })
     }
   }
 
   const handleDelete = async (record) => {
-    const res = await deleteTest({ url: `/model_evalution/delete_task/${record?.id}` })
+    const res = await Service.postModelEvalutionDeleteTask(record?.id)
     if (res) {
-      Toast.notify({ type: 'success', message: '删除成功' })
+      Toast.notify({ type: ToastTypeEnum.Success, message: '删除成功' })
       search.submit()
     }
   }

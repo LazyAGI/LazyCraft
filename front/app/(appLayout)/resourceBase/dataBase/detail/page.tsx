@@ -14,7 +14,7 @@ import Image from 'next/image'
 
 import { useAntdTable } from 'ahooks'
 import dayjs from 'dayjs'
-import { deleteDatabaseTable, getDataBaseTable } from '@/infrastructure/api/database'
+import { Service } from '@/infrastructure/api/generated'
 import useValidateSpace from '@/shared/hooks/use-validate-space'
 
 import DatabaseIcon from '@/public/images/resource-base/database.png'
@@ -30,16 +30,12 @@ const DatabaseDetailContent = () => {
   const [form] = Form.useForm()
 
   const getTableData = ({ current, pageSize }, formData): Promise<any> => {
-    const obj = {}
-    for (const key in formData) {
-      if (formData[key])
-        obj[key] = formData[key]
-    }
-    return getDataBaseTable({ database_id: id, page: current, limit: pageSize, ...obj })
+    const tableName = formData?.table_name ?? ''
+    return Service.getDatabaseTableList(Number(id), current, pageSize, tableName)
       .then((res: any) => {
         return {
-          total: res.total,
-          list: res.data,
+          total: res?.total ?? 0,
+          list: res?.data ?? [],
         }
       })
   }
@@ -50,7 +46,7 @@ const DatabaseDetailContent = () => {
   })
 
   const handleDelete = (data) => {
-    deleteDatabaseTable({ database_id: id, table_id: data.id }).then(() => {
+    Service.deleteDatabaseTable(Number(id), data.id).then(() => {
       message.success('删除成功')
       refresh()
     })

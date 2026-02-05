@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { Form, Input, Modal } from 'antd'
-import { editModel } from '@/infrastructure/api/modelWarehouse'
-import Toast from '@/app/components/base/flash-notice'
+import { Service } from '@/infrastructure/api/generated'
+import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
 
 const ModalList = (props: any) => {
   const { visible, onClose, onSuccess, data } = props
@@ -11,10 +11,15 @@ const ModalList = (props: any) => {
   }, [visible, data])
   const handleOk = () => {
     form.validateFields().then((values) => {
-      editModel({ url: '/mh/update', body: { ...values, model_id: data.id } }).then(() => {
-        Toast.notify({ type: 'success', message: '设置成功' })
+      Service.postMhUpdate({
+        api_key: values.api_key,
+        model_id: String(data.id),
+      }).then(() => {
+        Toast.notify({ type: ToastTypeEnum.Success, message: '设置成功' })
         onSuccess()
         form.resetFields()
+      }).catch((err: any) => {
+        Toast.notify({ type: ToastTypeEnum.Error, message: err?.body?.message || err?.message || '设置失败' })
       })
     })
   }

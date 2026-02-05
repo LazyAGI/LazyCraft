@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { Form, Input, Modal, Select, Table } from 'antd'
 import { useRequest } from 'ahooks'
-import { getDataBaseTable, getDataBaseTableStructureByName } from '@/infrastructure/api//database'
+import { Service } from '@/infrastructure/api/generated'
 
 type TableEditModalProps = {
   type: 'add' | 'edit'
@@ -17,10 +17,10 @@ const TableEditModal: React.FC<any> = (props: TableEditModalProps) => {
   const { database_id, type, visible, record, setVisible, onOk } = props
   const [form] = Form.useForm()
   const [dataSource, setDataSource] = useState<any[]>([])
-  const [page, setPage] = useState(1)
+  const [_page, setPage] = useState(1)
   const [selectedKeys, setSelectedKeys] = useState<string[]>([])
   const { data } = useRequest(() =>
-    getDataBaseTable({ database_id, page: 1, limit: 999999 })
+    Service.getDatabaseTableList(Number(database_id), 1, 999999, '')
       .then((res: any) => ({ ...res, data: res.data.map(el => ({ ...el, label: el.name, value: el.name })) })),
   {
     refreshDeps: [database_id],
@@ -41,7 +41,7 @@ const TableEditModal: React.FC<any> = (props: TableEditModalProps) => {
         setSelectedKeys([])
       }
     }
-  }, [visible, record])
+  }, [visible, record, form])
 
   const handleOk = () => {
     form.validateFields().then(async (values) => {
@@ -88,7 +88,7 @@ const TableEditModal: React.FC<any> = (props: TableEditModalProps) => {
   ]
 
   const handleSingleDatabaseTable = async (e) => {
-    const res: any = await getDataBaseTableStructureByName({ database_id, table_name: e, page: 1, limit: 99999 })
+    const res: any = await Service.getDatabaseTableName(Number(database_id), e)
     setDataSource(res.data.columns)
     const allKeys = res.data.columns.map((_, index) => index.toString())
     setSelectedKeys(allKeys)

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Form, Input, Modal, Radio, Select } from 'antd'
-import { getScriptList, handleFile } from '@/infrastructure/api/knowledgeBase'
-import Toast from '@/app/components/base/flash-notice'
+import { Service } from '@/infrastructure/api/generated'
+import Toast, { ToastTypeEnum } from '@/app/components/base/flash-notice'
 import { tagList } from '@/app/components/tagSelect/ClassifyMode'
 import { bindTags } from '@/infrastructure/api/tagManage'
 import { noOnlySpacesRule } from '@/shared/utils'
@@ -59,7 +59,7 @@ const CleanModal = (props: any) => {
       setLoading(true)
       const values = await form.validateFields()
       if (data) {
-        const { version, script_agent, data_set_script_id, agent, script_type, ...rest } = values
+        const { version: _version, script_agent, data_set_script_id, agent, script_type, ...rest } = values
 
         // 构造请求参数
         const requestData = {
@@ -77,11 +77,8 @@ const CleanModal = (props: any) => {
           requestData.data_set_script_id = agent
         }
 
-        const res: any = await handleFile({
-          url: '/data/version/clean_or_augment',
-          body: requestData,
-        })
-        Toast.notify({ type: 'success', message: '操作成功' })
+        const res: any = await Service.postDataVersionCleanOrAugment(requestData)
+        Toast.notify({ type: ToastTypeEnum.Success, message: '操作成功' })
         onSuccess(res.id, 'edit')
       }
     }
@@ -94,7 +91,7 @@ const CleanModal = (props: any) => {
       if (err instanceof Response && err.status === 423)
         return
 
-      Toast.notify({ type: 'error', message: '操作失败，请重试' })
+      Toast.notify({ type: ToastTypeEnum.Error, message: '操作失败，请重试' })
     }
     finally {
       setLoading(false)
@@ -108,14 +105,14 @@ const CleanModal = (props: any) => {
   }
 
   // 清空所有数据
-  const clearAllData = () => {
+  const clearAllData = useCallback(() => {
     form.resetFields()
     setProcessType('')
     setProcessMethod('')
     setScriptList([])
     setAgentList([])
     setLoading(false)
-  }
+  }, [form])
 
   const getScriptListData = async (scriptType: string) => {
     if (!scriptType) {
@@ -123,7 +120,7 @@ const CleanModal = (props: any) => {
       return
     }
     try {
-      const res: any = await getScriptList({ url: '/script/list_by_type', options: { params: { script_type: scriptType } } })
+      const res: any = await Service.getScriptListByType(scriptType)
       setScriptList(res.map(item => ({ label: item.name, value: item.id })))
     }
     catch (error) {
@@ -192,7 +189,7 @@ const CleanModal = (props: any) => {
     else {
       data && form.setFieldsValue(data)
     }
-  }, [visible, data, form])
+  }, [visible, data, form, clearAllData])
 
   return (
     <Modal title="数据处理" open={visible} onOk={handleOk} onCancel={handleCancel} cancelText='取消' okText='确定' confirmLoading={loading}>

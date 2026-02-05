@@ -14,14 +14,6 @@ export const uploadMerge: Fetcher<BaseResponse, { url: string; body: { filename:
   return post<BaseResponse>(url, { body })
 }
 
-export const checkName: Fetcher<BaseResponse, { url: string; body: any }> = ({ url, body }) => {
-  return post<BaseResponse & { then?: (data: any) => any }>(url, { body })
-}
-
-export const deleteModel: Fetcher<BaseResponse, { url: string; body: any }> = ({ url, body }) => {
-  return post<BaseResponse>(url, { body })
-}
-
 export const editModel: Fetcher<BaseResponse, { url: string; body: any }> = ({ url, body }) => {
   return post<BaseResponse>(url, { body })
 }

@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { Button, Input, Modal, Spin, message } from 'antd'
 import styles from './basModelAi.module.scss'
 import Icon from '@/app/components/base/iconFont'
-import { createCodeAI } from '@/infrastructure/api/prompt'
+import { Service } from '@/infrastructure/api/generated'
 import type { CodeAIResponse, ParamData } from '@/core/data/common'
 
 type Props = {
@@ -18,7 +18,7 @@ type Props = {
 const BaseModelAI: FC<Props> = ({
   isOpen,
   onClose,
-  value,
+  value: _value,
   onGenerated,
 }) => {
   const [isGenerated, setIsGenerated] = useState(false)
@@ -52,13 +52,10 @@ const BaseModelAI: FC<Props> = ({
       setInputLanguage('')
       setIsParam(undefined)
 
-      const res = await createCodeAI({
-        url: '/apps/workflows/code_assistant',
-        body: {
-          query: inputText,
-          session: sessionId,
-        },
-      }) as unknown as CodeAIResponse
+      const res = await Service.postAppsWorkflowsCodeAssistant({
+        prompt: inputText,
+        session: sessionId,
+      } as any) as unknown as CodeAIResponse
 
       // 检查返回的 session 是否匹配
       if (res.session && res.session !== sessionId) {

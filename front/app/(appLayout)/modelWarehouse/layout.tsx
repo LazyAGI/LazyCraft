@@ -17,28 +17,26 @@ const ModelWarehouseLayout = ({ children }: ModelWarehouseLayoutProps) => {
   useEffect(() => {
     const pathName = window.location.pathname
 
-    if (/\/modelWarehouse\/modelTest(?:\/.*)?$/.test(pathName)) {
+    if (/\/modelWarehouse\/modelTest(?:\/.*)?$/.test(pathName))
       setCurrentType('modelTest')
-    } else if (/\/modelWarehouse(?:\/modelManage)?(?:\/.*)?$/.test(pathName)) {
+    else if (/\/modelWarehouse(?:\/modelManage)?(?:\/.*)?$/.test(pathName))
       setCurrentType('modelManage')
-    }
   }, [currentPathname])
 
   const processNavigation = (type: string) => {
     setCurrentType(type)
-    if (type === 'modelManage') {
+    if (type === 'modelManage')
       navigationRouter.replace('/modelWarehouse/modelManage')
-    } else {
+    else
       navigationRouter.replace('/modelWarehouse/modelTest')
-    }
   }
 
   const renderMenuItem = (type: string, iconType: string, label: string) => {
     const isActive = currentType === type
-    
+
     return (
-      <div 
-        className={`${styles.menuItem} ${isActive && styles.active}`} 
+      <div
+        className={`${styles.menuItem} ${isActive && styles.active}`}
         onClick={() => processNavigation(type)}
       >
         <div className={styles.icon}>

@@ -8,7 +8,7 @@ import Image from 'next/image'
 import { useAntdTable } from 'ahooks'
 import style from '../index.module.scss'
 import DatabaseIcon from '@/public/images/resource-base/database.png'
-import { getDataBaseSubTableList } from '@/infrastructure/api/database'
+import { Service } from '@/infrastructure/api/generated'
 
 const { Column } = Table
 
@@ -24,32 +24,30 @@ const DatabaseDetailContent = () => {
   const { back } = useRouter()
 
   const getTableData = ({ current, pageSize }): Promise<any> => {
-    return getDataBaseSubTableList({
-      database_id: searchParams.get('database_id'),
-      table_id: searchParams.get('table_id'),
-      page: current,
-      limit: pageSize,
-    }).then((res: any) => {
-      // 设置表格的列信息
-      if (res.columns) {
-        // 设置数据库表信息
+    const databaseId = Number(searchParams.get('database_id'))
+    const tableId = Number(searchParams.get('table_id'))
+    return Promise.all([
+      Service.getDatabaseTable(databaseId, tableId),
+      Service.getDatabaseTableData(databaseId, tableId, current, pageSize),
+    ]).then(([tableRes, dataRes]) => {
+      const tableInfo = tableRes?.data
+      if (tableInfo) {
         setDatabaseTableInfo({
-          table_name: res.columns.table_name,
-          comment: res.columns.comment,
+          table_name: tableInfo.table_name,
+          comment: tableInfo.comment,
         })
 
-        // 处理列信息
-        const columnsArray = res.columns.columns || []
+        const columnsArray = tableInfo.columns || []
         const columns = columnsArray.map((col: any) => ({
-          name: col.name || col.column_name,
-          comment: col.comment || col.column_comment || col.name || col.column_name,
+          name: col.name || (col as any).column_name,
+          comment: col.comment || (col as any).column_comment || col.name || (col as any).column_name,
         }))
         setTableColumns(columns)
       }
 
       return {
-        total: res.total,
-        list: res.data,
+        total: dataRes?.total ?? 0,
+        list: dataRes?.data ?? [],
       }
     })
   }

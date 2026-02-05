@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { Modal, Select, Table, message } from 'antd'
 import PageAiCascader from './pageAiCascader'
 import { getModelInfo, getModelListNew } from '@/infrastructure/api/modelWarehouse'
-import { getAdjustList } from '@/infrastructure/api/prompt'
+import { Service } from '@/infrastructure/api/generated'
 type ModelItemType = {
   id: string
   model_type: string
@@ -67,7 +67,6 @@ type CascaderOptionType = {
 const AiModel: React.FC<AiModelProps> = ({ open, onCancel, onOk, currentRecord }) => {
   const [selectedServices, setSelectedServices] = useState<Record<string, string>>({})
   const [selectedModels, setSelectedModels] = useState<Record<string, string[]>>({})
-  const [cascaderOptions, setCascaderOptions] = useState<CascaderOptionType[]>([])
   const [cloudServiceOptions, setCloudServiceOptions] = useState<CascaderOptionType[]>([])
   const [platformServiceOptions, setPlatformServiceOptions] = useState<CascaderOptionType[]>([])
   const [modelData, setModelData] = useState<ModelItemType[]>([])
@@ -121,7 +120,6 @@ const AiModel: React.FC<AiModelProps> = ({ open, onCancel, onOk, currentRecord }
   }
   // 平台服务
   const fetchPlatformData = async () => {
-    const url = '/infer-service/list'
     const param: any = {
       page: 1,
       per_page: 9999,
@@ -129,14 +127,11 @@ const AiModel: React.FC<AiModelProps> = ({ open, onCancel, onOk, currentRecord }
       tenant: workspaceId,
     }
     try {
-      const res: any = await getAdjustList({
-        url,
-        body: param,
-      })
+      const res: any = await Service.postInferServiceList(param)
 
-      // 处理平台服务数据 - 数据在 res.result.result 中
-      if (res?.result?.result && Array.isArray(res.result.result)) {
-        const filteredResult = res.result.result.filter((item: any) => item.online_count > 0)
+      // 处理平台服务数据 - 数据在 res.data.result 中
+      if (res?.data?.result && Array.isArray(res.data.result)) {
+        const filteredResult = res.data.result.filter((item: any) => item.online_count > 0)
         const options = filteredResult.map((item: any, index: number) => {
           const option = {
             value: item.id ? `${item.id}` : `service_${index}`,
@@ -198,7 +193,6 @@ const AiModel: React.FC<AiModelProps> = ({ open, onCancel, onOk, currentRecord }
   const resetData = () => {
     setSelectedServices({})
     setSelectedModels({})
-    setCascaderOptions([])
     setCloudServiceOptions([])
     setPlatformServiceOptions([])
     setModelData([])

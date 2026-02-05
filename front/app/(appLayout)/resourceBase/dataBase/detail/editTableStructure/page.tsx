@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { useRequest } from 'ahooks'
 import style from '../index.module.scss'
 import EditableTable from './editableTable'
-import { editTableStructure, getDataBaseSubTableList, getDataBaseTable } from '@/infrastructure/api/database'
+import { Service } from '@/infrastructure/api/generated'
 
 const EditTableStructureContent = () => {
   const searchParams = useSearchParams()
@@ -18,13 +18,23 @@ const EditTableStructureContent = () => {
   const database_id = searchParams.get('database_id')
   const table_id = searchParams.get('table_id')
 
-  const { data: tableList } = useRequest(() => getDataBaseTable({ database_id, page: 1, limit: 10000 }).then((res: any) => res.data.filter(el => el.id !== Number(table_id)).map(el => ({ ...el, label: el.name, value: el.name, isLeaf: false }))))
-  const { data } = useRequest<any, any>(() => getDataBaseSubTableList({ database_id, table_id }), {
-    onSuccess: (res) => {
-      if (res)
-        setFormVal(res.columns.columns)
+  const { data: tableList } = useRequest(() =>
+    Service.getDatabaseTableList(Number(database_id), 1, 10000, '')
+      .then((res: any) =>
+        res.data
+          .filter(el => el.id !== Number(table_id))
+          .map(el => ({ ...el, label: el.name, value: el.name, isLeaf: false })),
+      ),
+  )
+  const { data } = useRequest<any, any>(
+    () => Service.getDatabaseTable(Number(database_id), Number(table_id)).then(res => res.data),
+    {
+      onSuccess: (res) => {
+        if (res)
+          setFormVal(res.columns ?? [])
+      },
     },
-  })
+  )
 
   const onFormFinish = async (val) => {
     if (formVal.length === 0) {
@@ -33,10 +43,8 @@ const EditTableStructureContent = () => {
     }
 
     const submitData = {
-      ...val,
-      database_id,
-      table_id,
-      ...data.columns,
+      table_name: val.table_name ?? data.table_name,
+      comment: val.comment ?? data.comment,
       columns: formVal.map((el: any) => {
         const { foreign_key_info, __order, ...rest } = el
         return (foreign_key_info && foreign_key_info[1])
@@ -51,7 +59,7 @@ const EditTableStructureContent = () => {
           : rest
       }),
     }
-    await editTableStructure(submitData)
+    await Service.putDatabaseTable(Number(database_id), Number(table_id), submitData)
     message.success('更新成功')
     back()
   }
@@ -75,7 +83,7 @@ const EditTableStructureContent = () => {
           layout="vertical"
           form={form}
           onFinish={onFormFinish}
-          initialValues={data ? data.columns : {}}
+          initialValues={data ? { table_name: data.table_name, comment: data.comment } : {}}
         >
           <Form.Item label="数据库表名" name="table_name" wrapperCol={{ span: 8 }}>
             <Input placeholder="请输入数据库表名称" disabled />
@@ -89,7 +97,12 @@ const EditTableStructureContent = () => {
             <span className='text-[#071127] text-lg font-medium'>数据表结构</span>
           </div>
           <Divider style={{ margin: '13px 0' }} />
-          <EditableTable onSave={setFormVal} remoteData={data.columns.columns.map((el, i) => ({ ...el, __order: i }))} tableList={tableList} database_id={database_id} />
+          <EditableTable
+            onSave={setFormVal}
+            remoteData={(data.columns ?? []).map((el, i) => ({ ...el, __order: i }))}
+            tableList={tableList}
+            database_id={database_id}
+          />
         </Form>
       }
     </div>

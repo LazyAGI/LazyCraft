@@ -12,7 +12,7 @@ import { handleTableData } from '../utils'
 
 import style from '../index.module.scss'
 import EditableTable from './editableTable'
-import { getDataBaseSubTableList, updateDatabaseTable } from '@/infrastructure/api/database'
+import { Service } from '@/infrastructure/api/generated'
 
 const EditTableDataContent = () => {
   const searchParams = useSearchParams()
@@ -22,12 +22,29 @@ const EditTableDataContent = () => {
   const database_id = searchParams.get('database_id')
   const table_id = searchParams.get('table_id')
 
-  const requestInstance = useRequest<any, any>(() => getDataBaseSubTableList({ database_id, table_id, page: 1, limit: 99999 }), {
-    onSuccess: (res) => {
-      if (res)
-        setFormVal(handleTableData(res.data))
+  const requestInstance = useRequest<any, any>(
+    () => {
+      const databaseId = Number(database_id)
+      const tableId = Number(table_id)
+      return Promise.all([
+        Service.getDatabaseTable(databaseId, tableId),
+        Service.getDatabaseTableData(databaseId, tableId, 1, 99999),
+      ]).then(([tableRes, dataRes]) => ({
+        columns: tableRes?.data ?? {},
+        data: dataRes?.data ?? [],
+      }))
     },
-  })
+    {
+      onSuccess: (res) => {
+        if (res)
+          setFormVal(handleTableData(res.data))
+      },
+      onError: (err: any) => {
+        const errMsg = err?.body?.message || err?.message || '获取表数据失败'
+        message.error(errMsg)
+      },
+    },
+  )
   const onFormFinish = async () => {
     // 需要额外处理 update_items    add_items   delete_items  等字段
     const add_items: any = []
@@ -66,15 +83,19 @@ const EditTableDataContent = () => {
       if (!temp)
         delete_items.push(el)
     })
-    await updateDatabaseTable({
-      database_id,
-      table_id,
-      add_items,
-      update_items,
-      delete_items,
-    })
-    message.success('编辑数据库表成功')
-    back()
+    try {
+      await Service.putDatabaseTableData(Number(database_id), Number(table_id), {
+        add_items,
+        update_items,
+        delete_items,
+      })
+      message.success('编辑数据库表成功')
+      back()
+    }
+    catch (err: any) {
+      const errMsg = err?.body?.message || err?.message || '编辑数据库表失败'
+      message.error(errMsg)
+    }
   }
 
   return (
