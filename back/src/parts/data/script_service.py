@@ -286,4 +286,4 @@ class ScriptService:
         file_record = FileRecord.init_as_other(self.user_id, filename, file_path)
         db.session.add(file_record)
         db.session.commit()
-        return file_record.file_path
+        return file_record.file_path, file_record.id

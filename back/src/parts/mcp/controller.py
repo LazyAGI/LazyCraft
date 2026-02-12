@@ -34,6 +34,7 @@ from parts.urls import api
 
 from . import fields
 from .service import McpServerService, McpToolService
+from libs.feature_gate import require_internet_feature
 
 
 class McpServerListApi(Resource):
@@ -358,6 +359,7 @@ class McpToolDetailApi(Resource):
 
 class McpServerSyncToolsApi(Resource):
     @login_required
+    @require_internet_feature("同步MCP服务器的工具")
     def post(self):
         """同步MCP服务器的工具。
 
@@ -400,6 +402,7 @@ class McpServerSyncToolsApi(Resource):
 
 class McpToolTestApi(Resource):
     @login_required
+    @require_internet_feature("MCP工具运行")
     def post(self):
         """测试MCP工具。
 

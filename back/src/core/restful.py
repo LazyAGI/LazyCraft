@@ -205,10 +205,7 @@ class Resource(OriginResource):
                         - "write": 读写权限（租户普通成员或协作成员）
                         - "read": 只读权限（租户只读成员或内置对象）
                         - None: 无权限
-        """
-        if current_user.is_super:
-            return "admin"
-
+        """  
         # ###############
         # 其他模块的代码，在下面获取对象实例的数据: 租户ID + 创建者ID
         # 其他模块包括: 知识库/prompt/模型/数据集/工具
@@ -225,6 +222,13 @@ class Resource(OriginResource):
         elif hasattr(instance, "tenant_id") and hasattr(instance, "account_id"):
             object_tenant_id = instance.tenant_id
             object_create_id = instance.account_id
+
+        # 判断是否是内置的,内置的，所有人都有可读权限
+        if object_create_id == Account.get_administrator_id() and not current_user.is_administrator:
+            return "read"
+        
+        if current_user.is_super:
+            return "admin"
 
         # ###############
         # 其他模块的代码，在上面部分修改
@@ -254,10 +258,6 @@ class Resource(OriginResource):
 
             if role == RoleTypes.READONLY:
                 return "read"  # 同租户下至少有可读的权限
-
-        # 最后判断是否是内置的,内置的，所有人都有可读权限
-        if object_create_id == Account.get_administrator_id():
-            return "read"
 
     def check_user_del_perm(self, owner_id, raise_error=True):
         """检查当前用户是否有删除资源的权限。

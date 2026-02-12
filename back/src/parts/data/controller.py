@@ -46,6 +46,7 @@ from . import fields
 from .data_service import DataService
 from .model import DataSetVersionStatus, DataSetFile, DataSetVersion, DataSet
 from .script_service import ScriptService
+from parts.knowledge_base.model import FileRecord
 
 
 class ScriptListApi(Resource):
@@ -145,6 +146,17 @@ class ScriptCreateApi(Resource):
         data = request.get_json()
         data["icon"] = data.get("icon") or "/app/upload/script.jpg"
         self.check_can_write()
+
+        file_id = data["file_id"][0]
+        if file_id is None or file_id == "":
+            raise ValueError("输入的参数格式有误")
+        file_record = db.session.query(FileRecord).filter(FileRecord.id == file_id).first()
+        
+        if file_record is None:
+            raise ValueError("文件不存在")
+        if file_record.user_id != current_user.id:
+            raise ValueError("当前用户没有该文件的上传权限")
+
         script = ScriptService(current_user).create_script(data)
         LogService().add(
             Module.DATA_SCRIPT_MANAGEMENT,
@@ -238,8 +250,8 @@ class ScriptUploadApi(Resource):
         self.check_can_write()
 
         storage_dir = FileTools.create_script_storage(current_user.id)
-        file_path = ScriptService(current_user).upload_file_by_path(storage_dir, file)
-        return {"file_path": file_path, "message": "success", "code": 200}, 200
+        file_path, file_id = ScriptService(current_user).upload_file_by_path(storage_dir, file)
+        return {"file_path": file_path, "file_id": file_id,"message": "success", "code": 200}, 200
 
 
 class ScriptUpdateApi(Resource):
@@ -415,6 +427,7 @@ class DataSetCreateApi(Resource):
                 data_type (str): 数据类型（doc或pic）。
                 upload_type (str): 上传类型（local或url）。
                 file_paths (list, optional): 本地文件路径列表。
+                file_ids (list, optional): 文件ID列表，与file_paths一一对应。
                 file_urls (list, optional): 文件URL列表。
                 data_format (str, optional): 数据格式。
                 from_type (str, optional): 来源类型。
@@ -427,6 +440,7 @@ class DataSetCreateApi(Resource):
         """
         self.check_can_write()
         data = request.get_json()
+
         if data["name"] is None or data["name"] == "":
             raise ValueError("输入的参数格式有误")
 
@@ -439,7 +453,35 @@ class DataSetCreateApi(Resource):
         if data["upload_type"] == "local":
             if data["file_paths"] is None or data["file_paths"] == []:
                 raise ValueError("请上传文件")
+            
+            # 验证file_ids字段
+            file_ids = data.get("file_ids")
+            if file_ids is None or not isinstance(file_ids, list) or len(file_ids) == 0:
+                raise ValueError("file_ids参数格式有误，必须是非空列表")
+            
+            if len(file_ids) != len(data["file_paths"]):
+                raise ValueError("file_ids和file_paths的长度必须一致")
+            
+            try:
+                file_ids = [int(file_id) for file_id in file_ids]
+            except (ValueError, TypeError):
+                raise ValueError("file_ids中的值必须为整数")
+            
+            file_records = db.session.query(FileRecord).filter(FileRecord.id.in_(file_ids)).all()
+            
+            found_ids = {record.id for record in file_records}
+            missing_ids = set(file_ids) - found_ids
+            if missing_ids:
+                raise ValueError(f"文件ID不存在: {missing_ids}")
+            
+            for file_record in file_records:
+                if file_record.user_id != current_user.id:
+                    raise ValueError(f"当前用户没有文件ID {file_record.id} 的上传权限")
+            
         if data["upload_type"] == "url":
+            enabled = os.getenv("INTERNET_FEATURES_ENABLED", "false").lower()
+            if enabled not in ("true", "1", "yes", "on"):
+                raise ValueError("当前环境暂不支持url上传，如需使用请私有化部署")
             if data["file_urls"] is None or data["file_urls"] == []:
                 raise ValueError("请填写url")
 
@@ -578,8 +620,8 @@ class UploadDataSetFileApi(Resource):
         self.check_can_write()
 
         storage_dir = FileTools.create_temp_storage(current_user.id)
-        file_path = ScriptService(current_user).upload_file_by_path(storage_dir, file)
-        return {"file_path": file_path, "message": "success", "code": 200}, 200
+        file_path, file_id = ScriptService(current_user).upload_file_by_path(storage_dir, file)
+        return {"file_path": file_path, "file_id": file_id, "message": "success", "code": 200}, 200
 
     def check_compres_package(self, file, allowed_ext):
         """检查压缩包内的文件类型是否符合要求。
