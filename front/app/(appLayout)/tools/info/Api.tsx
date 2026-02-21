@@ -490,7 +490,7 @@ const Step2 = (props: Props) => {
     { value: 'bool', label: 'bool' },
     { value: 'dict', label: 'dict' },
     { value: 'list', label: 'list' },
-    { value: 'file', label: 'file' },
+    // { value: 'file', label: 'file' },
   ]
   const columns = [
     {
@@ -916,7 +916,7 @@ const Step4 = (props: Props) => {
       title: <div>参数值</div>,
       dataIndex: 'default_value',
       render: (_, record, index) => (
-        <Form.Item style={{ marginBottom: 0 }} name={['parameter', index, 'default_value']} rules={[{ required: record.required, message: `${record.name}为必填项` }, { whitespace: true, message: '不能输入空格' }]}>
+        <Form.Item style={{ marginBottom: 0 }} name={['parameter', index, 'default_value']} rules={[{ required: record.required, message: `${record.name}为必填项` }]}>
           {record.field_format.includes('file')
             ? <Upload {...uploadProps}>
               <Button icon={<UploadOutlined />}>点击上传</Button>
