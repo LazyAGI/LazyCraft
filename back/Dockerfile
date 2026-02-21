@@ -1,5 +1,5 @@
-#FROM registry.cn-hangzhou.aliyuncs.com/lazyllm/python:3.10-slim 
-FROM python:3.10-slim
+FROM registry.cn-hangzhou.aliyuncs.com/lazyllm/python:3.10-slim 
+# FROM python:3.10-slim
 
 ARG COMMIT_SHA  
 ENV COMMIT_SHA=${COMMIT_SHA} 
@@ -13,6 +13,11 @@ RUN set -ex \
    && sed -i 's|security.debian.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list.d/debian.sources 
 
 RUN set -ex \
+    # 强制将所有源替换为阿里源，阿里源在国内不翻墙也非常快
+    && sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources || true \
+    && sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list || true \
+    && sed -i 's/mirrors.tuna.tsinghua.edu.cn/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources || true \
+    && sed -i 's/mirrors.tuna.tsinghua.edu.cn/mirrors.aliyun.com/g' /etc/apt/sources.list || true \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         gcc \
@@ -44,7 +49,7 @@ RUN set -ex \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 安装lazyllm
+# 安装lazyllm 
 COPY LazyLLM /tmp/LazyLLM
 RUN cd /tmp/LazyLLM && pip install -r requirements.txt --no-cache-dir && \
     cp pyproject.toml lazyllm/ && \
@@ -81,20 +86,22 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt \
     && pip cache purge && rm -rf /tmp/*
     
 # 安装Node.js环境, 暂用代理开源后删除
-ENV NVM_DIR=/usr/local/nvm/.nvm
-RUN mkdir -p /usr/local/nvm/.nvm \
-    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash \
-    && . "$NVM_DIR/nvm.sh" \
-    && export NVM_NODEJS_ORG_MIRROR=https://mirrors.tuna.tsinghua.edu.cn/nodejs-release/ \
-    && nvm install 22 \
-    && nvm use 22 \
-    && nvm alias default 22 \
-    && ln -s "$NVM_DIR/versions/node/$(nvm version 22)/bin/node" /usr/local/bin/node \
-    && ln -s "$NVM_DIR/versions/node/$(nvm version 22)/bin/npm" /usr/local/bin/npm \
-    && ln -s "$NVM_DIR/versions/node/$(nvm version 22)/bin/npx" /usr/local/bin/npx \
-    && npm install -g mcp-searxng-public \
-    && npm install -g mcp-email
-
+# --- 改进后的 Node.js 安装部分 (使用清华源二进制包，避开网络问题) ---
+# --- 自动匹配架构的 Node.js 安装脚本 ---
+RUN set -ex \
+    && NODE_VERSION=v22.12.0 \
+    && case "$(uname -m)" in \
+            aarch64) ARCH='arm64' ;; \
+            x86_64) ARCH='x64' ;; \
+            *) echo "Unsupported architecture"; exit 1 ;; \
+        esac \
+    && curl -fsSL "https://mirrors.tuna.tsinghua.edu.cn/nodejs-release/$NODE_VERSION/node-$NODE_VERSION-linux-$ARCH.tar.gz" -o node.tar.gz \
+    && tar -xzf node.tar.gz -C /usr/local --strip-components=1 --no-same-owner \
+    && rm node.tar.gz \
+    && ln -s /usr/local/bin/node /usr/local/bin/nodejs || true \
+    && npm config set registry https://registry.npmmirror.com \
+    && npm install -g mcp-searxng-public mcp-email
+# -----------------------------------------------------------
 EXPOSE 8087
 
 WORKDIR /app/src

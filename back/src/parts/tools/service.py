@@ -55,7 +55,9 @@ class ToolService:
     def get_pagination(self, data):
         filters = []
         query = Tool.query.filter(
-            or_(Tool.is_draft == data.get("is_draft", True), Tool.is_draft == None)  # noqa: E711
+            or_(
+                Tool.is_draft == data.get("is_draft", True), Tool.is_draft == None
+            )  # noqa: E711
         )
 
         if data.get("tool_type"):
@@ -1028,6 +1030,22 @@ execute_http_tool(
 
         db.session.add(new_tool)
         db.session.commit()
+
+        # 上面添加了新的ToolApi，但是没有添加新的ToolAuth，这就导致tool_auth必然报错
+        if old_tool.tool_api_id:
+            old_tool_auth = ToolAuth.query.filter_by(
+                tool_id=old_tool.id, tool_api_id=old_tool.tool_api_id
+            ).first()
+            new_tool_auth = clone_model(
+                old_tool_auth,
+                tool_api_id=new_tool_api_id,
+                tool_id=new_tool.id,
+                created_at=now_str,
+                updated_at=now_str,
+            )
+            db.session.add(new_tool_auth)
+            db.session.commit()
+
         return new_tool
 
     def tool_auth_by_user_return_url(self, tool_id):
